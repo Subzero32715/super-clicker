@@ -8,9 +8,9 @@
 <style>
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-:root{--blue:#3aa0ff;--deep:#1a5fb4;--ink:#0f2a4a;--card:#f4fbff;--line:#8cc8f5;--gold:#ffc800}
+:root{--blue:#3aa0ff;--deep:#1a5fb4;--ink:#0f2a4a;--card:#f4fbff;--line:#8cc8f5;--gold:#ffc800;--bg1:#d9f1ff;--bg2:#9fd3ff;--bg3:#86c5fb}
 html,body{margin:0;min-height:100%;font-family:'Trebuchet MS',system-ui,sans-serif;color:var(--ink)}
-body{background:linear-gradient(rgba(255,255,255,.35) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,rgba(255,255,255,.35) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(180deg,#d9f1ff,#9fd3ff 70%,#86c5fb);background-attachment:fixed}
+body{background:linear-gradient(rgba(255,255,255,.35) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,rgba(255,255,255,.35) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(180deg,var(--bg1),var(--bg2) 70%,var(--bg3));background-attachment:fixed}
 h1,h2,h3,.btn,.ddbtn,.pname,.lbl,.px{font-family:'Press Start 2P',monospace}
 h2{font-size:18px;margin:0}h3{font-size:12px;margin:0 0 12px}
 .pix{image-rendering:pixelated}
@@ -203,6 +203,30 @@ tr.me td{background:#fff8d6}
 #toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:1000;align-items:center;pointer-events:none}
 .toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;border:3px solid #fff;box-shadow:0 4px 0 rgba(0,0,0,.3);animation:fade .15s}
 .toast.good{background:#1c7d36}.toast.bad{background:#a62b30}
+
+.stat{min-width:0}.stat .lbl{flex:none}
+.stat b{min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:clip;text-align:right}
+.rvbonus{margin-top:6px;font-weight:800;color:#fff;font-size:15px;text-shadow:2px 2px 0 rgba(0,0,0,.6)}
+.btn:disabled{filter:grayscale(.4)}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:2px dashed var(--line)}
+.setrow:last-child{border:0}.setrow label{font-weight:700;font-size:14px}
+.sw{position:relative;width:54px;height:30px;flex:none}
+.sw input{opacity:0;position:absolute;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2;padding:0}
+.sw i{position:absolute;inset:0;background:#cfd8e3;border:3px solid var(--deep);border-radius:99px;transition:.15s}
+.sw i::after{content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--deep);transition:.15s}
+.sw input:checked+i{background:#35c75a}.sw input:checked+i::after{left:24px}
+input[type=range]{padding:0;accent-color:var(--blue);width:170px;border:0;background:none}
+.ugrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.up{display:flex;flex-direction:column;gap:10px}
+.ach{display:flex;align-items:center;gap:10px;padding:10px;border:3px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px}
+.ach.done{background:#e6ffed;border-color:#35c75a}.ach .ck{font-weight:900;font-size:18px;width:24px;text-align:center}
+.settext{width:100%;min-height:70px;font-size:11px;font-family:monospace}
+body[data-theme=sunset]{--bg1:#ffe9d6;--bg2:#ffb88f;--bg3:#ff9966;--blue:#ff7a45;--deep:#b8431f;--line:#ffc7a3}
+body[data-theme=forest]{--bg1:#e3f7d9;--bg2:#a8dd94;--bg3:#7cc66c;--blue:#35a35a;--deep:#1d6b36;--line:#a6dbb1}
+body[data-theme=candy]{--bg1:#ffe3f3;--bg2:#ffb3dd;--bg3:#ff8fcb;--blue:#ff5fa8;--deep:#b72a76;--line:#ffb7d9}
+body[data-theme=midnight]{--bg1:#232a66;--bg2:#161a46;--bg3:#0d1030;--blue:#6a7bff;--deep:#2a2f8f;--line:#9aa6ff}
+body[data-theme=midnight] .phead h2,body[data-theme=midnight] .phead .small{color:#fff}
+body[data-motion=off] *{animation:none!important;transition:none!important}
 </style>
 </head>
 <body>
@@ -277,6 +301,130 @@ tr.me td{background:#fff8d6}
 <div id="toasts"></div>
 
 <script src="https://cdn.ably.com/lib/ably.min-3.js"></script>
+<script>
+/*ARTCORE*/
+/* artcore.js - tiny 32x32 pixel-art drawing kit. Works in the browser and in node.
+   Coordinates: pixel (x,y) covers the square [x,x+1) x [y,y+1). Circles, ellipses and polygons take
+   CONTINUOUS coordinates (so circ(16,16,6,c) is perfectly centered on the 32x32 grid); rect/px/line take pixel ints.
+   Colors are '#rrggbb' strings (or '#rgb'). null = transparent/erase.
+   Register a sprite with:   ART['packid/Item name'] = g => { g.circ(16,16,8,'#f00'); g.bevel(); g.outline(); };
+*/
+(function (root) {
+  const N = 32;
+  const ART = root.ART = root.ART || {};
+  function hex(c) { if (c.length === 4) c = '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3]; const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  function toHex(r, g, b) { const f = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0'); return '#' + f(r) + f(g) + f(b); }
+  /* sh(c, a): lighten (a>0) or darken (a<0) by fraction -1..1 */
+  function sh(c, a) { const [r, g, b] = hex(c), t = a < 0 ? 0 : 255, p = Math.abs(a); return toHex(r + (t - r) * p, g + (t - g) * p, b + (t - b) * p); }
+  function mix(a, b, t) { const A = hex(a), B = hex(b); return toHex(A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t); }
+  function toHsl(c) { let [r, g, b] = hex(c).map(v => v / 255); const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2; let h = 0, s = 0; if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60 } return [h, s, l] }
+  function fromHsl(h, s, l) { h = ((h % 360) + 360) % 360; const f = n => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)) }; return toHex(f(0) * 255, f(8) * 255, f(4) * 255) }
+  /* rot(c, hueDegrees, satMul, lightAdd) */
+  function rot(c, d, sm = 1, la = 0) { const [h, s, l] = toHsl(c); return fromHsl(h + d, Math.min(1, s * sm), Math.max(0, Math.min(1, l + la))) }
+  function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
+
+  function Art() {
+    const g = Array.from({ length: N }, () => Array(N).fill(null)), A = { N, g, sh, mix, rot };
+    const inb = (x, y) => x >= 0 && y >= 0 && x < N && y < N;
+    A.get = (x, y) => inb(x, y) ? g[y][x] : null;
+    A.px = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (inb(x, y)) g[y][x] = c; return A };
+    A.rect = (x, y, w, h, c) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) A.px(x + i, y + j, c); return A };
+    A.frame = (x, y, w, h, c) => { A.rect(x, y, w, 1, c); A.rect(x, y + h - 1, w, 1, c); A.rect(x, y, 1, h, c); A.rect(x + w - 1, y, 1, h, c); return A };
+    A.ell = (cx, cy, rx, ry, c) => { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const dx = (x + .5 - cx) / rx, dy = (y + .5 - cy) / ry; if (dx * dx + dy * dy <= 1) g[y][x] = c } return A };
+    A.circ = (cx, cy, r, c) => A.ell(cx, cy, r, r, c);
+    A.ring = (cx, cy, r, c, t = 1) => { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const d = Math.hypot(x + .5 - cx, y + .5 - cy); if (d <= r && d > r - t) g[y][x] = c } return A };
+    A.line = (x0, y0, x1, y1, c, t = 1) => {
+      x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+      const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy, o = -Math.floor((t - 1) / 2);
+      for (; ;) { A.rect(x0 + o, y0 + o, t, t, c); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx } if (e2 <= dx) { e += dx; y0 += sy } }
+      return A;
+    };
+    /* filled polygon, pts = [[x,y],...] continuous coords, even-odd */
+    A.poly = (pts, c) => {
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const px = x + .5, py = y + .5; let ins = false;
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) ins = !ins }
+        if (ins) g[y][x] = c;
+      }
+      return A;
+    };
+    /* flood fill (4-way) starting at pixel x,y with color c, replaces the color found there (may be null) */
+    A.fill = (x, y, c) => { if (!inb(x, y)) return A; const t = g[y][x]; if (t === c) return A; const st = [[x, y]]; while (st.length) { const [a, b] = st.pop(); if (!inb(a, b) || g[b][a] !== t) continue; g[b][a] = c; st.push([a + 1, b], [a - 1, b], [a, b + 1], [a, b - 1]) } return A };
+    /* every other pixel (checkerboard) inside a rect */
+    A.checker = (x, y, w, h, c) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if ((i + j) % 2 === 0) A.px(x + i, y + j, c); return A };
+    /* random speckles inside rect, only on already-painted pixels */
+    A.noise = (x, y, w, h, c, p = .12, seed = 1) => { const r = rng(seed); for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (r() < p && A.get(x + i, y + j)) A.px(x + i, y + j, c); return A };
+    /* auto shading: light on top/left edges, dark on bottom/right edges of every shape. Call BEFORE outline(). */
+    A.bevel = (a = .22) => {
+      const s = g.map(r => r.slice());
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const c = s[y][x]; if (!c) continue; let d = 0;
+        if (!(y > 0 && s[y - 1][x])) d += a; if (!(x > 0 && s[y][x - 1])) d += a * .6; if (!(y < N - 1 && s[y + 1][x])) d -= a; if (!(x < N - 1 && s[y][x + 1])) d -= a * .6;
+        if (d) g[y][x] = sh(c, Math.max(-.5, Math.min(.5, d)));
+      }
+      return A;
+    };
+    /* 1px outline around everything painted. No color = a dark shade of the neighbouring pixel. diag=true also outlines diagonals. Call LAST. */
+    A.outline = (c, diag) => {
+      const s = g.map(r => r.slice()), nb = diag ? [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]] : [[0, 1], [0, -1], [1, 0], [-1, 0]];
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        if (s[y][x]) continue; let f = null;
+        for (const [dx, dy] of nb) { const a = x + dx, b = y + dy; if (inb(a, b) && s[b][a]) { f = s[b][a]; break } }
+        if (f) g[y][x] = c || sh(f, -.62);
+      }
+      return A;
+    };
+    /* copy the LEFT half onto the right half, mirrored. For symmetric subjects: draw only x<16. */
+    A.mirror = () => { for (let y = 0; y < N; y++) for (let x = 0; x < N / 2; x++) g[y][N - 1 - x] = g[y][x]; return A };
+    A.clear = () => { for (let y = 0; y < N; y++) g[y].fill(null); return A };
+    /* shift every color's hue (deg), saturation multiplier, lightness add */
+    A.hue = (d, sm = 1, la = 0) => { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (g[y][x]) g[y][x] = rot(g[y][x], d, sm, la); return A };
+    /* blend every pixel toward a color */
+    A.tint = (c, t = .4) => { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (g[y][x]) g[y][x] = mix(g[y][x], c, t); return A };
+    /* draw another registered sprite onto this one (e.g. for the glitch pack) */
+    A.use = key => { const f = ART[key]; if (!f) throw new Error('no art for ' + key); f(A); return A };
+    /* digital-glitch post effect: sliced rows, cyan/magenta ghosts, stray pixels */
+    A.glitch = (seed = 1, amt = 1) => {
+      const r = rng(seed * 9973 + 17), s = g.map(row => row.slice()); A.clear();
+      let y = 0; while (y < N) { const h = 1 + Math.floor(r() * 3), dx = r() < .4 * amt ? Math.round((r() - .5) * 8) : 0; for (let k = 0; k < h && y < N; k++, y++) for (let x = 0; x < N; x++) if (s[y][x]) A.px(x + dx, y, s[y][x]) }
+      const cols = ['#00f0ff', '#ff2bd6', '#fff200'], t = g.map(row => row.slice());
+      for (let yy = 0; yy < N; yy++) for (let x = 0; x < N; x++) { if (t[yy][x] && r() < .1 * amt) { const gx = x + (r() < .5 ? 2 : -2); if (inb(gx, yy) && !g[yy][gx]) g[yy][gx] = cols[Math.floor(r() * 2)] } }
+      for (let i = 0; i < 5 * amt; i++) { const yy = Math.floor(r() * N), x = Math.floor(r() * N), w = 2 + Math.floor(r() * 5); A.rect(x, yy, w, 1, cols[Math.floor(r() * 3)]) }
+      return A;
+    };
+    return A;
+  }
+  root.Art = Art; root.ART_SH = sh; root.ART_MIX = mix; root.ART_ROT = rot;
+  /* render a registered sprite into a canvas created by mk(w,h). returns canvas or null if no art / error */
+  root.artRender = function (key, mk) {
+    const f = ART[key]; if (!f) return null;
+    const A = Art(); try { f(A) } catch (e) { root.__artErr = root.__artErr || {}; root.__artErr[key] = e.message; return null }
+    const c = mk(N, N), x = c.getContext('2d');
+    for (let y = 0; y < N; y++) for (let i = 0; i < N; i++) if (A.g[y][i]) { x.fillStyle = A.g[y][i]; x.fillRect(i, y, 1, 1) }
+    return c;
+  };
+  root.artGrid = function (key) { const f = ART[key]; if (!f) return null; const A = Art(); f(A); return A.g };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/*HIDDENART*/
+
+(function () {
+  const D = '#1d1b30';
+  const spark = (g, x, y, c) => { g.px(x, y, c); g.px(x - 1, y, c); g.px(x + 1, y, c); g.px(x, y - 1, c); g.px(x, y + 1, c) };
+  const base = (g, aura) => { g.circ(16, 17, 14, g.sh(aura, .72)); g.ring(16, 17, 14, aura, 1); g.circ(16, 15, 6, D); g.ell(16, 32, 11, 9, D); g.rect(13, 14, 2, 2, aura); g.rect(18, 14, 2, 2, aura) };
+  ART['hidden/aarav'] = g => { base(g, '#b36bff'); g.line(7, 26, 5, 12, D, 3); g.line(25, 26, 27, 12, D, 3); g.circ(5, 11, 2, D); g.circ(27, 11, 2, D); [[3, 5], [29, 5], [10, 3], [22, 3]].forEach(p => spark(g, p[0], p[1], '#ffe45c')); g.outline('#0b0a14') };
+  ART['hidden/charlie'] = g => { base(g, '#ff7a1a'); g.poly([[16, 0], [19.5, 5], [18.5, 8], [16, 6.5], [13.5, 8], [12.5, 5]], '#ff7a1a'); g.poly([[16, 3], [17.8, 6], [16, 7], [14.2, 6]], '#ffe45c'); spark(g, 5, 8, '#ffd9a0'); spark(g, 27, 10, '#ffd9a0'); g.outline('#0b0a14') };
+  ART['hidden/holden'] = g => { base(g, '#7a8cff'); g.circ(26, 7, 3.5, '#f4fbff'); g.rect(23, 7, 7, 5, '#f4fbff'); g.px(24, 11, null); g.px(26, 11, null); g.px(28, 11, null); g.px(25, 7, '#222'); g.px(27, 7, '#222'); spark(g, 5, 7, '#aeeaff'); spark(g, 6, 26, '#aeeaff'); g.outline('#0b0a14') };
+  ART['hidden/subzero'] = g => { base(g, '#59d4ff'); g.poly([[11, 9], [12, 2], [14, 6], [16, 1], [18, 6], [20, 2], [21, 9]], '#ffd23a'); g.rect(4, 6, 2, 6, '#ff4d4f'); g.rect(4, 14, 2, 2, '#ff4d4f'); g.rect(26, 6, 2, 6, '#ff4d4f'); g.rect(26, 14, 2, 2, '#ff4d4f'); spark(g, 8, 24, '#aeeaff'); spark(g, 24, 24, '#aeeaff'); g.outline('#0b0a14') };
+})();
+
+</script>
+<script>
+/*ARTDATA-BEGIN*/
+/*ARTDATA-END*/
+</script>
 <script>
 /* Super Clicker - pack data. Edit this file to change packs, items, odds and rarities.
    tiers use "Name:weight|Name:weight". Weights are normalized to 100% when rolling,
@@ -499,13 +647,14 @@ window.RAR_ORDER = ['common', 'rare', 'epic', 'legendary', 'chroma', 'mystical',
 </script>
 <script>
 'use strict';
+const ST = Object.assign({ sfx: true, vol: 70, clickSfx: true, chatPing: true, theme: 'sky', scale: 100, motion: true, floaty: true, confetti: true, numfmt: 'short', holdClick: true, keys: true, autoSellCommon: false }, (() => { try { return JSON.parse(localStorage.getItem('sc_settings') || '{}') } catch (e) { return {} } })());
 /* =====================================================================
    CONFIG - edit these
    ===================================================================== */
 const CONFIG = {
   // Paste a (new, rotated) Ably key here. Leave as-is to run in LOCAL mode
   // (works across tabs of the same browser, handy for testing).
-  ABLY_KEY: 'PASTE_YOUR_ABLY_KEY_HERE',
+  ABLY_KEY: 'veSQiw.kAW3Yg:vGb_ZIRiAXTg-zLVA9vXX1A3ytd9hHB5nZhZZ0qyhNc',
   OWNER: 'subzero32715',
   SAVE_PREFIX: 'sc_save_',
   // Owner account is created automatically (password stored only as a salted hash).
@@ -521,7 +670,7 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } cat
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) } return h >>> 0 }
 function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
-function fmt(n) { n = Math.floor(n); if (n < 10000) return n.toLocaleString(); const u = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi']; let i = 0, v = n; while (v >= 1000 && i < u.length - 1) { v /= 1000; i++ } return (v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)) + u[i] }
+function fmt(n) { n = Math.floor(n); if (ST.numfmt === 'full') return n.toLocaleString(); if (n < 10000) return n.toLocaleString(); const u = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi']; let i = 0, v = n; while (v >= 1000 && i < u.length - 1) { v /= 1000; i++ } return (v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)) + u[i] }
 const fmtCps = n => n < 10 ? n.toFixed(2) : fmt(n);
 function fmtPct(p) { return (p >= 1 ? p.toFixed(2) : p.toPrecision(2)).replace(/\.?0+$/, '') + '%' }
 const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c };
@@ -538,8 +687,17 @@ PACKS.forEach(p => {
   ORIG[p.id] = { name: p.name, cost: p.cost, color: p.color, w: Object.fromEntries(p.items.map(i => [i.name, i.w])) };
   p.items.forEach(it => { it.key = p.id + '/' + it.name; it.pack = p; ITEMS[it.key] = it });
 });
+RAR.hidden = { name: 'Secrets', color: '#14e0c8', sell: 0, cpc: 400, cps: 200, base: 420, fancy: true }; RAR_ORDER.push('hidden');
+const HPACK = { id: 'hidden', name: 'Hidden Subs', color: '#14b8a6', cost: 0, items: [], motif: 'stars' };
+const HIDDEN = [
+  { id: 'aarav', name: 'Tickle Me Pits Aarav', how: 'Reach 100,000,000 coins.' },
+  { id: 'charlie', name: 'Hot Ears Charlie', how: 'Found by opening any pack - a 0.00001% chance every single time.', pct: 0.00001 },
+  { id: 'holden', name: 'Scawy Holden', how: 'Open the Shadow Pack 1,000 times.' },
+  { id: 'subzero', name: 'Surprise Mogged Subzero', how: 'Win 100 battles.' }
+].map(x => { const it = { key: 'hidden/' + x.id, name: x.name, rarity: 'hidden', w: 0, pack: HPACK, hid: true, how: x.how, pct: x.pct || 0 }; ITEMS[it.key] = it; return it });
+const HID = Object.fromEntries(HIDDEN.map(x => [x.key.split('/')[1], x]));
 const packTotal = p => p.items.reduce((a, i) => a + i.w, 0);
-const chanceOf = it => it.w / packTotal(it.pack) * 100;
+const chanceOf = it => it.hid ? it.pct : it.w / packTotal(it.pack) * 100;
 const byRar = (a, b) => RAR_ORDER.indexOf(a.rarity) - RAR_ORDER.indexOf(b.rarity) || b.w - a.w;
 const VAR = {
   n: { name: 'Normal', mult: 1, p: 0 }, gold: { name: 'Gold', mult: 2, p: 4.76 }, diamond: { name: 'Diamond', mult: 3, p: 2.13 },
@@ -599,6 +757,7 @@ function makeSprite(seed, hue) {
 function spriteURL(key) {
   if (SPR[key]) return SPR[key];
   const it = ITEMS[key]; if (!it) return pennyURL();
+  try { const ac = window.artRender && artRender(key, cv); if (ac) return SPR[key] = ac.toDataURL() } catch (e) {}
   const hint = hueHint(it.name), ph = hash(it.pack.id) % 360;
   return SPR[key] = makeSprite(key, hint !== null ? hint : (ph + (hash(it.name) % 80) - 40 + 360) % 360);
 }
@@ -654,21 +813,25 @@ let ME = null, S = null, cur = 'shop', CPS = 0, CPC = 1, topUser = null, hbTimer
 let PLAYERS = lsGet('sc_players', {}), OWNERDB = lsGet('sc_ownerdb', {}), BANS = lsGet('sc_bans', []), QUEUE = lsGet('sc_queue', []), GM = lsGet('sc_gmult', { x: 1, until: 0 });
 const isOwner = () => !!ME && ME.username.toLowerCase() === CONFIG.OWNER.toLowerCase();
 const gm = () => Date.now() < GM.until ? GM.x : 1;
-const defaultSave = () => ({ coins: 0, inv: {}, setKey: null, rank: 1000, wins: 0, losses: 0, opens: 0, clicks: 0, instant: false, nextOpen: null, daily: { date: '', counts: {} }, team: [], seen: [] });
+const defaultSave = () => ({ coins: 0, inv: {}, setKey: null, rank: 1000, wins: 0, losses: 0, opens: 0, clicks: 0, instant: false, nextOpen: null, daily: { date: '', counts: {} }, team: [], seen: [], up: {}, peak: 0, packOpens: {}, sold: 0, ach: {}, streak: { last: '', n: 0 }, lastSeen: 0 });
 const loadSave = u => Object.assign(defaultSave(), lsGet(CONFIG.SAVE_PREFIX + u.toLowerCase(), {}));
 let saveT = 0;
 function save(force) { if (!ME || !S) return; const n = Date.now(); if (!force && n - saveT < 1500) return; saveT = n; lsSet(CONFIG.SAVE_PREFIX + ME.username.toLowerCase(), S) }
 function nm(u) { return `<span class="uname${u === topUser ? ' gold' : ''}">${u === topUser ? '👑 ' : ''}${esc(u)}</span>` }
+let BON = { cpc: 0, cps: 0 };
 function recalc() {
-  let t = 0; const seen = new Set();
-  for (const ik in S.inv) if (S.inv[ik] > 0) { const k = splitInv(ik)[0]; if (ITEMS[k] && !seen.has(k)) { seen.add(k); t += RAR[ITEMS[k].rarity].cps } }
-  CPS = t; CPC = 1;
-  if (S.setKey && S.inv[S.setKey] > 0) { const [k, v] = splitInv(S.setKey); if (ITEMS[k]) CPC = Math.max(1, RAR[ITEMS[k].rarity].cpc * Math.sqrt(VAR[v].mult)) } else S.setKey = null;
+  const m = {};
+  for (const ik in S.inv) { const c = S.inv[ik]; if (c <= 0) continue; const [k, v] = splitInv(ik); if (!ITEMS[k]) continue; const e = m[k] || (m[k] = { c: 0, vf: 1 }); e.c += c; e.vf = Math.max(e.vf, Math.sqrt((VAR[v] || VAR.n).mult)) }
+  let cc = 0, cs = 0;
+  for (const k in m) { const e = m[k], r = RAR[ITEMS[k].rarity], f = e.vf * (1 + .05 * Math.min(e.c - 1, 9)); if (bonusKind(k) === 'cpc') cc += r.cpc * .5 * f; else cs += r.cps * f }
+  BON = { cpc: cc, cps: cs }; const up = S.up || {}, g = 1 + .1 * (up.gold || 0);
+  CPC = (1 + cc + (up.click || 0)) * g; CPS = (cs + (up.auto || 0)) * g;
+  if (!(S.setKey && S.inv[S.setKey] > 0)) S.setKey = null;
 }
 function addItem(k, v, n = 1) { const ik = invKey(k, v); S.inv[ik] = (S.inv[ik] || 0) + n; recalc() }
 const sellValue = (k, v) => Math.round(RAR[ITEMS[k].rarity].sell * VAR[v].mult);
 function sell(ik, n = 1) {
-  const c = S.inv[ik] || 0; if (c < n) return 0; const [k, v] = splitInv(ik), val = sellValue(k, v) * n;
+  const c = S.inv[ik] || 0; if (c < n) return 0; const [k, v] = splitInv(ik); if (!ITEMS[k] || ITEMS[k].hid) return 0; const val = sellValue(k, v) * n; S.sold = (S.sold || 0) + n; sfx('sell');
   S.coins += val; S.inv[ik] = c - n; if (!S.inv[ik]) delete S.inv[ik]; recalc(); updateStats(); updateCoin(); save(true); return val;
 }
 function updateStats() {
@@ -782,7 +945,7 @@ function applyAdmin(d) {
 function showBanner(t) { $('#bannerTxt').textContent = t; $('#banner').classList.add('on') }
 $('#bannerX').onclick = () => $('#banner').classList.remove('on');
 function popupMsg(t) { const r = $('#reveal'); r.className = 'on'; r.innerHTML = `<div class="rvmsg">${esc(t)}</div><button class="btn green" id="rvOk">OK</button>`; $('#rvOk').onclick = closeReveal }
-function showBanned() { const r = $('#reveal'); r.className = 'on'; r.innerHTML = `<div class="rvmsg">You have been banned from Super Clicker.</div>`; setTimeout(() => { closeReveal(); logout() }, 2500) }
+function showBanned() { const r = $('#reveal'); r.className = 'on'; r.innerHTML = `<div class="rvmsg">You have been banned from Super Clicker.</div>`; setTimeout(() => { closeReveal(true); logout() }, 2500) }
 
 /* ===== auth ===== */
 async function pwHash(salt, pw) {
@@ -822,18 +985,18 @@ $('#a-login').onsubmit = async e => {
 function enter(acct) {
   ME = acct; S = loadSave(acct.username); lsSet('sc_session', acct.username.toLowerCase());
   $('#auth').hidden = true; $('#app').hidden = false; $('#who').innerHTML = nm(ME.username); $('#ownerBtn').hidden = !isOwner();
-  buildDD(); recalc(); updateStats(); updateCoin(); startNet(); go('shop');
+  buildDD(); recalc(); offlineEarn(); applySettings(); updateStats(); updateCoin(); startNet(); go('shop');
 }
 function logout() {
   save(true); clearInterval(hbTimer); Net.close(); ME = null; S = null; localStorage.removeItem('sc_session');
-  closeModal(); closeReveal(); $('#battle').className = ''; $('#app').hidden = true; $('#auth').hidden = false; authView('home');
+  closeModal(); closeReveal(true); $('#battle').className = ''; $('#app').hidden = true; $('#auth').hidden = false; authView('home');
 }
 $('#logout').onclick = logout;
 
 /* ===== navigation ===== */
-const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], owner: ['OWNER PANEL', '#1a5fb4'] };
+const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], quests: ['QUESTS', '#00b894'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
 function buildDD() {
-  $('#ddList').innerHTML = ['shop', 'index', 'chat', 'board', 'battles'].map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('');
+  $('#ddList').innerHTML = ['shop', 'upgrades', 'index', 'quests', 'chat', 'board', 'battles', 'settings'].map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('');
   $$('.ddi').forEach(el => el.onclick = () => { $('#dd').classList.remove('open'); go(el.dataset.p) });
 }
 $('#ddBtn').onclick = e => { e.stopPropagation(); $('#dd').classList.toggle('open') };
@@ -843,17 +1006,31 @@ $('#resetCoin').onclick = () => { S.setKey = null; recalc(); updateStats(); upda
 function go(p) {
   if (p === 'owner' && !isOwner()) p = 'shop'; cur = p; $('#ddLabel').textContent = PAGES[p][0];
   $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p));
-  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, owner: renderOwner })[p]();
+  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, settings: renderSettings, owner: renderOwner })[p](); sfx('ui');
 }
 
 /* ===== clicker ===== */
-$('#coin').addEventListener('pointerdown', e => {
-  if (e.button > 0 || !S) return; const g = CPC * gm(); S.coins += g; S.clicks++;
-  const f = document.createElement('div'); f.className = 'floaty'; f.textContent = '+' + fmtCps(g); f.style.left = (e.clientX - 12) + 'px'; f.style.top = (e.clientY - 20) + 'px'; document.body.appendChild(f); setTimeout(() => f.remove(), 900);
+let lastClickSfx = 0, holdT = null, holdPt = { x: 0, y: 0 };
+function clickCoin(x, y) {
+  if (!S) return; let g = CPC * gm(), crit = false; const cl = (S.up.crit || 0) * .05;
+  if (cl && Math.random() < cl) { g *= 5; crit = true }
+  S.coins += g; S.clicks++;
+  if (ST.floaty) { const f = document.createElement('div'); f.className = 'floaty'; f.textContent = '+' + fmtCps(g) + (crit ? '!' : ''); f.style.left = (x - 12) + 'px'; f.style.top = (y - 20) + 'px'; if (crit) f.style.color = '#ffe45c'; document.body.appendChild(f); setTimeout(() => f.remove(), 900) }
   const c = $('#coin'); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); updateStats(); save();
+  const n = performance.now(); if (ST.clickSfx && n - lastClickSfx > 45) { lastClickSfx = n; sfx(crit ? 'crit' : 'click') }
+}
+$('#coin').addEventListener('pointerdown', e => {
+  if (e.button > 0) return; holdPt = { x: e.clientX, y: e.clientY }; clickCoin(e.clientX, e.clientY);
+  if (ST.holdClick) { clearInterval(holdT); holdT = setInterval(() => clickCoin(holdPt.x, holdPt.y), 140) }
 });
-setInterval(() => { if (!S) return; S.coins += CPS * gm() / 10; updateStats() }, 100);
-window.addEventListener('beforeunload', () => save(true));
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => $('#coin').addEventListener(ev, () => clearInterval(holdT)));
+document.addEventListener('keydown', e => {
+  if (!ST.keys || !S || e.repeat) return;
+  if ((e.key === ' ' || e.key === 'Enter') && !/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName) && !$('#modal-root').children.length && !$('#reveal').classList.contains('on') && !$('#battle').classList.contains('on') && cur !== 'chat') { e.preventDefault(); const r = $('#coin').getBoundingClientRect(); clickCoin(r.left + r.width / 2, r.top + r.height / 2) }
+});
+setInterval(() => { if (!S) return; S.coins += CPS * gm() / 10; if (S.coins > S.peak) S.peak = S.coins; updateStats() }, 100);
+setInterval(() => { if (S) tickChecks() }, 1000);
+window.addEventListener('beforeunload', () => { if (S) S.lastSeen = Date.now(); save(true) });
 
 /* ===== shop & pack opening ===== */
 const today = () => new Date().toDateString();
@@ -874,6 +1051,7 @@ function previewPack(p) {
 }
 function roll(p) {
   if (S.nextOpen) { const n = S.nextOpen; S.nextOpen = null; return { key: n.key, v: n.v } }
+  if (Math.random() * 100 < HID.charlie.pct) return { key: HID.charlie.key, v: 'n' };
   let r = Math.random() * packTotal(p), it = p.items[p.items.length - 1];
   for (const i of p.items) { r -= i.w; if (r < 0) { it = i; break } }
   let v = 'n'; if (p.variants) { let x = Math.random() * 100, acc = 0; for (const k of VROLL) { acc += VAR[k].p; if (x < acc) { v = k; break } } }
@@ -883,22 +1061,37 @@ function openPack(p) {
   if (dailyLeft(p) <= 0) return toast('Daily limit reached for ' + p.name, 'bad');
   if (S.coins < p.cost) return toast('Not enough coins!', 'bad');
   S.coins -= p.cost; if (p.daily) S.daily.counts[p.id] = (S.daily.counts[p.id] || 0) + 1;
-  const r = roll(p); addItem(r.key, r.v, 1); S.opens++; updateStats(); updateCoin(); save(true);
-  showReveal(r, p); if (cur === 'shop') renderShop();
+  const r = roll(p); addItem(r.key, r.v, 1); S.opens++; S.packOpens[p.id] = (S.packOpens[p.id] || 0) + 1;
+  let note = ''; const it0 = ITEMS[r.key];
+  if (ST.autoSellCommon && it0.rarity === 'common' && r.v === 'n' && (S.inv[invKey(r.key, 'n')] || 0) > 1) { sell(invKey(r.key, 'n'), 1); note = 'Duplicate Common auto-sold' }
+  updateStats(); updateCoin(); save(true); sfx('open');
+  showReveal(r, p, note); tickChecks(); if (cur === 'shop') renderShop();
 }
-function closeReveal() { const r = $('#reveal'); r.className = ''; r.innerHTML = '' }
+let revealLock = 0, lockT = null;
+function closeReveal(force) {
+  if (!force && Date.now() < revealLock) return;
+  revealLock = 0; clearInterval(lockT); const r = $('#reveal'); r.className = ''; r.innerHTML = ''; r.onclick = null;
+}
 function showReveal(r, p, label) {
-  const it = ITEMS[r.key], rar = RAR[it.rarity], ik = invKey(r.key, r.v), val = sellValue(r.key, r.v), box = $('#reveal');
+  const it = ITEMS[r.key], rar = RAR[it.rarity], box = $('#reveal'), gate = RAR_ORDER.indexOf(it.rarity) >= 4;
+  if (it.hid && !label) label = 'SECRET UNLOCKED!';
   box.className = 'on' + (rar.fancy ? ' rainbow' : '');
-  const ch = fmtPct(chanceOf(it)) + (r.v !== 'n' ? ` · ${VAR[r.v].name} variant ${fmtPct(VAR[r.v].p)}` : '');
-  box.innerHTML = `${label ? `<div class="rvmsg" style="margin:0 0 10px;font-size:16px">${esc(label)}</div>` : ''}<div class="rvspot"><img class="${vcls(r.v).trim()}" src="${spriteURL(r.key)}"></div><div class="rvtag" style="background:${rar.color}">${rar.name.toUpperCase()}${r.v !== 'n' ? ' · ' + VAR[r.v].name.toUpperCase() : ''}</div><div class="rvname" style="--rc:${rar.color}">${esc(it.name)}</div><div class="rvchance">Chance: ${ch}</div><div class="mbtns"><button class="btn green" id="rvKeep">KEEP</button><button class="btn gold" id="rvSell">SELL +${fmt(val)}</button>${p ? `<button class="btn" id="rvAgain">OPEN AGAIN (${fmt(p.cost)})</button>` : ''}</div>`;
-  $('#rvKeep').onclick = closeReveal;
-  $('#rvSell').onclick = () => { if (sell(ik, 1)) toast(`Sold ${it.name} for ${fmt(val)} coins`, 'good'); closeReveal(); if (cur === 'index') renderIndex() };
-  if (p) $('#rvAgain').onclick = () => { closeReveal(); openPack(p) };
+  const ch = it.hid ? (it.pct ? fmtPct(it.pct) : 'Secret reward') : fmtPct(chanceOf(it)) + (r.v !== 'n' ? ` · ${VAR[r.v].name} variant ${fmtPct(VAR[r.v].p)}` : '');
+  box.innerHTML = `${label ? `<div class="rvmsg" style="margin:0 0 10px;font-size:16px">${esc(label)}</div>` : ''}<div class="rvspot"><img class="${vcls(r.v).trim()}" src="${spriteURL(r.key)}"></div><div class="rvtag" style="background:${rar.color}">${rar.name.toUpperCase()}${r.v !== 'n' ? ' · ' + VAR[r.v].name.toUpperCase() : ''}</div><div class="rvname" style="--rc:${rar.color}">${esc(it.name)}</div><div class="rvchance">Chance: ${ch}</div><div class="rvbonus">${bonusText(r.key, r.v)}</div><div class="mbtns"><button class="btn green" id="rvKeep">KEEP</button>${p ? `<button class="btn" id="rvAgain">OPEN AGAIN (${fmt(p.cost)})</button>` : ''}</div>`;
+  const keep = $('#rvKeep'), again = $('#rvAgain');
+  keep.onclick = () => closeReveal();
+  if (again) again.onclick = () => { closeReveal(); openPack(p) };
   box.onclick = e => { if (e.target === box) closeReveal() };
+  sfx('reveal:' + it.rarity);
+  if (gate) {
+    revealLock = Date.now() + 3000; const btns = [keep, again].filter(Boolean), base = btns.map(b => b.textContent); clearInterval(lockT);
+    const upd = () => { const left = Math.ceil((revealLock - Date.now()) / 1000); if (left > 0) btns.forEach(b => { b.disabled = true; b.textContent = 'WAIT ' + left + '...' }); else { clearInterval(lockT); btns.forEach((b, i) => { b.disabled = false; b.textContent = base[i] }) } };
+    upd(); lockT = setInterval(upd, 200);
+  }
   confetti(rar.fancy ? ['#ff3b3b', '#ff9d00', '#fff200', '#38e24a', '#18d4ff', '#b13bff', '#fff'] : [rar.color, '#ffffff', shade(rar.color, .4)], rar.fancy ? 260 : 140);
 }
 function confetti(colors, n) {
+  if (!ST.confetti) return;
   const c = $('#confetti'), x = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
   const ps = Array.from({ length: n }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * .7, vx: (Math.random() - .5) * 2, vy: 2 + Math.random() * 4, s: 5 + Math.random() * 7, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: colors[Math.floor(Math.random() * colors.length)] }));
   const t0 = performance.now();
@@ -911,29 +1104,37 @@ function confetti(colors, n) {
 
 /* ===== index ===== */
 const FLAV = { common: ['A familiar sight.', 'Nothing fancy, but it clicks.', 'Easy to find, easy to love.'], rare: ['Not everyone has one of these.', 'A nice find!', 'Starting to get interesting.'], epic: ['Collectors take notice.', 'Pulses with strange energy.', 'A real prize.'], legendary: ['Tales are told about this one.', 'Gleams like treasure.', 'A true legend.'], chroma: ['Shimmers in every color.', 'Hard to look away from.', 'Practically glowing.'], mystical: ['Whispers of ancient power.', 'Almost impossible to find.', 'Mysterious and rare.'], supreme: ['Rules over the rest.', 'Crimson and commanding.'], secret: ['Wasn\'t supposed to be found.', 'Shhh... you never saw this.'], omega: ['The end of the line.', 'Nothing is rarer than this.'] };
-function describe(it) { const f = FLAV[it.rarity], r = RAR[it.rarity]; return `${it.name} from the ${it.pack.name}. ${f[hash(it.key) % f.length]} Drop chance ${fmtPct(chanceOf(it))}. Set it as your coin for +${fmtCps(Math.max(1, r.cpc))} coins per click, and collecting it adds +${r.cps} coins per second.` }
+function describe(it) {
+  if (it.hid) return `${it.name} - a hidden sub. ${it.how} Owning it gives ${bonusText(it.key, 'n')}.`;
+  const f = FLAV[it.rarity];
+  return `${it.name} from the ${it.pack.name}. ${f[hash(it.key) % f.length]} Drop chance ${fmtPct(chanceOf(it))}. Owning it gives ${bonusText(it.key, 'n')} (rarer subs give more; extra copies and variants boost it).`;
+}
 function renderIndex() {
-  const owned = new Set(Object.keys(S.inv).filter(k => S.inv[k] > 0).map(k => splitInv(k)[0])), total = Object.keys(ITEMS).length;
-  const cnt = k => Object.keys(S.inv).filter(i => splitInv(i)[0] === k).reduce((a, i) => a + S.inv[i], 0);
-  $('#page').innerHTML = `<div class="phead"><h2>INDEX</h2><div class="idxhead"><span class="rtag" style="background:var(--deep)">${owned.size}/${total} COLLECTED</span><button class="btn gold" id="dupes">SELL ALL DUPLICATES</button></div></div>` +
-    PACKS.map(p => { const items = [...p.items].sort(byRar), have = items.filter(i => owned.has(i.key)).length; return `<div class="idxpack"><h3 style="background:${p.color}">${esc(p.name.toUpperCase())} <span style="margin-left:auto;font-size:9px">${have}/${items.length}</span></h3><div class="idxgrid">${items.map(it => { const c = cnt(it.key), rc = RAR[it.rarity].color; return `<div class="tile${c ? '' : ' locked'}" data-k="${esc(it.key)}" style="--rc:${rc}">${c ? `<span class="cnt">x${c}</span>` : ''}<img src="${spriteURL(it.key)}"><div class="tn">${c ? esc(it.name) : '???'}</div></div>` }).join('')}</div></div>` }).join('');
+  const keys = Object.keys(S.inv).filter(k => S.inv[k] > 0), owned = new Set(keys.map(k => splitInv(k)[0]));
+  const total = Object.values(ITEMS).filter(i => !i.hid).length, ownedN = [...owned].filter(k => ITEMS[k] && !ITEMS[k].hid).length;
+  const cnt = k => keys.filter(i => splitInv(i)[0] === k).reduce((a, i) => a + S.inv[i], 0);
+  const tile = (it, c) => { const rc = RAR[it.rarity].color; return `<div class="tile${c ? '' : ' locked'}" data-k="${esc(it.key)}" style="--rc:${rc}">${c ? `<span class="cnt">x${c}</span>` : ''}<img src="${spriteURL(it.key)}"><div class="tn">${c ? esc(it.name) : '???'}</div></div>` };
+  const hid = HIDDEN.filter(x => owned.has(x.key));
+  $('#page').innerHTML = `<div class="phead"><h2>INDEX</h2><div class="idxhead"><span class="rtag" style="background:var(--deep)">${ownedN}/${total} COLLECTED</span><button class="btn gold" id="dupes">SELL ALL DUPLICATES</button></div></div>` +
+    PACKS.map(p => { const items = [...p.items].sort(byRar), have = items.filter(i => owned.has(i.key)).length; return `<div class="idxpack"><h3 style="background:${p.color}">${esc(p.name.toUpperCase())} <span style="margin-left:auto;font-size:9px">${have}/${items.length}</span></h3><div class="idxgrid">${items.map(it => tile(it, cnt(it.key))).join('')}</div></div>` }).join('') +
+    (hid.length ? `<div class="idxpack"><h3 style="background:#14b8a6">HIDDEN SUBS</h3><div class="idxgrid">${hid.map(it => tile(it, cnt(it.key))).join('')}</div></div>` : '');
   $$('.tile:not(.locked)').forEach(el => el.onclick = () => itemModal(el.dataset.k));
   $('#dupes').onclick = sellDupes;
 }
 function itemModal(k, vSel) {
   const it = ITEMS[k], r = RAR[it.rarity], vs = Object.keys(VAR).filter(v => S.inv[invKey(k, v)] > 0);
   if (!vs.length) return closeModal(); const v = vs.includes(vSel) ? vSel : vs[0], ik = invKey(k, v), c = S.inv[ik], val = sellValue(k, v), isSet = S.setKey === ik;
-  const m = modal(`<div class="idetail"><span class="rtag" style="background:${r.color}">${r.name.toUpperCase()}</span><h3 style="margin-top:12px;font-size:14px;line-height:1.5">${esc(it.name)}</h3><img class="big${vcls(v)}" src="${spriteURL(k)}"><div class="small">${esc(it.pack.name)} · You own x${c}</div>${vs.length > 1 ? `<div class="chips">${vs.map(x => `<span class="chip${x === v ? ' on' : ''}" data-v="${x}">${VAR[x].name} x${S.inv[invKey(k, x)]}</span>`).join('')}</div>` : (v !== 'n' ? `<div class="chips"><span class="chip on">${VAR[v].name}</span></div>` : '')}<p style="margin:10px 0">${esc(describe(it))}</p><div class="mbtns"><button class="btn gold" id="imSell">SELL +${fmt(val)}</button><button class="btn ${isSet ? 'alt' : 'green'}" id="imSet">${isSet ? 'EQUIPPED' : 'SET'}</button></div></div>`);
+  const m = modal(`<div class="idetail"><span class="rtag" style="background:${r.color}">${r.name.toUpperCase()}</span><h3 style="margin-top:12px;font-size:14px;line-height:1.5">${esc(it.name)}</h3><img class="big${vcls(v)}" src="${spriteURL(k)}"><div class="small">${esc(it.pack.name)} · You own x${c}</div>${vs.length > 1 ? `<div class="chips">${vs.map(x => `<span class="chip${x === v ? ' on' : ''}" data-v="${x}">${VAR[x].name} x${S.inv[invKey(k, x)]}</span>`).join('')}</div>` : (v !== 'n' ? `<div class="chips"><span class="chip on">${VAR[v].name}</span></div>` : '')}<p style="margin:10px 0">${esc(describe(it))}</p><div class="mbtns">${it.hid ? '' : `<button class="btn gold" id="imSell">SELL +${fmt(val)}</button>`}<button class="btn ${isSet ? 'alt' : 'green'}" id="imSet">${isSet ? 'EQUIPPED' : 'USE AS COIN'}</button></div></div>`);
   $$('.chip', m).forEach(ch => ch.onclick = () => itemModal(k, ch.dataset.v));
-  $('#imSell', m).onclick = () => { sell(ik, 1); toast(`Sold for ${fmt(val)} coins`, 'good'); S.inv[ik] > 0 ? itemModal(k, v) : closeModal(); updateCoin(); renderIndex() };
+  if ($('#imSell', m)) $('#imSell', m).onclick = () => { sell(ik, 1); toast(`Sold for ${fmt(val)} coins`, 'good'); S.inv[ik] > 0 ? itemModal(k, v) : closeModal(); updateCoin(); renderIndex() };
   $('#imSet', m).onclick = () => { S.setKey = ik; recalc(); updateStats(); updateCoin(); save(true); toast('Your coin is now ' + it.name, 'good'); itemModal(k, v) };
 }
 function sellDupes() {
-  let tot = 0, n = 0; for (const ik in S.inv) if (S.inv[ik] > 1) { const [k, v] = splitInv(ik); if (ITEMS[k]) { tot += sellValue(k, v) * (S.inv[ik] - 1); n += S.inv[ik] - 1 } }
+  let tot = 0, n = 0; for (const ik in S.inv) if (S.inv[ik] > 1) { const [k, v] = splitInv(ik); if (ITEMS[k] && !ITEMS[k].hid) { tot += sellValue(k, v) * (S.inv[ik] - 1); n += S.inv[ik] - 1 } }
   if (!n) return toast('No duplicates to sell.');
   const m = modal(`<div class="idetail"><h3>SELL DUPLICATES?</h3><p>Sell ${n} extra copies for <b>${fmt(tot)}</b> coins? You'll keep one of everything.</p><div class="mbtns"><button class="btn gold" id="ydup">SELL ALL</button><button class="btn alt" id="ndup">CANCEL</button></div></div>`);
   $('#ndup', m).onclick = closeModal;
-  $('#ydup', m).onclick = () => { for (const ik in S.inv) if (S.inv[ik] > 1) S.inv[ik] = 1; S.coins += tot; recalc(); updateStats(); save(true); closeModal(); toast(`Sold ${n} duplicates for ${fmt(tot)} coins!`, 'good'); renderIndex() };
+  $('#ydup', m).onclick = () => { for (const ik in S.inv) if (S.inv[ik] > 1 && !(ITEMS[splitInv(ik)[0]] || {}).hid) S.inv[ik] = 1; S.coins += tot; recalc(); updateStats(); save(true); closeModal(); toast(`Sold ${n} duplicates for ${fmt(tot)} coins!`, 'good'); renderIndex() };
 }
 
 /* ===== chat ===== */
@@ -943,7 +1144,7 @@ function fileHTML(f) { if (!f || !SAFE_DATA.test(f.d || '')) return ''; if (/^da
 function chatHTML(d) { return `<div class="msg${d.u === ME.username ? ' mine' : ''}"><div class="mh">${nm(d.u)}<span class="mt">${new Date(d.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>${d.t ? `<div>${esc(d.t)}</div>` : ''}${fileHTML(d.f)}</div>` }
 function onChat(m) {
   const d = m.data; if (!d || !d.id || CHAT.some(x => x.id === d.id) || typeof d.u !== 'string') return;
-  d.t = d.t ? String(d.t).slice(0, 400) : ''; CHAT.push(d); if (CHAT.length > 150) CHAT.shift();
+  d.t = d.t ? String(d.t).slice(0, 400) : ''; CHAT.push(d); if (CHAT.length > 150) CHAT.shift(); if (ME && d.u !== ME.username && ST.chatPing) sfx('chat');
   if (cur === 'chat') { const l = $('#chatlog'); if (l) { const atEnd = l.scrollHeight - l.scrollTop - l.clientHeight < 80; l.insertAdjacentHTML('beforeend', chatHTML(d)); if (atEnd || d.u === ME.username) l.scrollTop = l.scrollHeight } }
 }
 function renderChat() {
@@ -1131,13 +1332,13 @@ function playEvents(ev, i) {
   if (!BT || !$('#btLog')) return; if (i >= ev.length) { BT.busy = false; if (BT.B.over) { const won = BT.B.winner === BT.mySide; return setTimeout(() => finishBattle(won), 600) } $('#btLog').textContent = 'Choose your move.'; setMovesEnabled(true); return }
   const e = ev[i], mine = e.s === BT.mySide, ae = $('#' + (mine ? 'm' : 'f') + 'Img'), te = $('#' + (mine ? 'f' : 'm') + 'Img');
   $('#btLog').textContent = e.txt || ''; const fx = (el, c) => { if (!el) return; el.classList.remove(c); void el.offsetWidth; el.classList.add(c) };
-  if (e.k === 'hit') { fx(ae, 'lunge'); setTimeout(() => fx(te, 'shake'), 150) } else if (e.k === 'heal') fx(ae, 'glow');
+  if (e.k === 'hit') { sfx('hit'); fx(ae, 'lunge'); setTimeout(() => fx(te, 'shake'), 150) } else if (e.k === 'heal') { sfx('heal'); fx(ae, 'glow') } else if (e.k === 'guard') sfx('guard');
   if (e.sn) { paint(e.sn); BT.shown = e.sn } setTimeout(() => playEvents(ev, i + 1), e.k === 'end' ? 100 : 950);
 }
 function finishBattle(won, note) {
   if (!BT) return; const online = BT.mode === 'online';
   if (won) { S.wins++; S.coins += online ? 80 : 25; S.rank += online ? 25 : 10 } else { S.losses++; S.rank = Math.max(0, S.rank - (online ? 15 : 5)) }
-  updateStats(); save(true); heartbeat(); setMovesEnabled(false);
+  updateStats(); save(true); heartbeat(); setMovesEnabled(false); sfx(won ? 'win' : 'lose'); tickChecks();
   const c = document.createElement('div'); c.className = 'bcenter';
   c.innerHTML = `<div class="big">${won ? 'YOU WIN!' : 'YOU LOST'}</div><div>${note ? esc(note) + '<br>' : ''}${won ? `+${online ? 80 : 25} coins · +${online ? 25 : 10} rank` : `-${online ? 15 : 5} rank`}</div><button class="btn" id="btBack">BACK</button>`;
   bEl().appendChild(c); $('#btBack').onclick = endBattleUI; if (won) confetti(['#ffc800', '#fff', '#3aa0ff'], 140);
@@ -1202,7 +1403,188 @@ function editPack(id) {
 function pushPacks() { lsSet('sc_packedits', PACKEDITS); applyOverrides(PACKEDITS); adminSend('*', 'packs', { ov: PACKEDITS }, true); renderOwner() }
 setInterval(() => { if (isOwner() && PACKS.length) { /* re-announce pack edits to latecomers every 2 min */ if (Object.keys(PACKEDITS).length && Date.now() % 120000 < 5000) adminSend('*', 'packs', { ov: PACKEDITS }, true) } }, 5000);
 
+/* ===== bonuses: each sub gives EITHER coins per click OR coins per second ===== */
+const bonusKind = k => hash('bk' + k) % 2 ? 'cpc' : 'cps';
+function bonusVal(k, v = 'n') { const r = RAR[ITEMS[k].rarity], vf = Math.sqrt((VAR[v] || VAR.n).mult); return bonusKind(k) === 'cpc' ? r.cpc * .5 * vf : r.cps * vf }
+function bonusText(k, v) { const x = bonusVal(k, v); return bonusKind(k) === 'cpc' ? `+${fmtCps(x)} coins per click` : `+${fmtCps(x)} coins per second` }
+
+/* ===== sound ===== */
+const Snd = {
+  ctx: null,
+  get() { if (this.ctx === null) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)() } catch (e) { this.ctx = false } } if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); return this.ctx },
+  tone(f, d, type = 'square', vol = .2, when = 0, slide = 0) {
+    const c = this.get(); if (!c) return; const t = c.currentTime + when, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+    const v = Math.max(.0002, vol * ST.vol / 100); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + d + .03);
+  },
+  noise(d, vol = .15, when = 0, hp = 800) {
+    const c = this.get(); if (!c) return; const len = Math.floor(c.sampleRate * d), buf = c.createBuffer(1, len, c.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = buf; f.type = 'highpass'; f.frequency.value = hp; g.gain.value = vol * ST.vol / 100;
+    s.connect(f); f.connect(g); g.connect(c.destination); s.start(c.currentTime + when);
+  }
+};
+document.addEventListener('pointerdown', () => { if (ST.sfx) Snd.get() }, { passive: true });
+function sfx(name) {
+  if (!ST.sfx || ST.vol <= 0) return; const T = (f, d, ty, v, w, s) => Snd.tone(f, d, ty, v, w, s), arp = (ns, st, ty, v) => ns.forEach((n, i) => T(n, .22, ty || 'square', v || .2, i * st));
+  try {
+    if (name.startsWith('reveal:')) {
+      const idx = Math.max(0, RAR_ORDER.indexOf(name.slice(7))), sc = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 2093], n = Math.min(2 + idx, 10);
+      for (let i = 0; i < n; i++) T(sc[i], .25 + idx * .02, idx >= 4 ? 'triangle' : 'square', .17, i * Math.max(.05, .11 - idx * .005));
+      if (idx >= 4) { T(1047, .9, 'sine', .15, n * .08); T(1568, .9, 'sine', .12, n * .08 + .02) } if (idx >= 3) Snd.noise(.3, .06, 0, 3000); return;
+    }
+    switch (name) {
+      case 'click': T(520 + Math.random() * 120, .07, 'square', .12, 0, 260); break;
+      case 'crit': T(900, .1, 'square', .16, 0, 600); T(1300, .14, 'triangle', .16, .06); break;
+      case 'ui': T(700, .05, 'triangle', .12); break;
+      case 'err': T(160, .18, 'sawtooth', .14); break;
+      case 'open': T(180, .35, 'sawtooth', .12, 0, 700); Snd.noise(.25, .08, 0); break;
+      case 'sell': T(1200, .08, 'square', .13); T(1700, .14, 'square', .13, .07); break;
+      case 'buy': arp([660, 880, 1320], .06, 'triangle', .18); break;
+      case 'win': arp([523, 659, 784, 1047, 1319], .1, 'square', .18); break;
+      case 'lose': arp([392, 330, 262, 196], .16, 'triangle', .2); break;
+      case 'hit': Snd.noise(.12, .2, 0, 300); T(140, .12, 'square', .18, 0, -80); break;
+      case 'heal': arp([523, 659, 784], .07, 'sine', .2); break;
+      case 'guard': T(220, .12, 'triangle', .18); break;
+      case 'chat': T(880, .08, 'sine', .16); T(1175, .1, 'sine', .16, .07); break;
+      case 'daily': arp([523, 659, 784, 1047], .09, 'triangle', .2); break;
+      case 'ach': arp([784, 988, 1175, 1568], .08, 'square', .16); break;
+    }
+  } catch (e) {}
+}
+const saveST = () => { try { localStorage.setItem('sc_settings', JSON.stringify(ST)) } catch (e) {} };
+function applySettings() {
+  document.body.dataset.theme = ST.theme; document.body.dataset.motion = ST.motion ? 'on' : 'off';
+  const a = $('#app'); if (a) a.style.zoom = (ST.scale || 100) / 100;
+}
+
+/* ===== hidden subs, achievements, checks ===== */
+const ownsHidden = id => (S.inv[invKey('hidden/' + id, 'n')] || 0) > 0, pendingH = new Set();
+function grantHidden(id) {
+  if (pendingH.has(id)) return; pendingH.add(id);
+  const fire = () => {
+    if ($('#reveal').classList.contains('on')) return setTimeout(fire, 900);
+    pendingH.delete(id); if (!S || ownsHidden(id)) return;
+    addItem('hidden/' + id, 'n', 1); updateStats(); save(true); showReveal({ key: 'hidden/' + id, v: 'n' }, null, 'SECRET UNLOCKED!'); if (cur === 'index') renderIndex();
+  }; fire();
+}
+function collStats() { let uniq = 0, best = -1; const seen = new Set(); for (const ik in S.inv) if (S.inv[ik] > 0) { const k = splitInv(ik)[0]; if (ITEMS[k] && !seen.has(k)) { seen.add(k); if (!ITEMS[k].hid) uniq++; best = Math.max(best, RAR_ORDER.indexOf(ITEMS[k].rarity)) } } return { uniq, best } }
+const ACH = [
+  ['c100', 'Warm Up', 'Click the coin 100 times', s => s.clicks >= 100, 50],
+  ['c1k', 'Finger Workout', 'Click 1,000 times', s => s.clicks >= 1000, 500],
+  ['c10k', 'Clicker Pro', 'Click 10,000 times', s => s.clicks >= 10000, 5000],
+  ['p1', 'First Pack', 'Open your first pack', s => s.opens >= 1, 50],
+  ['p25', 'Pack Fan', 'Open 25 packs', s => s.opens >= 25, 300],
+  ['p100', 'Pack Addict', 'Open 100 packs', s => s.opens >= 100, 2000],
+  ['p1k', 'Pack Legend', 'Open 1,000 packs', s => s.opens >= 1000, 25000],
+  ['k1', 'Pocket Change', 'Hold 1,000 coins at once', s => s.peak >= 1e3, 100],
+  ['k2', 'Rich', 'Hold 100,000 coins at once', s => s.peak >= 1e5, 5000],
+  ['k3', 'Millionaire', 'Hold 1,000,000 coins at once', s => s.peak >= 1e6, 50000],
+  ['k4', 'Tycoon', 'Hold 10,000,000 coins at once', s => s.peak >= 1e7, 250000],
+  ['u25', 'Collector', 'Collect 25 different subs', (s, c) => c.uniq >= 25, 1000],
+  ['u100', 'Curator', 'Collect 100 different subs', (s, c) => c.uniq >= 100, 10000],
+  ['u250', 'Museum', 'Collect 250 different subs', (s, c) => c.uniq >= 250, 100000],
+  ['l1', 'Shiny', 'Own a Legendary or better', (s, c) => c.best >= 3, 1000],
+  ['ch1', 'Chroma Hunter', 'Own a Chroma or better', (s, c) => c.best >= 4, 5000],
+  ['my1', 'Mystical', 'Own a Mystical or better', (s, c) => c.best >= 5, 25000],
+  ['w1', 'First Blood', 'Win a battle', s => s.wins >= 1, 100],
+  ['w10', 'Fighter', 'Win 10 battles', s => s.wins >= 10, 1000],
+  ['w50', 'Champion', 'Win 50 battles', s => s.wins >= 50, 10000],
+  ['s50', 'Merchant', 'Sell 50 subs', s => s.sold >= 50, 500],
+  ['up5', 'Upgraded', 'Buy 5 upgrade levels', s => Object.values(s.up).reduce((a, b) => a + b, 0) >= 5, 500]
+];
+function checkAch() {
+  const c = collStats(); let any = false;
+  for (const a of ACH) { if (S.ach[a[0]]) continue; let ok = false; try { ok = a[3](S, c) } catch (e) {} if (ok) { S.ach[a[0]] = 1; S.coins += a[4]; any = true; toast(`Achievement: ${a[1]} (+${fmt(a[4])} coins)`, 'good'); sfx('ach') } }
+  if (any) { updateStats(); save(true); if (cur === 'quests') renderQuests() }
+}
+function tickChecks() {
+  if (!S) return; S.lastSeen = Date.now(); if (S.coins > S.peak) S.peak = S.coins;
+  if (!ownsHidden('aarav') && S.peak >= 1e8) grantHidden('aarav');
+  if (!ownsHidden('holden') && (S.packOpens.shadow || 0) >= 1000) grantHidden('holden');
+  if (!ownsHidden('subzero') && S.wins >= 100) grantHidden('subzero');
+  checkAch();
+}
+function offlineEarn() {
+  const lv = S.up.off || 0; if (!lv || !S.lastSeen) return;
+  const secs = Math.min((Date.now() - S.lastSeen) / 1000, lv * 600), gain = secs * CPS * .5;
+  if (gain >= 1) { S.coins += gain; setTimeout(() => toast(`Welcome back! +${fmt(gain)} coins while you were away`, 'good'), 600) }
+}
+
+/* ===== upgrades ===== */
+const UPG = [
+  { id: 'click', name: 'Stronger Fingers', desc: '+1 coin per click per level', base: 50, mul: 1.55, max: 100 },
+  { id: 'auto', name: 'Auto Clicker', desc: '+1 coin per second per level', base: 100, mul: 1.5, max: 100 },
+  { id: 'gold', name: 'Golden Touch', desc: '+10% to ALL coins earned per level', base: 600, mul: 2.1, max: 25 },
+  { id: 'crit', name: 'Critical Clicks', desc: '+5% chance per level for a x5 click', base: 400, mul: 1.9, max: 10 },
+  { id: 'off', name: 'Offline Earnings', desc: 'Earn coins while away: +10 min of time (at 50% speed) per level', base: 800, mul: 2, max: 12 }
+];
+const upCost = (u, l) => Math.round(u.base * Math.pow(u.mul, l));
+function buyUpgrade(id) {
+  const u = UPG.find(x => x.id === id), l = S.up[id] || 0, c = upCost(u, l); if (l >= u.max) return;
+  if (S.coins < c) { sfx('err'); return toast('Not enough coins!', 'bad') }
+  S.coins -= c; S.up[id] = l + 1; recalc(); updateStats(); save(true); sfx('buy'); renderUpgrades(); checkAch();
+}
+function renderUpgrades() {
+  $('#page').innerHTML = `<div class="phead"><h2>UPGRADES</h2><span class="rtag" style="background:var(--deep)">${fmtCps(CPC)} / CLICK · ${fmtCps(CPS)} / SEC</span></div><div class="ugrid">${UPG.map(u => { const l = S.up[u.id] || 0, mx = l >= u.max, c = upCost(u, l); return `<div class="panel up"><h3>${esc(u.name)} <span class="rtag" style="background:var(--deep)">LV ${l}${mx ? ' MAX' : ''}</span></h3><div>${esc(u.desc)}</div><button class="btn ${S.coins >= c && !mx ? 'green' : 'alt'}" data-u="${u.id}" ${mx ? 'disabled' : ''}>${mx ? 'MAXED' : 'BUY - ' + fmt(c)}</button></div>` }).join('')}</div>`;
+  $$('[data-u]').forEach(b => b.onclick = () => buyUpgrade(b.dataset.u));
+}
+
+/* ===== quests ===== */
+function dailyInfo() {
+  const t = new Date().toDateString(), y = new Date(Date.now() - 864e5).toDateString(), L = S.streak.last, can = L !== t, next = can ? (L === y ? S.streak.n + 1 : 1) : S.streak.n;
+  return { can, next, reward: 300 + 200 * Math.min(Math.max(next - 1, 0), 9) + Math.round(CPS * 300) };
+}
+function claimDaily() { const d = dailyInfo(); if (!d.can) return; S.streak = { last: new Date().toDateString(), n: d.next }; S.coins += d.reward; sfx('daily'); toast(`Daily reward: +${fmt(d.reward)} coins (day ${d.next} streak)`, 'good'); updateStats(); save(true); renderQuests() }
+function renderQuests() {
+  const d = dailyInfo(), done = ACH.filter(a => S.ach[a[0]]).length;
+  $('#page').innerHTML = `<div class="phead"><h2>QUESTS</h2><span class="rtag" style="background:var(--deep)">${done}/${ACH.length} DONE</span></div>
+  <div class="panel" style="margin-bottom:16px"><h3>DAILY REWARD</h3><div class="orow"><div style="flex:1;font-weight:700">Streak: ${S.streak.n} day${S.streak.n === 1 ? '' : 's'}<div class="small">${d.can ? `Today's reward: ${fmt(d.reward)} coins (grows every day in a row)` : 'Claimed today. Come back tomorrow to keep the streak!'}</div></div><button class="btn ${d.can ? 'gold' : 'alt'}" id="dClaim" ${d.can ? '' : 'disabled'}>${d.can ? 'CLAIM' : 'CLAIMED'}</button></div></div>
+  <div class="panel"><h3>ACHIEVEMENTS</h3>${ACH.map(a => `<div class="ach${S.ach[a[0]] ? ' done' : ''}"><span class="ck">${S.ach[a[0]] ? '✔' : '•'}</span><div style="flex:1"><b>${esc(a[1])}</b><div class="small">${esc(a[2])}</div></div><span class="rtag" style="background:#ffc800;color:#3a2a00;text-shadow:none">+${fmt(a[4])}</span></div>`).join('')}</div>`;
+  if ($('#dClaim')) $('#dClaim').onclick = claimDaily;
+}
+
+/* ===== settings ===== */
+const SETUI = [
+  ['SOUND', [['sfx', 'tog', 'Sound effects'], ['vol', 'rng', 'Volume', 0, 100, '%'], ['clickSfx', 'tog', 'Click sounds'], ['chatPing', 'tog', 'Ping when someone chats']]],
+  ['LOOK & FEEL', [['theme', 'sel', 'Theme', { sky: 'Sky', sunset: 'Sunset', forest: 'Forest', candy: 'Candy', midnight: 'Midnight' }], ['scale', 'rng', 'Interface size', 80, 130, '%'], ['motion', 'tog', 'Animations'], ['floaty', 'tog', 'Floating +numbers when clicking'], ['confetti', 'tog', 'Confetti'], ['numfmt', 'sel', 'Number format', { short: 'Short (1.2M)', full: 'Full (1,200,000)' }]]],
+  ['GAMEPLAY', [['holdClick', 'tog', 'Hold the coin to keep clicking'], ['keys', 'tog', 'Space / Enter clicks the coin'], ['autoSellCommon', 'tog', 'Auto-sell duplicate Common pulls'], ['instant', 'stog', 'Instant open (skip pack preview)']]]
+];
+function renderSettings() {
+  const row = (k, type, label, a, b, c) => {
+    let ctl;
+    if (type === 'tog') ctl = `<span class="sw"><input type="checkbox" data-s="${k}" ${ST[k] ? 'checked' : ''}><i></i></span>`;
+    else if (type === 'stog') ctl = `<span class="sw"><input type="checkbox" data-ss="${k}" ${S[k] ? 'checked' : ''}><i></i></span>`;
+    else if (type === 'rng') ctl = `<span style="display:flex;gap:8px;align-items:center"><input type="range" data-s="${k}" min="${a}" max="${b}" value="${ST[k]}"><b class="px" style="font-size:9px;min-width:50px;text-align:right" id="rv_${k}">${ST[k]}${c || ''}</b></span>`;
+    else ctl = `<select data-s="${k}">${Object.entries(a).map(([v, n]) => `<option value="${v}"${ST[k] === v ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+    return `<div class="setrow"><label>${esc(label)}</label>${ctl}</div>`;
+  };
+  const code = (() => { try { return btoa(unescape(encodeURIComponent(JSON.stringify(S)))) } catch (e) { return '' } })();
+  $('#page').innerHTML = `<div class="phead"><h2>SETTINGS</h2></div>` + SETUI.map(([t, rows]) => `<div class="panel osec"><h3>${t}</h3>${rows.map(r => row(...r)).join('')}${t === 'SOUND' ? '<div class="orow" style="margin-top:10px"><button class="btn sm" id="sTest">TEST SOUND</button></div>' : ''}</div>`).join('') +
+    `<div class="panel osec"><h3>ACCOUNT</h3><div class="setrow"><label>Signed in as</label><b>${esc(ME.username)}</b></div><div class="setrow"><label>Member since</label><span>${new Date(ME.created || Date.now()).toLocaleDateString()}</span></div><div class="setrow"><label>Packs opened / clicks</label><span>${fmt(S.opens)} / ${fmt(S.clicks)}</span></div><div class="orow" style="margin-top:10px"><button class="btn red sm" id="sOut">LOG OUT</button></div></div>
+    <div class="panel osec"><h3>SAVE DATA</h3><div class="small" style="margin-bottom:6px">Your progress lives in this browser. Copy the code to back it up or move it to another device.</div><textarea class="settext" id="sCode" readonly>${code}</textarea><div class="orow" style="margin-top:8px"><button class="btn sm" id="sCopy">COPY CODE</button></div><div class="small" style="margin:10px 0 6px">Paste a code below to load a backup (this replaces your current progress):</div><textarea class="settext" id="sImp" placeholder="Paste save code here"></textarea><div class="orow" style="margin-top:8px"><button class="btn sm green" id="sLoad">LOAD CODE</button><button class="btn sm red" id="sReset">RESET PROGRESS</button></div></div>
+    <div class="panel osec"><h3>CONTROLS</h3><div class="small">Space / Enter = click the coin · Esc = close windows · Hold the coin to auto-click · Rare pulls (Chroma and up) lock the screen for 3 seconds so you can enjoy them.</div></div>`;
+  $$('[data-s]').forEach(el => el.oninput = el.onchange = () => {
+    const k = el.dataset.s; ST[k] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? +el.value : el.value;
+    if (el.type === 'range') { const t = $('#rv_' + k); if (t) t.textContent = ST[k] + '%' }
+    saveST(); applySettings(); if (el.type !== 'range') { sfx('ui'); updateStats() }
+  });
+  $$('[data-ss]').forEach(el => el.onchange = () => { S[el.dataset.ss] = el.checked; save(true); sfx('ui') });
+  $('#sTest').onclick = () => { sfx('reveal:epic') };
+  $('#sOut').onclick = logout;
+  $('#sCopy').onclick = () => { const t = $('#sCode'); t.select(); try { navigator.clipboard.writeText(t.value) } catch (e) { document.execCommand && document.execCommand('copy') } toast('Save code copied', 'good') };
+  $('#sLoad').onclick = () => {
+    try { const o = JSON.parse(decodeURIComponent(escape(atob($('#sImp').value.trim())))); if (!o || typeof o.coins !== 'number' || typeof o.inv !== 'object') throw 0; S = Object.assign(defaultSave(), o); recalc(); updateStats(); updateCoin(); save(true); toast('Save loaded!', 'good'); renderSettings() } catch (e) { toast('That code did not work.', 'bad') }
+  };
+  $('#sReset').onclick = () => {
+    const m = modal(`<div class="idetail"><h3>RESET EVERYTHING?</h3><p>This erases your coins, subs and upgrades on this account. It cannot be undone.</p><div class="mbtns"><button class="btn red" id="rYes">YES, RESET</button><button class="btn alt" id="rNo">CANCEL</button></div></div>`);
+    $('#rNo', m).onclick = closeModal; $('#rYes', m).onclick = () => { S = defaultSave(); recalc(); updateStats(); updateCoin(); save(true); closeModal(); toast('Progress reset'); renderSettings() };
+  };
+}
+
 /* ===== boot ===== */
+applySettings();
 authView('home');
 { const A = ACCTS(), k = CONFIG.OWNER_ACCOUNT.username.toLowerCase(); A[k] = Object.assign({}, CONFIG.OWNER_ACCOUNT, { created: (A[k] && A[k].created) || Date.now() }); lsSet('sc_accounts', A) }
 (async () => { const s = lsGet('sc_session', null), a = s && ACCTS()[s]; if (a && !(BANS.includes(s) && s !== CONFIG.OWNER.toLowerCase())) enter(a) })();
