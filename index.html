@@ -229,6 +229,18 @@ body[data-theme=midnight] .phead h2,body[data-theme=midnight] .phead .small{colo
 body[data-motion=off] *{animation:none!important;transition:none!important}
 .netbadge{cursor:pointer}
 img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!important}
+
+#cmb{width:min(300px,90%);margin:8px auto 0;text-align:center}.cmbTop{display:flex;justify-content:space-between;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:4px}.cmbBar{height:12px;border:2px solid var(--deep);border-radius:8px;background:#fff;overflow:hidden}#cmbFill{display:block;height:100%;background:linear-gradient(90deg,#ff9f1c,#ffd23a);width:0}
+#coin.fz{filter:drop-shadow(0 0 16px #ffd23a) saturate(1.5)}
+.gsub{position:fixed;left:-90px;width:64px;height:64px;z-index:400;cursor:pointer;animation:gfly 9s linear forwards;filter:drop-shadow(0 0 10px #ffd23a)}.gsub img{width:100%;height:100%}.gsub.rev{left:auto;right:-90px;animation-name:gfly2}
+@keyframes gfly{to{transform:translateX(calc(100vw + 180px))}}@keyframes gfly2{to{transform:translateX(calc(-100vw - 180px))}}
+.gpanel{text-align:center}.gstat{display:flex;justify-content:center;gap:22px;margin:10px 0;font-weight:800}
+.ggrid{display:grid;gap:10px;margin:12px auto;max-width:420px}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.hole{aspect-ratio:1;border-radius:50%;background:radial-gradient(#5a3a1a 55%,#3a2410);border:3px solid var(--deep);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;user-select:none}.hole img{width:80%;height:80%;pointer-events:none}.hole.good{background:#35c75a}.hole.bad{background:#ff5a5f}
+.mcard{aspect-ratio:1;position:relative;cursor:pointer;perspective:600px}.mcard .mf,.mcard .mb{position:absolute;inset:0;border-radius:10px;border:3px solid var(--deep);display:flex;align-items:center;justify-content:center;transition:transform .25s;backface-visibility:hidden}
+.mcard .mb{background:#9b4dff;color:#fff;font-family:'Press Start 2P',monospace}.mcard .mf{background:#fff;transform:rotateY(180deg)}.mcard.up .mb,.mcard.done .mb{transform:rotateY(180deg)}.mcard.up .mf,.mcard.done .mf{transform:rotateY(0)}.mcard.done{opacity:.6}.mf img{width:80%;height:80%}
+.gsil{width:160px;height:160px;margin:10px auto;background:#e8f4ff;border:3px solid var(--deep);border-radius:12px;display:flex;align-items:center;justify-content:center}.gsil img{width:85%;height:85%;transition:filter .3s}
+.gopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:420px;margin:0 auto}.gopts .ok{background:#35c75a!important;color:#fff}.gopts .no{background:#ff5a5f!important;color:#fff}
 </style>
 </head>
 <body>
@@ -288,6 +300,7 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
         <div class="coinwrap">
           <div id="coin"><img id="coinImg" alt="coin"></div>
           <div class="small" id="coinName" style="font-weight:700"></div>
+          <div id="cmb"><div class="cmbTop"><span id="cmbTxt"></span><span id="cmbMul"></span></div><div class="cmbBar"><i id="cmbFill"></i></div><button class="btn gold sm" id="frenzy" hidden>FRENZY!</button></div>
           <button class="btn alt sm" id="resetCoin" hidden>BACK TO PENNY</button>
         </div>
       </div>
@@ -2019,9 +2032,9 @@ function logout() {
 $('#logout').onclick = logout;
 
 /* ===== navigation ===== */
-const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], quests: ['QUESTS', '#00b894'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
+const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], quests: ['QUESTS', '#00b894'], whack: ['WHACK-A-SUB', '#e17055'], match: ['MEMORY MATCH', '#6c5ce7'], guess: ["WHO'S THAT SUB?", '#00a8a8'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
 function buildDD() {
-  $('#ddList').innerHTML = ['shop', 'upgrades', 'index', 'quests', 'chat', 'board', 'battles', 'settings'].map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('');
+  $('#ddList').innerHTML = ['shop', 'upgrades', 'index', 'quests', 'chat', 'board', 'battles', 'whack', 'match', 'guess', 'settings'].map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('');
   $$('.ddi').forEach(el => el.onclick = () => { $('#dd').classList.remove('open'); go(el.dataset.p) });
 }
 $('#ddBtn').onclick = e => { e.stopPropagation(); $('#dd').classList.toggle('open') };
@@ -2029,21 +2042,43 @@ document.addEventListener('click', () => $('#dd').classList.remove('open'));
 $('#ownerBtn').onclick = () => go('owner');
 $('#resetCoin').onclick = () => { S.setKey = null; recalc(); updateStats(); updateCoin(); save(true) };
 function go(p) {
-  if (p === 'owner' && !isOwner()) p = 'shop'; cur = p; $('#ddLabel').textContent = PAGES[p][0];
+  stopGames(); if (p === 'owner' && !isOwner()) p = 'shop'; cur = p; $('#ddLabel').textContent = PAGES[p][0];
   $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p));
-  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, settings: renderSettings, owner: renderOwner })[p](); sfx('ui');
+  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, whack: renderWhack, match: renderMatch, guess: renderGuess, settings: renderSettings, owner: renderOwner })[p](); sfx('ui');
 }
 
 /* ===== clicker ===== */
 let lastClickSfx = 0, holdT = null, holdPt = { x: 0, y: 0 };
+const CB = { n: 0, last: 0, meter: 0, fz: 0 };
+const comboMul = () => 1 + Math.min(CB.n, 50) * .04;
+function updCmb() {
+  const t = $('#cmbTxt'); if (!t) return; const now = Date.now(), live = now - CB.last < 1200 && CB.n > 0, fz = now < CB.fz;
+  if (!live && CB.n) CB.n = 0; if (!live && now - CB.last > 1500 && !fz) CB.meter = Math.max(0, CB.meter - .25);
+  t.textContent = fz ? 'FRENZY! ' + Math.ceil((CB.fz - now) / 1000) + 's' : live ? 'COMBO ' + CB.n : 'CLICK FAST FOR COMBOS';
+  $('#cmbMul').textContent = 'x' + (comboMul() * (fz ? 7 : 1)).toFixed(2); $('#cmbFill').style.width = (fz ? (CB.fz - now) / 100 : CB.meter) + '%';
+  $('#frenzy').hidden = !(CB.meter >= 100 && !fz); $('#coin').classList.toggle('fz', fz);
+}
+$('#frenzy').onclick = () => { if (CB.meter < 100) return; CB.fz = Date.now() + 10000; CB.meter = 0; S.frenzies = (S.frenzies || 0) + 1; sfx('crit'); toast('FRENZY! Clicks are worth x7 for 10 seconds!', 'good'); updCmb(); checkAch() };
+setInterval(updCmb, 100);
 function clickCoin(x, y) {
-  if (!S) return; let g = CPC * gm(), crit = false; const cl = (S.up.crit || 0) * .05;
+  if (!S) return; const now = Date.now(); CB.n = now - CB.last < 900 ? CB.n + 1 : 1; CB.last = now; if (CB.n > (S.bestCombo || 0)) S.bestCombo = CB.n;
+  const fz = now < CB.fz; if (!fz) CB.meter = Math.min(100, CB.meter + 1.5);
+  let g = (CPC + CPS * .02) * gm() * comboMul() * (fz ? 7 : 1), crit = false; const cl = (S.up.crit || 0) * .05;
   if (cl && Math.random() < cl) { g *= 5; crit = true }
   S.coins += g; S.clicks++;
-  if (ST.floaty) { const f = document.createElement('div'); f.className = 'floaty'; f.textContent = '+' + fmtCps(g) + (crit ? '!' : ''); f.style.left = (x - 12) + 'px'; f.style.top = (y - 20) + 'px'; if (crit) f.style.color = '#ffe45c'; document.body.appendChild(f); setTimeout(() => f.remove(), 900) }
-  const c = $('#coin'); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); updateStats(); save();
+  if (ST.floaty) { const f = document.createElement('div'); f.className = 'floaty'; f.textContent = '+' + fmtCps(g) + (crit ? '!' : ''); f.style.left = (x - 12) + 'px'; f.style.top = (y - 20) + 'px'; if (crit || fz) f.style.color = '#ffe45c'; document.body.appendChild(f); setTimeout(() => f.remove(), 900) }
+  const c = $('#coin'); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); updateStats(); updCmb(); save();
   const n = performance.now(); if (ST.clickSfx && n - lastClickSfx > 45) { lastClickSfx = n; sfx(crit ? 'crit' : 'click') }
 }
+/* golden subs fly across the screen now and then - click one for a big bonus */
+let goldEl = null;
+setInterval(() => {
+  if (!S || goldEl || document.hidden || $('#reveal').classList.contains('on') || $('#battle').classList.contains('on') || Math.random() > .09) return;
+  const ks = Object.keys(S.inv); let src = pennyURL(); if (ks.length) { try { src = spriteURL(splitInv(ks[Math.floor(Math.random() * ks.length)])[0]) } catch (e) {} }
+  const d = document.createElement('div'); d.className = 'gsub' + (Math.random() < .5 ? ' rev' : ''); d.innerHTML = '<img class="pix" src="' + src + '">'; d.style.top = (12 + Math.random() * 60) + 'vh';
+  d.onclick = e => { e.stopPropagation(); const b = Math.round(Math.max(100, CPS * gm() * 45, CPC * gm() * 80)); S.coins += b; S.goldens = (S.goldens || 0) + 1; sfx('ach'); toast('Golden sub caught! +' + fmt(b) + ' coins', 'good'); d.remove(); goldEl = null; updateStats(); save(true); checkAch() };
+  d.addEventListener('animationend', () => { d.remove(); goldEl = null }); document.body.appendChild(d); goldEl = d;
+}, 5000);
 $('#coin').addEventListener('pointerdown', e => {
   if (e.button > 0) return; holdPt = { x: e.clientX, y: e.clientY }; clickCoin(e.clientX, e.clientY);
   if (ST.holdClick) { clearInterval(holdT); holdT = setInterval(() => clickCoin(holdPt.x, holdPt.y), 140) }
@@ -2056,6 +2091,76 @@ document.addEventListener('keydown', e => {
 setInterval(() => { if (!S) return; S.coins += CPS * gm() / 10; if (S.coins > S.peak) S.peak = S.coins; updateStats() }, 100);
 setInterval(() => { if (S) tickChecks() }, 1000);
 window.addEventListener('beforeunload', () => { if (S) S.lastSeen = Date.now(); save(true) });
+
+
+/* ===== fun pages (no coins to spend) ===== */
+let GT = [];
+function stopGames() { GT.forEach(t => { clearTimeout(t); clearInterval(t) }); GT = [] }
+const T_ = (f, ms) => { const t = setTimeout(f, ms); GT.push(t); return t }, I_ = (f, ms) => { const t = setInterval(f, ms); GT.push(t); return t };
+const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a };
+const allKeys = () => Object.keys(ITEMS).filter(k => !ITEMS[k].hid);
+const ownedKeys = () => [...new Set(Object.keys(S.inv).map(i => splitInv(i)[0]))].filter(k => ITEMS[k] && !ITEMS[k].hid);
+function pool(n) { const o = shuf(ownedKeys()), r = shuf(allKeys().filter(k => !o.includes(k))); return o.concat(r).slice(0, n) }
+const rarPts = k => 1 + Math.max(0, RAR_ORDER.indexOf(ITEMS[k].rarity));
+function hs(game, val, better) {
+  S.hs = S.hs || {}; const old = S.hs[game]; if (old !== undefined && !better(val, old)) return false;
+  S.hs[game] = val; const b = Math.round(Math.max(50, CPS * gm() * 30)); S.coins += b; sfx('ach'); toast('New personal best! +' + fmt(b) + ' coins', 'good'); updateStats(); save(true); return true;
+}
+const bestOf = (g, none) => (S.hs && S.hs[g] !== undefined) ? S.hs[g] : none;
+
+function renderWhack() {
+  $('#page').innerHTML = `<div class="phead"><h2>WHACK-A-SUB</h2><span class="rtag" style="background:var(--deep)">BEST ${bestOf('whack', 0)}</span></div><div class="panel gpanel"><div class="small">Tap the subs as they pop up. Rarer subs score more. Don't tap the bombs! 30 seconds.</div><div class="gstat"><span>SCORE <b id="wScore">0</b></span><span>TIME <b id="wTime">30</b></span></div><div class="ggrid g3" id="wGrid">${[...Array(9)].map(() => '<div class="hole"></div>').join('')}</div><button class="btn green" id="wStart">START</button></div>`;
+  $('#wStart').onclick = startWhack;
+}
+function startWhack() {
+  stopGames(); let score = 0, t = 30; const holes = $$('#wGrid .hole'), ps = pool(12); $('#wStart').disabled = true;
+  const sc = () => { if ($('#wScore')) $('#wScore').textContent = score };
+  holes.forEach(hl => { hl.innerHTML = ''; hl.onpointerdown = () => { const d = hl.firstChild; if (!d || d.dataset.hit) return; d.dataset.hit = 1; if (d.dataset.bomb) { score = Math.max(0, score - 5); sfx('sell'); hl.classList.add('bad') } else { score += +d.dataset.p; sfx('click'); hl.classList.add('good') } sc(); T_(() => { hl.innerHTML = ''; hl.className = 'hole' }, 150) } });
+  function end() { stopGames(); const nb = hs('whack', score, (a, b) => a > b); renderWhack(); $('#wScore').textContent = score; $('#wTime').textContent = 0; toast('Time! You scored ' + score + (nb ? '' : ' (best ' + bestOf('whack', 0) + ')')) }
+  I_(() => { t--; if ($('#wTime')) $('#wTime').textContent = t; if (t <= 0) end() }, 1000);
+  function pop() {
+    if (t <= 0) return; const free = holes.filter(x => !x.firstChild);
+    if (free.length) { const hl = free[Math.floor(Math.random() * free.length)], bomb = Math.random() < .15, k = bomb ? 'weapon/Bomb' : ps[Math.floor(Math.random() * ps.length)]; hl.innerHTML = `<img class="pix" src="${spriteURL(k)}" data-p="${bomb ? 0 : rarPts(k)}"${bomb ? ' data-bomb="1"' : ''}>`; T_(() => { if (hl.firstChild && !hl.firstChild.dataset.hit) hl.innerHTML = '' }, 900 - (30 - t) * 12) }
+    T_(pop, 480 - (30 - t) * 6);
+  }
+  pop();
+}
+
+function renderMatch() {
+  $('#page').innerHTML = `<div class="phead"><h2>MEMORY MATCH</h2><span class="rtag" style="background:var(--deep)">BEST ${bestOf('match', '-')} MOVES</span></div><div class="panel gpanel"><div class="small">Flip two cards to find the matching subs. Finish in as few moves as you can.</div><div class="gstat"><span>MOVES <b id="mMoves">0</b></span><span>PAIRS <b id="mPairs">0/8</b></span></div><div class="ggrid g4" id="mGrid"></div><button class="btn green" id="mStart">NEW GAME</button></div>`;
+  $('#mStart').onclick = startMatch; startMatch();
+}
+function startMatch() {
+  stopGames(); const ks = pool(8), cards = shuf(ks.concat(ks)); let open = [], moves = 0, pairs = 0, lock = false;
+  $('#mMoves').textContent = 0; $('#mPairs').textContent = '0/8';
+  $('#mGrid').innerHTML = cards.map((k, i) => `<div class="mcard" data-i="${i}"><div class="mf"><img class="pix" src="${spriteURL(k)}"></div><div class="mb">?</div></div>`).join('');
+  $$('#mGrid .mcard').forEach(el => el.onclick = () => {
+    if (lock || el.classList.contains('up') || el.classList.contains('done')) return; el.classList.add('up'); sfx('click'); open.push(el);
+    if (open.length === 2) {
+      moves++; $('#mMoves').textContent = moves; lock = true; const [a, b] = open;
+      if (cards[+a.dataset.i] === cards[+b.dataset.i]) { a.classList.add('done'); b.classList.add('done'); open = []; lock = false; pairs++; $('#mPairs').textContent = pairs + '/8'; sfx('ach'); if (pairs === 8) { toast('Cleared in ' + moves + ' moves!'); hs('match', moves, (x, y) => x < y) } }
+      else T_(() => { a.classList.remove('up'); b.classList.remove('up'); open = []; lock = false }, 700);
+    }
+  });
+}
+
+function renderGuess() {
+  $('#page').innerHTML = `<div class="phead"><h2>WHO'S THAT SUB?</h2><span class="rtag" style="background:var(--deep)">BEST ${bestOf('guess', 0)}/10</span></div><div class="panel gpanel"><div class="small">Guess the sub from its shadow. 10 rounds.</div><div id="gBox"><button class="btn green" id="gStart" style="margin-top:12px">START</button></div></div>`;
+  $('#gStart').onclick = startGuess;
+}
+function startGuess() {
+  stopGames(); const qs = shuf(allKeys()).slice(0, 10); let i = 0, right = 0; const box = $('#gBox');
+  function ask() {
+    if (i >= 10) { const nb = hs('guess', right, (a, b) => a > b); box.innerHTML = `<div style="font-size:22px;font-weight:800;margin:14px 0">You got ${right}/10!</div><button class="btn green" id="gAgain">PLAY AGAIN</button>`; $('#gAgain').onclick = startGuess; return }
+    const k = qs[i], opts = shuf([k, ...shuf(allKeys().filter(x => x !== k && ITEMS[x].name !== ITEMS[k].name)).slice(0, 3)]);
+    box.innerHTML = `<div class="gstat"><span>QUESTION <b>${i + 1}/10</b></span><span>RIGHT <b>${right}</b></span></div><div class="gsil"><img class="pix" id="gImg" src="${spriteURL(k)}" style="filter:brightness(0)"></div><div class="gopts">${opts.map(o => `<button class="btn alt" data-k="${o}">${esc(ITEMS[o].name)}</button>`).join('')}</div>`;
+    $$('#gBox .gopts button').forEach(bt => bt.onclick = () => {
+      $$('#gBox .gopts button').forEach(x => { x.onclick = null; if (x.dataset.k === k) x.classList.add('ok') }); $('#gImg').style.filter = 'none';
+      if (bt.dataset.k === k) { right++; sfx('click') } else { bt.classList.add('no'); sfx('sell') } T_(() => { i++; ask() }, 1000);
+    });
+  }
+  ask();
+}
 
 /* ===== shop & pack opening ===== */
 const today = () => new Date().toDateString();
@@ -2496,6 +2601,10 @@ function grantHidden(id) {
 }
 function collStats() { let uniq = 0, best = -1; const seen = new Set(); for (const ik in S.inv) if (S.inv[ik] > 0) { const k = splitInv(ik)[0]; if (ITEMS[k] && !seen.has(k)) { seen.add(k); if (!ITEMS[k].hid) uniq++; best = Math.max(best, RAR_ORDER.indexOf(ITEMS[k].rarity)) } } return { uniq, best } }
 const ACH = [
+  ['cmb30', 'Combo Master', 'Reach a 30 click combo', s => (s.bestCombo || 0) >= 30, 300],
+  ['cmb50', 'Unstoppable', 'Reach a 50 click combo', s => (s.bestCombo || 0) >= 50, 1500],
+  ['fz1', 'Frenzy!', 'Trigger a Click Frenzy', s => (s.frenzies || 0) >= 1, 400],
+  ['gold1', 'Golden Touch', 'Catch a golden sub', s => (s.goldens || 0) >= 1, 400],
   ['c100', 'Warm Up', 'Click the coin 100 times', s => s.clicks >= 100, 50],
   ['c1k', 'Finger Workout', 'Click 1,000 times', s => s.clicks >= 1000, 500],
   ['c10k', 'Clicker Pro', 'Click 10,000 times', s => s.clicks >= 10000, 5000],
