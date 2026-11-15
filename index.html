@@ -2686,7 +2686,7 @@ function renderOwner() {
   <div class="panel osec"><h3>ONLY ME (cheats)</h3>
   <div class="orow"><button class="btn sm green" id="m_all">GET ALL SUBS</button><button class="btn sm" id="m_gold">SPAWN GOLDEN SUB</button><button class="btn sm" id="m_fz">FILL FRENZY</button><button class="btn sm" id="m_daily">RESET DAILY LIMITS</button><button class="btn sm" id="m_pity">NEXT PACK = CHROMA</button></div>
   <div class="orow"><span>My coin multiplier x</span><input id="m_mult" type="number" value="1" min="1" style="width:90px"><button class="btn sm" id="m_setmult">SET</button></div></div>
-  <div class="panel osec"><h3>ANY SUB IMAGE</h3><div class="orow">${pickerHTML('im')}</div><div class="orow"><button class="btn sm green" id="im_set">UPLOAD + CROP IMAGE</button><button class="btn sm alt" id="im_reset">RESET TO DEFAULT ART</button></div><div class="small">Change the picture of any sub for everyone (Mario, Volcanu, the Five Nights pack, anything). Afterwards press EXPORT specials.json in the box below and upload that file next to index.html so the images stay forever.</div></div>
+  <div class="panel osec"><h3>ANY SUB IMAGE</h3><div class="orow">${pickerHTML('im')}</div><div class="orow"><button class="btn sm green" id="im_set">UPLOAD + CROP IMAGE</button><button class="btn sm alt" id="im_reset">RESET TO DEFAULT ART</button></div><div class="orow"><span>Strength</span><input id="bb_tol" type="range" min="10" max="200" value="60" style="flex:1"><button class="btn sm gold" id="bb_run">REMOVE BACKGROUNDS FROM ALL UPLOADED IMAGES</button><button class="btn sm alt" id="bb_undo">RESTORE ORIGINALS</button></div><div class="small">Special subs are left alone. Originals are kept so you can restore them.</div><div class="small">Change the picture of any sub for everyone (Mario, Volcanu, the Five Nights pack, anything). Afterwards press EXPORT specials.json in the box below and upload that file next to index.html so the images stay forever.</div></div>
   <div class="panel osec"><h3>SPECIAL SUBS</h3><div id="o_spec"></div><div class="orow"><button class="btn sm green" id="o_newspec">+ NEW SPECIAL</button><button class="btn sm alt" id="o_expspec">EXPORT specials.json</button></div><div class="small">Upload an image, crop it, and everyone online gets it. Players who join later get it while you are online, or permanently if you upload the exported specials.json next to index.html.</div></div>
   <div class="panel osec"><h3>PACKS</h3><div class="opacks">${PACKS.map(p => `<div class="opk"><i style="background:${p.color}"></i><span>${esc(p.name)} (${fmt(p.cost)})</span><button class="btn sm" data-ep="${p.id}">EDIT</button></div>`).join('')}</div></div>
   <div class="panel osec"><h3>PLAYER DATABASE</h3><div class="orow"><input id="o_q" placeholder="search..." style="flex:1"><button class="btn sm alt" id="o_csv">EXPORT CSV</button></div><div class="tblwrap" id="o_tbl"></div></div>
@@ -2706,6 +2706,7 @@ function renderOwner() {
   $('#m_pity').onclick = () => { S.pity = 999; save(true); toast('Your next pack that has a Chroma will give one', 'good') };
   $('#m_setmult').onclick = () => { S.omult = Math.max(1, num('m_mult') || 1); updateStats(); save(true); toast('Your coin multiplier is x' + S.omult, 'good') };
   $('#im_set').onclick = () => { const v = pickerVal('im'); if (!ITEMS[v.key]) return; pickImage(d => saveSpecial({ id: 'k:' + v.key, key: v.key, img: d })) };
+  $('#bb_run').onclick = () => bulkBG(+$('#bb_tol').value, false); $('#bb_undo').onclick = () => bulkBG(0, true);
   $('#im_reset').onclick = () => { const v = pickerVal('im'); if (ITEMS[v.key]) saveSpecial({ id: 'k:' + v.key, key: v.key, img: '' }) };
   const num = id => +$('#' + id).value, tgt = () => $('#o_t').value.trim(), need = () => { if (!tgt()) { toast('Enter a player username.', 'bad'); return false } return true };
   const rep = (r, what) => toast(r === 'queued' ? `${what}: player offline - queued, delivers when they come online` : r === 'self' ? `${what}: applied to you` : `${what}: sent`, 'good');
@@ -2740,37 +2741,56 @@ function saveSpecial(s) {
   s.ver = Date.now(); setSpecial(s); if (!OWNER_KEYS) toast('Saved on this device. To sync it to players, log out and back in (needs https).', 'bad'); else announceSpecials([s.id]);
   toast('Special saved', 'good'); if (cur === 'owner') renderSpecPanel(); if (cur === 'index') renderIndex(); if (cur === 'shop') renderShop();
 }
-function removeBG(cv, tol) {
-  const W = cv.width, H = cv.height, x = cv.getContext('2d'), im = x.getImageData(0, 0, W, H), d = im.data; let r = 0, g = 0, b = 0, n = 0;
-  const add = i => { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++ };
-  for (let i = 0; i < W; i++) { add(i * 4); add(((H - 1) * W + i) * 4) } for (let j = 1; j < H - 1; j++) { add(j * W * 4); add((j * W + W - 1) * 4) }
-  r /= n; g /= n; b /= n; const dist = i => Math.hypot(d[i] - r, d[i + 1] - g, d[i + 2] - b), seen = new Uint8Array(W * H), q = [];
-  const push = (px, py) => { if (px < 0 || py < 0 || px >= W || py >= H) return; const k = py * W + px; if (seen[k] || dist(k * 4) > tol) return; seen[k] = 1; q.push(k) };
+function removeBG(cv, tol, picks) {
+  const W = cv.width, H = cv.height, x = cv.getContext('2d'), im = x.getImageData(0, 0, W, H), d = im.data, bins = {}; let nb = 0, tr = 0; const bord = [];
+  for (let i = 0; i < W; i++) bord.push(i, (H - 1) * W + i); for (let j = 1; j < H - 1; j++) bord.push(j * W, j * W + W - 1);
+  bord.forEach(k => { const i = k * 4; nb++; if (d[i + 3] < 128) { tr++; return } const key = (d[i] >> 5) + ',' + (d[i + 1] >> 5) + ',' + (d[i + 2] >> 5), q = bins[key] || (bins[key] = { n: 0, r: 0, g: 0, b: 0 }); q.n++; q.r += d[i]; q.g += d[i + 1]; q.b += d[i + 2] });
+  if (tr > nb / 2 && !(picks && picks.length)) return false;
+  const pal = Object.values(bins).filter(q => q.n >= nb * .03).sort((p, q) => q.n - p.n).slice(0, 6).map(q => [q.r / q.n, q.g / q.n, q.b / q.n]); (picks || []).forEach(p => pal.push(p)); if (!pal.length) return false;
+  const md = i => { let m = 1e9; for (const p of pal) { const v = Math.hypot(d[i] - p[0], d[i + 1] - p[1], d[i + 2] - p[2]); if (v < m) m = v } return m };
+  const seen = new Uint8Array(W * H), st = [];
+  const push = (px, py) => { if (px < 0 || py < 0 || px >= W || py >= H) return; const k = py * W + px; if (seen[k]) return; if (d[k * 4 + 3] >= 128 && md(k * 4) > tol) return; seen[k] = 1; st.push(k) };
   for (let i = 0; i < W; i++) { push(i, 0); push(i, H - 1) } for (let j = 0; j < H; j++) { push(0, j); push(W - 1, j) }
-  while (q.length) { const k = q.pop(), px = k % W, py = (k / W) | 0; push(px + 1, py); push(px - 1, py); push(px, py + 1); push(px, py - 1) }
+  while (st.length) { const k = st.pop(), px = k % W, py = (k / W) | 0; push(px + 1, py); push(px - 1, py); push(px, py + 1); push(px, py - 1) }
   for (let k = 0; k < W * H; k++) if (seen[k]) d[k * 4 + 3] = 0;
-  for (let k = 0; k < W * H; k++) if (!seen[k]) { const px = k % W, py = (k / W) | 0; if (((px > 0 && seen[k - 1]) || (px < W - 1 && seen[k + 1]) || (py > 0 && seen[k - W]) || (py < H - 1 && seen[k + W])) && dist(k * 4) < tol * 1.6) d[k * 4 + 3] = 140 }
-  x.putImageData(im, 0, 0);
+  for (let k = 0; k < W * H; k++) if (!seen[k]) { const px = k % W, py = (k / W) | 0; if (((px > 0 && seen[k - 1]) || (px < W - 1 && seen[k + 1]) || (py > 0 && seen[k - W]) || (py < H - 1 && seen[k + W])) && md(k * 4) < tol * 1.5) d[k * 4 + 3] = 140 }
+  x.putImageData(im, 0, 0); return true;
+}
+const IMGORIG = lsGet('sc_imgorig', {});
+let loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src });
+async function bulkBG(tol, restore) {
+  const ids = restore ? Object.keys(IMGORIG).filter(id => SPEC[id]) : Object.keys(SPEC).filter(id => SPEC[id].key && SPEC[id].img), out = []; let skipped = 0; toast('Working on ' + ids.length + ' images...');
+  for (const id of ids) {
+    const s = SPEC[id]; let d;
+    if (restore) { d = IMGORIG[id]; delete IMGORIG[id] }
+    else { try { const im = await loadImg(s.img), cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; cv.getContext('2d').drawImage(im, 0, 0); if (removeBG(cv, tol) === false) { skipped++; continue } let sz = cv.width, dd = cv.toDataURL('image/png'); while (dd.length > 60000 && sz > 64) { sz = Math.round(sz * .8); const c2 = document.createElement('canvas'); c2.width = c2.height = sz; c2.getContext('2d').drawImage(cv, 0, 0, sz, sz); dd = c2.toDataURL('image/png') } if (!IMGORIG[id]) IMGORIG[id] = s.img; d = dd } catch (e) { skipped++; continue } }
+    setSpecial({ id, key: s.key, img: d, ver: Date.now() + out.length }); out.push(id);
+  }
+  lsSet('sc_imgorig', IMGORIG); if (OWNER_KEYS) announceSpecials(out); renderSpecPanel(); if (cur === 'shop') renderShop(); if (cur === 'index') renderIndex();
+  toast((restore ? 'Restored ' : 'Backgrounds removed on ') + out.length + ' images' + (skipped ? ' (' + skipped + ' skipped: already see-through or unreadable)' : ''), 'good'); return out.length;
 }
 function cropImage(file, done) {
   const im = new Image(), url = URL.createObjectURL(file);
   im.onerror = () => toast('That file is not a usable image.', 'bad');
   im.onload = () => {
-    const m = modal('<h3>CROP IMAGE</h3><canvas id="crc" width="240" height="240" style="touch-action:none;border:3px solid var(--deep);border-radius:12px;background:#222;cursor:grab;max-width:100%"></canvas><div class="small">Drag to move. Slider to zoom. The circle is how it shows in the game.</div><input type="range" id="crz" min="100" max="400" value="100" style="width:100%"><label style="display:block;margin-top:8px;font-weight:700"><input type="checkbox" id="crbg"> Remove background</label><input type="range" id="crtol" min="10" max="120" value="45" style="width:100%"><div class="small">Works best on a plain background. Slide to remove more or less.</div><div class="mbtns"><button class="btn green" id="crok">SAVE</button><button class="btn alt" id="crno">CANCEL</button></div>');
-    const c = $('#crc', m), x = c.getContext('2d'), base = 240 / Math.min(im.width, im.height); let z = 1, ox = (240 - im.width * base) / 2, oy = (240 - im.height * base) / 2, drag = null;
+    const m = modal('<h3>CROP IMAGE</h3><canvas id="crc" width="240" height="240" style="touch-action:none;border:3px solid var(--deep);border-radius:12px;background:#222;cursor:grab;max-width:100%"></canvas><div class="small">Drag to move. Slider to zoom. The circle is how it shows in the game.</div><input type="range" id="crz" min="100" max="400" value="100" style="width:100%"><label style="display:block;margin-top:8px;font-weight:700"><input type="checkbox" id="crbg"> Remove background</label><input type="range" id="crtol" min="10" max="200" value="60" style="width:100%"><div class="small">Slide to remove more or less. Tip: click the background in the picture to remove that color too.</div><button class="btn sm alt" id="crclr">CLEAR CLICKED COLORS</button><div class="mbtns"><button class="btn green" id="crok">SAVE</button><button class="btn alt" id="crno">CANCEL</button></div>');
+    const c = $('#crc', m), x = c.getContext('2d'), base = 240 / Math.min(im.width, im.height); let z = 1, ox = (240 - im.width * base) / 2, oy = (240 - im.height * base) / 2, drag = null, moved = 0; const picks = [], rawc = document.createElement('canvas'); rawc.width = rawc.height = 240; const rx = rawc.getContext('2d');
     const clampP = () => { ox = Math.min(0, Math.max(240 - im.width * base * z, ox)); oy = Math.min(0, Math.max(240 - im.height * base * z, oy)) };
     const tmp = document.createElement('canvas'); tmp.width = tmp.height = 240; const tx = tmp.getContext('2d');
-    const draw = () => { clampP(); x.fillStyle = '#222'; x.fillRect(0, 0, 240, 240); if ($('#crbg', m).checked) { tx.clearRect(0, 0, 240, 240); tx.drawImage(im, ox, oy, im.width * base * z, im.height * base * z); removeBG(tmp, +$('#crtol', m).value); for (let yy = 0; yy < 240; yy += 12) for (let xx = 0; xx < 240; xx += 12) { x.fillStyle = (xx + yy) / 12 % 2 ? '#c8c8c8' : '#f2f2f2'; x.fillRect(xx, yy, 12, 12) } x.drawImage(tmp, 0, 0) } else x.drawImage(im, ox, oy, im.width * base * z, im.height * base * z); x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 2; x.beginPath(); x.arc(120, 120, 118, 0, 7); x.stroke() };
+    const draw = () => { clampP(); x.fillStyle = '#222'; x.fillRect(0, 0, 240, 240); if ($('#crbg', m).checked) { tx.clearRect(0, 0, 240, 240); tx.drawImage(im, ox, oy, im.width * base * z, im.height * base * z); removeBG(tmp, +$('#crtol', m).value, picks); for (let yy = 0; yy < 240; yy += 12) for (let xx = 0; xx < 240; xx += 12) { x.fillStyle = (xx + yy) / 12 % 2 ? '#c8c8c8' : '#f2f2f2'; x.fillRect(xx, yy, 12, 12) } x.drawImage(tmp, 0, 0) } else x.drawImage(im, ox, oy, im.width * base * z, im.height * base * z); x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 2; x.beginPath(); x.arc(120, 120, 118, 0, 7); x.stroke() };
     $('#crbg', m).onchange = draw; $('#crtol', m).oninput = () => { if ($('#crbg', m).checked) draw() };
     $('#crz', m).oninput = e => { const cx = (120 - ox) / (base * z), cy = (120 - oy) / (base * z); z = e.target.value / 100; ox = 120 - cx * base * z; oy = 120 - cy * base * z; draw() };
-    c.onpointerdown = e => { drag = { x: e.clientX, y: e.clientY }; c.setPointerCapture && c.setPointerCapture(e.pointerId) };
-    c.onpointermove = e => { if (!drag) return; const k = 240 / c.getBoundingClientRect().width; ox += (e.clientX - drag.x) * k; oy += (e.clientY - drag.y) * k; drag = { x: e.clientX, y: e.clientY }; draw() };
-    c.onpointerup = c.onpointercancel = () => { drag = null };
+    c.onpointerdown = e => { drag = { x: e.clientX, y: e.clientY }; moved = 0; c.setPointerCapture && c.setPointerCapture(e.pointerId) };
+    c.onpointermove = e => { if (!drag) return; moved += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); const k = 240 / c.getBoundingClientRect().width; ox += (e.clientX - drag.x) * k; oy += (e.clientY - drag.y) * k; drag = { x: e.clientX, y: e.clientY }; draw() };
+    c.onpointerup = e => {
+      if (drag && moved < 5 && $('#crbg', m).checked) { const r = c.getBoundingClientRect(), k = 240 / r.width, px = Math.max(0, Math.min(239, Math.round((e.clientX - r.left) * k))), py = Math.max(0, Math.min(239, Math.round((e.clientY - r.top) * k))); rx.clearRect(0, 0, 240, 240); rx.drawImage(im, ox, oy, im.width * base * z, im.height * base * z); const p = rx.getImageData(px, py, 1, 1).data; if (p[3] > 0) { picks.push([p[0], p[1], p[2]]); draw() } }
+      drag = null;
+    }; c.onpointercancel = () => { drag = null }; $('#crclr', m).onclick = () => { picks.length = 0; draw() };
     $('#crno', m).onclick = () => { closeModal(); URL.revokeObjectURL(url) };
     $('#crok', m).onclick = () => {
       const bg = $('#crbg', m).checked, tol = +$('#crtol', m).value; let d, size = 160;
       for (; ;) { const o = document.createElement('canvas'); o.width = o.height = size; const t = o.getContext('2d'), k = size / 240; if (!bg) { t.fillStyle = '#fff'; t.fillRect(0, 0, size, size) } t.drawImage(im, ox * k, oy * k, im.width * base * z * k, im.height * base * z * k);
-        if (bg) { removeBG(o, tol); d = o.toDataURL('image/png'); if (d.length > 60000 && size > 64) { size = Math.round(size * .8); continue } } else { let q = .86; d = o.toDataURL('image/jpeg', q); while (d.length > 60000 && q > .3) { q -= .12; d = o.toDataURL('image/jpeg', q) } } break }
+        if (bg) { removeBG(o, tol, picks); d = o.toDataURL('image/png'); if (d.length > 60000 && size > 64) { size = Math.round(size * .8); continue } } else { let q = .86; d = o.toDataURL('image/jpeg', q); while (d.length > 60000 && q > .3) { q -= .12; d = o.toDataURL('image/jpeg', q) } } break }
       closeModal(); URL.revokeObjectURL(url); done(d);
     };
     draw();
