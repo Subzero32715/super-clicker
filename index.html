@@ -2748,12 +2748,18 @@ function removeBG(cv, tol, picks) {
   if (tr > nb / 2 && !(picks && picks.length)) return false;
   const pal = Object.values(bins).filter(q => q.n >= nb * .03).sort((p, q) => q.n - p.n).slice(0, 6).map(q => [q.r / q.n, q.g / q.n, q.b / q.n]); (picks || []).forEach(p => pal.push(p)); if (!pal.length) return false;
   const md = i => { let m = 1e9; for (const p of pal) { const v = Math.hypot(d[i] - p[0], d[i + 1] - p[1], d[i + 2] - p[2]); if (v < m) m = v } return m };
-  const seen = new Uint8Array(W * H), st = [];
-  const push = (px, py) => { if (px < 0 || py < 0 || px >= W || py >= H) return; const k = py * W + px; if (seen[k]) return; if (d[k * 4 + 3] >= 128 && md(k * 4) > tol) return; seen[k] = 1; st.push(k) };
+  /* edge map: the outline of the subject blocks the fill, so the inside of the subject is never eaten */
+  const L = new Float32Array(W * H), B = new Float32Array(W * H), gr = new Float32Array(W * H);
+  for (let k = 0; k < W * H; k++) L[k] = .3 * d[k * 4] + .59 * d[k * 4 + 1] + .11 * d[k * 4 + 2];
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++) { let s = 0, c = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const a = xx + dx, b = y + dy; if (a >= 0 && b >= 0 && a < W && b < H) { s += L[b * W + a]; c++ } } B[y * W + xx] = s / c }
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++) { const k = y * W + xx, gx = (B[y * W + Math.min(W - 1, xx + 1)] - B[y * W + Math.max(0, xx - 1)]), gy = (B[Math.min(H - 1, y + 1) * W + xx] - B[Math.max(0, y - 1) * W + xx]); gr[k] = Math.abs(gx) + Math.abs(gy) }
+  const E = 16 + tol * .15, seen = new Uint8Array(W * H), st = [];
+  const push = (px, py) => { if (px < 0 || py < 0 || px >= W || py >= H) return; const k = py * W + px; if (seen[k]) return; if (d[k * 4 + 3] >= 128 && (md(k * 4) > tol || gr[k] > E)) return; seen[k] = 1; st.push(k) };
   for (let i = 0; i < W; i++) { push(i, 0); push(i, H - 1) } for (let j = 0; j < H; j++) { push(0, j); push(W - 1, j) }
   while (st.length) { const k = st.pop(), px = k % W, py = (k / W) | 0; push(px + 1, py); push(px - 1, py); push(px, py + 1); push(px, py - 1) }
+  for (let pass = 0; pass < 2; pass++) { const add = []; for (let k = 0; k < W * H; k++) if (!seen[k]) { const px = k % W, py = (k / W) | 0; if (((px > 0 && seen[k - 1]) || (px < W - 1 && seen[k + 1]) || (py > 0 && seen[k - W]) || (py < H - 1 && seen[k + W])) && md(k * 4) < tol * .8) add.push(k) } add.forEach(k => seen[k] = 1) }
   for (let k = 0; k < W * H; k++) if (seen[k]) d[k * 4 + 3] = 0;
-  for (let k = 0; k < W * H; k++) if (!seen[k]) { const px = k % W, py = (k / W) | 0; if (((px > 0 && seen[k - 1]) || (px < W - 1 && seen[k + 1]) || (py > 0 && seen[k - W]) || (py < H - 1 && seen[k + W])) && md(k * 4) < tol * 1.5) d[k * 4 + 3] = 140 }
+  for (let k = 0; k < W * H; k++) if (!seen[k]) { const px = k % W, py = (k / W) | 0; if (((px > 0 && seen[k - 1]) || (px < W - 1 && seen[k + 1]) || (py > 0 && seen[k - W]) || (py < H - 1 && seen[k + W])) && md(k * 4) < tol) d[k * 4 + 3] = 150 }
   x.putImageData(im, 0, 0); return true;
 }
 const IMGORIG = lsGet('sc_imgorig', {});
@@ -2763,14 +2769,14 @@ async function bulkBG(tol, restore) {
   for (const id of ids) {
     const s = SPEC[id]; let d;
     if (restore) { d = IMGORIG[id]; delete IMGORIG[id] }
-    else { try { const im = await loadImg(s.img), cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; cv.getContext('2d').drawImage(im, 0, 0); if (removeBG(cv, tol) === false) { skipped++; continue } let sz = cv.width, dd = cv.toDataURL('image/png'); while (dd.length > 60000 && sz > 64) { sz = Math.round(sz * .8); const c2 = document.createElement('canvas'); c2.width = c2.height = sz; c2.getContext('2d').drawImage(cv, 0, 0, sz, sz); dd = c2.toDataURL('image/png') } if (!IMGORIG[id]) IMGORIG[id] = s.img; d = dd } catch (e) { skipped++; continue } }
+    else { try { const im = await loadImg(IMGORIG[id] || s.img), cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; cv.getContext('2d').drawImage(im, 0, 0); if (removeBG(cv, tol) === false) { skipped++; continue } let sz = cv.width, dd = cv.toDataURL('image/png'); while (dd.length > 60000 && sz > 64) { sz = Math.round(sz * .8); const c2 = document.createElement('canvas'); c2.width = c2.height = sz; c2.getContext('2d').drawImage(cv, 0, 0, sz, sz); dd = c2.toDataURL('image/png') } if (!IMGORIG[id]) IMGORIG[id] = s.img; d = dd } catch (e) { skipped++; continue } }
     setSpecial({ id, key: s.key, img: d, ver: Date.now() + out.length }); out.push(id);
   }
   lsSet('sc_imgorig', IMGORIG); if (OWNER_KEYS) announceSpecials(out); renderSpecPanel(); if (cur === 'shop') renderShop(); if (cur === 'index') renderIndex();
   toast((restore ? 'Restored ' : 'Backgrounds removed on ') + out.length + ' images' + (skipped ? ' (' + skipped + ' skipped: already see-through or unreadable)' : ''), 'good'); return out.length;
 }
 /* one-time: old uploaded images (not special subs) get their background removed automatically */
-setInterval(() => { if (!S || !isOwner() || lsGet('sc_bgmig', 0) || $('#modal-root').children.length) return; if (!Object.keys(SPEC).some(id => SPEC[id].key && SPEC[id].img)) return; lsSet('sc_bgmig', 1); bulkBG(60, false) }, 6000);
+setInterval(() => { if (!S || !isOwner() || lsGet('sc_bgmig2', 0) || $('#modal-root').children.length) return; if (!Object.keys(SPEC).some(id => SPEC[id].key && SPEC[id].img)) return; lsSet('sc_bgmig2', 1); bulkBG(60, false) }, 6000);
 function cropImage(file, done) {
   const im = new Image(), url = URL.createObjectURL(file);
   im.onerror = () => toast('That file is not a usable image.', 'bad');
