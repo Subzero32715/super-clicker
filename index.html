@@ -241,6 +241,17 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
 .mcard .mb{background:#9b4dff;color:#fff;font-family:'Press Start 2P',monospace}.mcard .mf{background:#fff;transform:rotateY(180deg)}.mcard.up .mb,.mcard.done .mb{transform:rotateY(180deg)}.mcard.up .mf,.mcard.done .mf{transform:rotateY(0)}.mcard.done{opacity:.6}.mf img{width:80%;height:80%}
 .gsil{width:160px;height:160px;margin:10px auto;background:#e8f4ff;border:3px solid var(--deep);border-radius:12px;display:flex;align-items:center;justify-content:center}.gsil img{width:85%;height:85%;transition:filter .3s}
 .gopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:420px;margin:0 auto}.gopts .ok{background:#35c75a!important;color:#fff}.gopts .no{background:#ff5a5f!important;color:#fff}
+
+.gcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.gcard{background:#fff;border:3px solid var(--deep);border-radius:14px;padding:12px;text-align:center;cursor:pointer;box-shadow:0 5px 0 var(--c,#333);transition:transform .1s;display:flex;flex-direction:column;align-items:center;gap:6px}.gcard:hover{transform:translateY(-3px)}.gcard img{width:56px;height:56px}.gcard b{font-family:'Press Start 2P',monospace;font-size:10px;line-height:1.5}.gcard span{font-size:12px;opacity:.8}.gcard em{font-style:normal;font-weight:800;font-size:12px;color:var(--c)}
+.carea{position:relative;width:min(340px,100%);height:400px;margin:10px auto;border:3px solid var(--deep);border-radius:12px;background:linear-gradient(#bfe8ff,#eaf7ff);overflow:hidden;touch-action:none}
+.cbask{position:absolute;bottom:6px;width:64px;height:30px;margin-left:-32px;background:#a8601a;border:3px solid #5a3418;border-radius:4px 4px 16px 16px}
+.cfall{position:absolute;left:0;top:0;width:40px;height:40px}.cfall.gld{filter:drop-shadow(0 0 8px #ffd23a)}
+.g2{grid-template-columns:1fr 1fr}.spad{aspect-ratio:1;border:4px solid var(--deep);border-radius:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.55;transition:opacity .1s,transform .1s;touch-action:manipulation}.spad img{width:55%;height:55%;pointer-events:none}.spad.lit{opacity:1;transform:scale(1.06);filter:brightness(1.3)}
+.dbox{height:220px;max-width:420px;margin:12px auto;border:4px solid var(--deep);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:13px;cursor:pointer;user-select:none;background:#dfe6f2;gap:10px;line-height:1.6;padding:10px;touch-action:manipulation}.dbox.wait{background:#ff7a7a;color:#fff}.dbox.go{background:#35c75a;color:#fff}.dbox.bad{background:#ffb02e}.dbox img{width:80px;height:80px}
+.reels{display:flex;justify-content:center;gap:10px;margin:14px 0}.reel{width:92px;height:92px;border:4px solid var(--deep);border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center}.reel img{width:75%;height:75%}.reel.win{animation:slotpulse .4s 3}
+@keyframes slotpulse{50%{transform:scale(1.12);background:#ffe45c}}
+.hlbox{display:flex;justify-content:center;gap:16px;align-items:center;margin:14px 0;flex-wrap:wrap}.hlc{width:140px;border:3px solid var(--deep);border-radius:14px;padding:10px;background:#fff}.hlc img{width:84px;height:84px}.hlc b{display:block;font-size:12px}.hlc .pc{font-family:'Press Start 2P',monospace;font-size:10px;margin-top:6px;min-height:14px}
 </style>
 </head>
 <body>
@@ -1708,6 +1719,22 @@ function applyOverrides(ov) {
 let PACKEDITS = lsGet('sc_packedits', {});
 applyOverrides(PACKEDITS);
 
+/* ===== special subs: owner-made, synced to everyone ===== */
+let SPEC = lsGet('sc_specials', {});
+function applyOneSpecial(s) {
+  if (!s || !s.id) return; let it = ITEMS['hidden/' + s.id];
+  if (!it) { if (!s.custom) return; it = { key: 'hidden/' + s.id, name: 'Special', rarity: 'hidden', w: 0, pack: HPACK, hid: true, how: '', pct: 0, custom: true }; ITEMS[it.key] = it; HIDDEN.push(it); HID[s.id] = it }
+  if (s.name) it.name = String(s.name).slice(0, 40);
+  if (s.pct !== undefined && (it.custom || it.pct > 0)) { it.pct = Math.max(0, Math.min(100, +s.pct || 0)); if (it.custom) it.how = it.pct > 0 ? 'A rare find from opening any pack (' + fmtPct(it.pct) + ' chance every time).' : 'This special can no longer be found.' }
+  if (typeof s.img === 'string' && s.img.startsWith('data:image/') && s.img.length < 90000) SPR[it.key] = s.img; else if (s.img === '') delete SPR[it.key];
+}
+function setSpecial(s) {
+  if (!s || !s.id || typeof s.id !== 'string') return false; const old = SPEC[s.id]; if (old && (old.ver || 0) > (s.ver || 0)) return false;
+  SPEC[s.id] = Object.assign({}, old, s); lsSet('sc_specials', SPEC); applyOneSpecial(SPEC[s.id]); return true;
+}
+Object.values(SPEC).forEach(applyOneSpecial);
+try { fetch('specials.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(j => { if (!j || typeof j !== 'object') return; let ch = false; Object.values(j).forEach(s => { if (setSpecial(s)) ch = true }); if (ch && typeof S !== 'undefined' && S && cur === 'index') renderIndex() }).catch(() => {}) } catch (e) {}
+
 /* ===== procedural pixel art ===== */
 function hueHint(name) {
   const n = name.toLowerCase();
@@ -1968,6 +1995,7 @@ function applyAdmin(d) {
   switch (d.type) {
     case 'coins': S.coins += +p.n || 0; toast(`The owner gave you ${fmt(p.n)} coins!`, 'good'); break;
     case 'setcoins': S.coins = Math.max(0, +p.n || 0); break;
+    case 'special': if (setSpecial(p) && cur === 'index') renderIndex(); break;
     case 'rank': S.rank = Math.max(0, +p.n || 0); break;
     case 'sub': if (ITEMS[p.key]) { addItem(p.key, VAR[p.v] ? p.v : 'n', Math.max(1, +p.n || 1)); showReveal({ key: p.key, v: VAR[p.v] ? p.v : 'n' }, null, 'GIFT FROM THE OWNER') } break;
     case 'next': if (ITEMS[p.key]) S.nextOpen = { key: p.key, v: VAR[p.v] ? p.v : 'n' }; break;
@@ -2032,9 +2060,9 @@ function logout() {
 $('#logout').onclick = logout;
 
 /* ===== navigation ===== */
-const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], quests: ['QUESTS', '#00b894'], whack: ['WHACK-A-SUB', '#e17055'], match: ['MEMORY MATCH', '#6c5ce7'], guess: ["WHO'S THAT SUB?", '#00a8a8'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
+const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], quests: ['QUESTS', '#00b894'], games: ['MINIGAMES', '#e17055'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
 function buildDD() {
-  $('#ddList').innerHTML = ['shop', 'upgrades', 'index', 'quests', 'chat', 'board', 'battles', 'whack', 'match', 'guess', 'settings'].map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('');
+  $('#ddList').innerHTML = ['shop', 'upgrades', 'index', 'quests', 'chat', 'board', 'battles', 'games', 'settings'].map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('');
   $$('.ddi').forEach(el => el.onclick = () => { $('#dd').classList.remove('open'); go(el.dataset.p) });
 }
 $('#ddBtn').onclick = e => { e.stopPropagation(); $('#dd').classList.toggle('open') };
@@ -2044,7 +2072,7 @@ $('#resetCoin').onclick = () => { S.setKey = null; recalc(); updateStats(); upda
 function go(p) {
   stopGames(); if (p === 'owner' && !isOwner()) p = 'shop'; cur = p; $('#ddLabel').textContent = PAGES[p][0];
   $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p));
-  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, whack: renderWhack, match: renderMatch, guess: renderGuess, settings: renderSettings, owner: renderOwner })[p](); sfx('ui');
+  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, games: renderGames, settings: renderSettings, owner: renderOwner })[p](); sfx('ui');
 }
 
 /* ===== clicker ===== */
@@ -2095,7 +2123,8 @@ window.addEventListener('beforeunload', () => { if (S) S.lastSeen = Date.now(); 
 
 /* ===== fun pages (no coins to spend) ===== */
 let GT = [];
-function stopGames() { GT.forEach(t => { clearTimeout(t); clearInterval(t) }); GT = [] }
+let RAF = 0;
+function stopGames() { cancelAnimationFrame(RAF); GT.forEach(t => { if (typeof t === 'function') t(); else { clearTimeout(t); clearInterval(t) } }); GT = [] }
 const T_ = (f, ms) => { const t = setTimeout(f, ms); GT.push(t); return t }, I_ = (f, ms) => { const t = setInterval(f, ms); GT.push(t); return t };
 const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a };
 const allKeys = () => Object.keys(ITEMS).filter(k => !ITEMS[k].hid);
@@ -2104,23 +2133,135 @@ function pool(n) { const o = shuf(ownedKeys()), r = shuf(allKeys().filter(k => !
 const rarPts = k => 1 + Math.max(0, RAR_ORDER.indexOf(ITEMS[k].rarity));
 function hs(game, val, better) {
   S.hs = S.hs || {}; const old = S.hs[game]; if (old !== undefined && !better(val, old)) return false;
-  S.hs[game] = val; const b = Math.round(Math.max(50, CPS * gm() * 30)); S.coins += b; sfx('ach'); toast('New personal best! +' + fmt(b) + ' coins', 'good'); updateStats(); save(true); return true;
+  S.hs[game] = val; const b = Math.round(Math.max(50, CPS * gm() * 30)); S.coins += b; sfx('ach'); confetti(['#ffd23a', '#ff5a5f', '#35c75a', '#4da6ff'], 110); toast('New personal best! +' + fmt(b) + ' coins', 'good'); updateStats(); save(true); return true;
 }
 const bestOf = (g, none) => (S.hs && S.hs[g] !== undefined) ? S.hs[g] : none;
 
+
+function addBack() { const hd = $('#page .phead'); if (!hd || $('#gBack')) return; hd.insertAdjacentHTML('afterbegin', '<button class="btn alt sm" id="gBack" style="margin-right:10px">&lsaquo; GAMES</button>'); $('#gBack').onclick = () => go('games') }
+const GAMES = [
+  { id: 'whack', t: 'WHACK-A-SUB', d: 'Tap subs as they pop up. Golden ones are worth triple!', c: '#e17055', ic: 'spring/Rabbit', r: () => renderWhack(), b: () => bestOf('whack', 0) },
+  { id: 'catch', t: 'SUB CATCHER', d: 'Catch falling subs in your basket. Dodge the bombs!', c: '#2ecc71', ic: 'fruit/Apple', r: () => renderCatcher(), b: () => bestOf('catch', 0) },
+  { id: 'slots', t: 'LUCKY SLOTS', d: '10 free spins. Line up 3 subs for the jackpot!', c: '#f1c40f', ic: 'chance/Jackpot', r: () => renderSlots(), b: () => bestOf('slots', 0) },
+  { id: 'draw', t: 'QUICK DRAW', d: 'Wait for the green flash, then tap as fast as you can.', c: '#e74c3c', ic: 'weapon/Katana', r: () => renderDraw(), b: () => bestOf('draw', '-') + (S.hs && S.hs.draw !== undefined ? ' ms' : '') },
+  { id: 'simon', t: 'SIMON SUBS', d: 'Watch the sub lights and repeat the pattern.', c: '#9b59b6', ic: 'kingdom/Rainbow slime', r: () => renderSimon(), b: () => bestOf('simon', 0) },
+  { id: 'hilo', t: 'RARER OR COMMON?', d: 'Is the next sub harder to pull than this one?', c: '#16a085', ic: 'mineral/Diamond', r: () => renderHilo(), b: () => bestOf('hilo', 0) },
+  { id: 'match', t: 'MEMORY MATCH', d: 'Find all 8 pairs in as few moves as you can.', c: '#6c5ce7', ic: 'school/Crayons', r: () => renderMatch(), b: () => bestOf('match', '-') },
+  { id: 'guess', t: "WHO'S THAT SUB?", d: 'Name the sub from its shadow.', c: '#00a8a8', ic: 'shadow/Shadow', r: () => renderGuess(), b: () => bestOf('guess', 0) + '/10' }
+];
+function renderGames() {
+  $('#page').innerHTML = '<div class="phead"><h2>MINIGAMES</h2><span class="rtag" style="background:var(--deep)">JUST FOR FUN</span></div><div class="small" style="margin-bottom:12px">Nothing to buy here. Beat your personal best in any game for a small coin bonus.</div><div class="gcards">' + GAMES.map(g => '<div class="gcard" data-g="' + g.id + '" style="--c:' + g.c + '"><img class="pix" src="' + spriteURL(g.ic) + '"><b>' + g.t + '</b><span>' + g.d + '</span><em>BEST: ' + g.b() + '</em></div>').join('') + '</div>';
+  $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); GAMES.find(x => x.id === el.dataset.g).r() });
+}
+const heads = (t, k, v) => '<div class="phead"><h2>' + t + '</h2><span class="rtag" style="background:var(--deep)">BEST ' + v + '</span></div>';
+
+/* ---- SUB CATCHER ---- */
+function renderCatcher() {
+  stopGames(); $('#page').innerHTML = heads('SUB CATCHER', 'catch', bestOf('catch', 0)) + '<div class="panel gpanel"><div class="small">Move your basket with the mouse, your finger or the arrow keys. Rare subs score more, golden ones x5, and catching in a row builds a combo. A bomb costs a heart. 45 seconds!</div><div class="gstat"><span>SCORE <b id="cScore">0</b></span><span>HEARTS <b id="cLives">3</b></span><span>COMBO <b id="cCombo">0</b></span></div><div id="cArea" class="carea"><div id="cBask" class="cbask" style="left:50%"></div></div><button class="btn green" id="cStart">START</button></div>';
+  $('#cStart').onclick = startCatcher; addBack();
+}
+function startCatcher() {
+  stopGames(); const area = $('#cArea'); area.innerHTML = '<div id="cBask" class="cbask"></div>'; $('#cStart').disabled = true; const bask = $('#cBask'), W = area.clientWidth || 340, H = area.clientHeight || 400, ps = pool(10);
+  let score = 0, lives = 3, combo = 0, bx = W / 2, last = performance.now(), spawn = 0, t = 0, items = []; bask.style.left = bx + 'px';
+  const mv = e => { const r = area.getBoundingClientRect(); bx = Math.max(32, Math.min(W - 32, e.clientX - r.left)) }; area.onpointermove = mv; area.onpointerdown = mv;
+  const kd = e => { if (e.key === 'ArrowLeft') bx = Math.max(32, bx - 30); if (e.key === 'ArrowRight') bx = Math.min(W - 32, bx + 30) }; document.addEventListener('keydown', kd); GT.push(() => document.removeEventListener('keydown', kd));
+  const hud = () => { $('#cScore').textContent = score; $('#cLives').textContent = lives; $('#cCombo').textContent = combo };
+  function end() { stopGames(); const nb = hs('catch', score, (a, b) => a > b); renderCatcher(); $('#cScore').textContent = score; toast('Game over! You scored ' + score + (nb ? '' : ' (best ' + bestOf('catch', 0) + ')')) }
+  function frame(now) {
+    const dtm = Math.min(50, now - last); last = now; t += dtm; spawn -= dtm;
+    if (spawn <= 0) { spawn = Math.max(280, 850 - t / 55); const bomb = Math.random() < .16, gold = !bomb && Math.random() < .07, k = bomb ? 'weapon/Bomb' : ps[Math.floor(Math.random() * ps.length)], el = document.createElement('img'); el.className = 'pix cfall' + (gold ? ' gld' : ''); el.src = spriteURL(k); area.appendChild(el); items.push({ el, x: 24 + Math.random() * (W - 48), y: -40, vy: 2.2 + Math.random() * 1.6 + t / 14000, k, bomb, gold }) }
+    bask.style.left = bx + 'px';
+    items = items.filter(o => {
+      o.y += o.vy * dtm / 16.7; o.el.style.transform = 'translate(' + (o.x - 20) + 'px,' + o.y + 'px)';
+      if (o.y > H - 50 && o.y < H - 8 && Math.abs(o.x - bx) < 42) { if (o.bomb) { lives--; combo = 0; sfx('sell'); area.style.background = '#ffb0b0'; setTimeout(() => area.style.background = '', 150) } else { combo++; score += rarPts(o.k) * (o.gold ? 5 : 1) * (1 + Math.floor(combo / 5)); sfx(o.gold ? 'ach' : 'click') } o.el.remove(); return false }
+      if (o.y > H) { if (!o.bomb) combo = 0; o.el.remove(); return false } return true;
+    });
+    hud(); if (lives <= 0 || t > 45000) return end(); RAF = requestAnimationFrame(frame);
+  }
+  RAF = requestAnimationFrame(frame);
+}
+
+/* ---- LUCKY SLOTS ---- */
+function renderSlots() {
+  stopGames(); const syms = pool(4); let left = 10, score = 0, busy = false;
+  $('#page').innerHTML = heads('LUCKY SLOTS', 'slots', bestOf('slots', 0)) + '<div class="panel gpanel"><div class="small">10 free spins. Three matching subs = JACKPOT. Two matching = a small win. Rarer subs pay more!</div><div class="gstat"><span>SPINS LEFT <b id="lLeft">10</b></span><span>SCORE <b id="lScore">0</b></span></div><div class="reels"><div class="reel"></div><div class="reel"></div><div class="reel"></div></div><div id="lMsg" style="min-height:24px;font-weight:800"></div><button class="btn gold" id="lSpin">PULL THE LEVER</button><div class="small" style="margin-top:12px">Pays (x rarity points): ' + syms.map(k => esc(ITEMS[k].name) + ' = ' + rarPts(k) * 15).join(' | ') + ' for three.</div></div>';
+  addBack(); const reels = $$('.reel'), show = (r, k) => r.innerHTML = '<img class="pix" src="' + spriteURL(k) + '">'; reels.forEach((r, i) => show(r, syms[i % 4]));
+  $('#lSpin').onclick = () => {
+    if (busy || left <= 0) return; busy = true; left--; $('#lLeft').textContent = left; $('#lMsg').textContent = ''; reels.forEach(r => r.classList.remove('win')); sfx('ui');
+    const res = [0, 1, 2].map(() => syms[Math.floor(Math.random() * 4)]); let done = 0;
+    reels.forEach((r, i) => { const iv = I_(() => { show(r, syms[Math.floor(Math.random() * 4)]); Snd.tone(300 + Math.random() * 300, .04, 'square', .08) }, 70); T_(() => { clearInterval(iv); show(r, res[i]); Snd.tone(440 + i * 110, .12, 'triangle', .2); if (++done === 3) finish() }, 700 + i * 450) });
+    function finish() {
+      let pts = 0; const [a, b, c] = res;
+      if (a === b && b === c) { pts = rarPts(a) * 15; $('#lMsg').textContent = 'JACKPOT! +' + pts; reels.forEach(r => r.classList.add('win')); sfx('ach'); confetti(['#ffd23a', '#ff5a5f', '#35c75a'], 80) }
+      else if (a === b || b === c || a === c) { const k = a === b || a === c ? a : b; pts = rarPts(k) * 3; $('#lMsg').textContent = 'Pair! +' + pts; sfx('click') } else $('#lMsg').textContent = 'No match';
+      score += pts; $('#lScore').textContent = score; busy = false;
+      if (left <= 0) { T_(() => { const nb = hs('slots', score, (x, y) => x > y); toast('All spins used! Final score ' + score + (nb ? '' : ' (best ' + bestOf('slots', 0) + ')')); $('#lSpin').textContent = 'PLAY AGAIN'; left = 0; $('#lSpin').onclick = renderSlots }, 900) }
+    }
+  };
+}
+
+/* ---- QUICK DRAW ---- */
+function renderDraw() {
+  stopGames(); $('#page').innerHTML = heads('QUICK DRAW', 'draw', bestOf('draw', '-') + (S.hs && S.hs.draw !== undefined ? ' ms' : '')) + '<div class="panel gpanel"><div class="small">5 rounds. Wait for the screen to turn green, then tap as fast as you can. Tap too early and you get a penalty!</div><div id="dInfo" style="font-weight:800;margin-top:8px">Tap the box to begin</div><div class="dbox" id="dBox">TAP TO START</div></div>'; addBack();
+  const box = $('#dBox'), ps = pool(10); let round = 0, times = [], state = 'idle', t0 = 0, timer = 0;
+  function arm() {
+    round++; state = 'wait'; box.className = 'dbox wait'; box.textContent = 'WAIT FOR IT...'; $('#dInfo').textContent = 'Round ' + round + ' / 5';
+    timer = T_(() => { state = 'go'; t0 = performance.now(); box.className = 'dbox go'; box.innerHTML = '<img class="pix" src="' + spriteURL(ps[round % ps.length]) + '"><div>TAP!</div>'; Snd.tone(880, .15, 'square', .25) }, 1200 + Math.random() * 2800);
+  }
+  box.onpointerdown = () => {
+    if (state === 'idle') return arm();
+    if (state === 'wait') { clearTimeout(timer); state = 'early'; times.push(700); box.className = 'dbox bad'; box.textContent = 'TOO EARLY! +700ms penalty'; sfx('sell'); return T_(next, 1200) }
+    if (state === 'go') { const ms = Math.round(performance.now() - t0); times.push(ms); state = 'shown'; box.className = 'dbox'; box.innerHTML = ms + ' ms<br>' + (ms < 200 ? 'LIGHTNING!' : ms < 280 ? 'FAST!' : ms < 380 ? 'Decent' : 'Sleepy...'); sfx(ms < 300 ? 'ach' : 'click'); T_(next, 1100) }
+  };
+  function next() {
+    if (round >= 5) { const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length); state = 'over'; box.className = 'dbox'; box.innerHTML = 'AVERAGE<br>' + avg + ' ms'; const nb = hs('draw', avg, (a, b) => a < b); $('#dInfo').textContent = nb ? 'New personal best!' : 'Tap the box to play again'; T_(() => { state = 'again'; }, 600); return }
+    arm();
+  }
+  const orig = box.onpointerdown; box.onpointerdown = e => { if (state === 'again') return renderDraw(); orig(e) };
+}
+
+/* ---- SIMON SUBS ---- */
+function renderSimon() {
+  stopGames(); const ps = pool(4), cols = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f'], freqs = [330, 415, 262, 523]; let seq = [], idx = 0, lock = true, level = 0;
+  $('#page').innerHTML = heads('SIMON SUBS', 'simon', bestOf('simon', 0)) + '<div class="panel gpanel"><div class="small">Watch the pads light up, then repeat the pattern. It gets one step longer every round!</div><div class="gstat"><span>ROUND <b id="sLvl">0</b></span></div><div id="sMsg" style="min-height:22px;font-weight:800"></div><div class="ggrid g2" id="sGrid">' + ps.map((k, i) => '<div class="spad" data-i="' + i + '" style="background:' + cols[i] + '"><img class="pix" src="' + spriteURL(k) + '"></div>').join('') + '</div><button class="btn green" id="sStart">START</button></div>'; addBack();
+  const pads = $$('.spad'), msg = m => { const e = $('#sMsg'); if (e) e.textContent = m };
+  const flash = (i, ms) => { pads[i].classList.add('lit'); Snd.tone(freqs[i], ms / 1000, 'triangle', .25); T_(() => pads[i].classList.remove('lit'), ms) };
+  function next() { lock = true; level++; $('#sLvl').textContent = level; seq.push(Math.floor(Math.random() * 4)); idx = 0; const step = Math.max(260, 520 - level * 15); msg('Watch...'); seq.forEach((p, j) => T_(() => flash(p, Math.max(180, 380 - level * 12)), 600 + j * step)); T_(() => { lock = false; msg('Your turn!') }, 600 + seq.length * step) }
+  function end() { lock = true; sfx('sell'); const sc = level - 1; stopGames(); const nb = hs('simon', sc, (a, b) => a > b); renderSimon(); $('#sMsg').textContent = 'Wrong pad! You completed ' + sc + ' round' + (sc === 1 ? '' : 's') + (nb ? '' : ' (best ' + bestOf('simon', 0) + ')') }
+  pads.forEach((p, i) => p.onpointerdown = () => { if (lock) return; flash(i, 180); if (i !== seq[idx]) return end(); idx++; if (idx === seq.length) { lock = true; sfx('ach'); T_(next, 800) } });
+  $('#sStart').onclick = () => { $('#sStart').disabled = true; seq = []; level = 0; next() };
+}
+
+/* ---- RARER OR COMMON? ---- */
+function renderHilo() {
+  stopGames(); const ks = allKeys().filter(k => ITEMS[k].w > 0), ch = k => chanceOf(ITEMS[k]); let streak = 0, a = null, b = null;
+  $('#page').innerHTML = heads('RARER OR COMMON?', 'hilo', bestOf('hilo', 0)) + '<div class="panel gpanel"><div class="small">You see how often the left sub drops from its pack. Is the right sub RARER or MORE COMMON? One wrong guess and it is over.</div><div class="gstat"><span>STREAK <b id="hStreak">0</b></span></div><div class="hlbox" id="hBox"></div><div id="hBtns"><button class="btn green" id="hStart">START</button></div></div>'; addBack();
+  function pair() { for (let n = 0; n < 50; n++) { const x = ks[Math.floor(Math.random() * ks.length)], y = ks[Math.floor(Math.random() * ks.length)]; if (x !== y && ch(x) / ch(y) > 1.25 || ch(y) / ch(x) > 1.25) { if (x !== y) return [x, y] } } return [ks[0], ks[1]] }
+  function ask() {
+    [a, b] = pair(); $('#hStreak').textContent = streak;
+    $('#hBox').innerHTML = '<div class="hlc"><img class="pix" src="' + spriteURL(a) + '"><b>' + esc(ITEMS[a].name) + '</b><div class="pc">' + fmtPct(ch(a)) + '</div></div><div style="font-weight:800">VS</div><div class="hlc"><img class="pix" src="' + spriteURL(b) + '"><b>' + esc(ITEMS[b].name) + '</b><div class="pc" id="hRev">???</div></div>';
+    $('#hBtns').innerHTML = '<button class="btn green" data-a="r">RARER</button> <button class="btn alt" data-a="c">MORE COMMON</button>';
+    $$('#hBtns button').forEach(bt => bt.onclick = () => {
+      $('#hBtns').innerHTML = ''; $('#hRev').textContent = fmtPct(ch(b)); const ok = (ch(b) < ch(a)) === (bt.dataset.a === 'r');
+      if (ok) { streak++; sfx('ach'); T_(ask, 1100) } else { sfx('sell'); const sc = streak; T_(() => { const nb = hs('hilo', sc, (x, y) => x > y); renderHilo(); $('#hStreak').textContent = sc; toast('Wrong! Final streak: ' + sc + (nb ? '' : ' (best ' + bestOf('hilo', 0) + ')')) }, 1300) }
+    });
+  }
+  $('#hStart').onclick = ask;
+}
+
 function renderWhack() {
-  $('#page').innerHTML = `<div class="phead"><h2>WHACK-A-SUB</h2><span class="rtag" style="background:var(--deep)">BEST ${bestOf('whack', 0)}</span></div><div class="panel gpanel"><div class="small">Tap the subs as they pop up. Rarer subs score more. Don't tap the bombs! 30 seconds.</div><div class="gstat"><span>SCORE <b id="wScore">0</b></span><span>TIME <b id="wTime">30</b></span></div><div class="ggrid g3" id="wGrid">${[...Array(9)].map(() => '<div class="hole"></div>').join('')}</div><button class="btn green" id="wStart">START</button></div>`;
-  $('#wStart').onclick = startWhack;
+  $('#page').innerHTML = `<div class="phead"><h2>WHACK-A-SUB</h2><span class="rtag" style="background:var(--deep)">BEST ${bestOf('whack', 0)}</span></div><div class="panel gpanel"><div class="small">Tap the subs as they pop up. Rarer subs score more, glowing golden ones are worth triple, and a streak of hits adds bonus points. Don't tap the bombs! 30 seconds.</div><div class="gstat"><span>SCORE <b id="wScore">0</b></span><span>TIME <b id="wTime">30</b></span></div><div class="ggrid g3" id="wGrid">${[...Array(9)].map(() => '<div class="hole"></div>').join('')}</div><button class="btn green" id="wStart">START</button></div>`;
+  $('#wStart').onclick = startWhack; addBack();
 }
 function startWhack() {
-  stopGames(); let score = 0, t = 30; const holes = $$('#wGrid .hole'), ps = pool(12); $('#wStart').disabled = true;
+  stopGames(); let score = 0, t = 30, streak = 0; const holes = $$('#wGrid .hole'), ps = pool(12); $('#wStart').disabled = true;
   const sc = () => { if ($('#wScore')) $('#wScore').textContent = score };
-  holes.forEach(hl => { hl.innerHTML = ''; hl.onpointerdown = () => { const d = hl.firstChild; if (!d || d.dataset.hit) return; d.dataset.hit = 1; if (d.dataset.bomb) { score = Math.max(0, score - 5); sfx('sell'); hl.classList.add('bad') } else { score += +d.dataset.p; sfx('click'); hl.classList.add('good') } sc(); T_(() => { hl.innerHTML = ''; hl.className = 'hole' }, 150) } });
+  holes.forEach(hl => { hl.innerHTML = ''; hl.onpointerdown = () => { const d = hl.firstChild; if (!d || d.dataset.hit) return; d.dataset.hit = 1; if (d.dataset.bomb) { score = Math.max(0, score - 5); streak = 0; sfx('sell'); hl.classList.add('bad') } else { streak++; score += +d.dataset.p + Math.floor(streak / 5); sfx(d.dataset.gold ? 'ach' : 'click'); hl.classList.add('good') } sc(); T_(() => { hl.innerHTML = ''; hl.className = 'hole' }, 150) } });
   function end() { stopGames(); const nb = hs('whack', score, (a, b) => a > b); renderWhack(); $('#wScore').textContent = score; $('#wTime').textContent = 0; toast('Time! You scored ' + score + (nb ? '' : ' (best ' + bestOf('whack', 0) + ')')) }
   I_(() => { t--; if ($('#wTime')) $('#wTime').textContent = t; if (t <= 0) end() }, 1000);
   function pop() {
     if (t <= 0) return; const free = holes.filter(x => !x.firstChild);
-    if (free.length) { const hl = free[Math.floor(Math.random() * free.length)], bomb = Math.random() < .15, k = bomb ? 'weapon/Bomb' : ps[Math.floor(Math.random() * ps.length)]; hl.innerHTML = `<img class="pix" src="${spriteURL(k)}" data-p="${bomb ? 0 : rarPts(k)}"${bomb ? ' data-bomb="1"' : ''}>`; T_(() => { if (hl.firstChild && !hl.firstChild.dataset.hit) hl.innerHTML = '' }, 900 - (30 - t) * 12) }
+    if (free.length) { const hl = free[Math.floor(Math.random() * free.length)], bomb = Math.random() < .15, gold = !bomb && Math.random() < .1, k = bomb ? 'weapon/Bomb' : ps[Math.floor(Math.random() * ps.length)]; hl.innerHTML = `<img class="pix" src="${spriteURL(k)}" data-p="${bomb ? 0 : rarPts(k) * (gold ? 3 : 1)}"${bomb ? ' data-bomb="1"' : ''}${gold ? ' data-gold="1" style="filter:drop-shadow(0 0 8px #ffd23a)"' : ''}>`; T_(() => { if (hl.firstChild && !hl.firstChild.dataset.hit) hl.innerHTML = '' }, 900 - (30 - t) * 12) }
     T_(pop, 480 - (30 - t) * 6);
   }
   pop();
@@ -2128,7 +2269,7 @@ function startWhack() {
 
 function renderMatch() {
   $('#page').innerHTML = `<div class="phead"><h2>MEMORY MATCH</h2><span class="rtag" style="background:var(--deep)">BEST ${bestOf('match', '-')} MOVES</span></div><div class="panel gpanel"><div class="small">Flip two cards to find the matching subs. Finish in as few moves as you can.</div><div class="gstat"><span>MOVES <b id="mMoves">0</b></span><span>PAIRS <b id="mPairs">0/8</b></span></div><div class="ggrid g4" id="mGrid"></div><button class="btn green" id="mStart">NEW GAME</button></div>`;
-  $('#mStart').onclick = startMatch; startMatch();
+  $('#mStart').onclick = startMatch; startMatch(); addBack();
 }
 function startMatch() {
   stopGames(); const ks = pool(8), cards = shuf(ks.concat(ks)); let open = [], moves = 0, pairs = 0, lock = false;
@@ -2146,7 +2287,7 @@ function startMatch() {
 
 function renderGuess() {
   $('#page').innerHTML = `<div class="phead"><h2>WHO'S THAT SUB?</h2><span class="rtag" style="background:var(--deep)">BEST ${bestOf('guess', 0)}/10</span></div><div class="panel gpanel"><div class="small">Guess the sub from its shadow. 10 rounds.</div><div id="gBox"><button class="btn green" id="gStart" style="margin-top:12px">START</button></div></div>`;
-  $('#gStart').onclick = startGuess;
+  $('#gStart').onclick = startGuess; addBack();
 }
 function startGuess() {
   stopGames(); const qs = shuf(allKeys()).slice(0, 10); let i = 0, right = 0; const box = $('#gBox');
@@ -2181,7 +2322,7 @@ function previewPack(p) {
 }
 function roll(p) {
   if (S.nextOpen) { const n = S.nextOpen; S.nextOpen = null; return { key: n.key, v: n.v } }
-  if (Math.random() * 100 < HID.charlie.pct) return { key: HID.charlie.key, v: 'n' };
+  for (const x of HIDDEN) if (x.pct > 0 && Math.random() * 100 < x.pct) return { key: x.key, v: 'n' };
   let r = Math.random() * packTotal(p), it = p.items[p.items.length - 1];
   for (const i of p.items) { r -= i.w; if (r < 0) { it = i; break } }
   let v = 'n'; if (p.variants) { let x = Math.random() * 100, acc = 0; for (const k of VROLL) { acc += VAR[k].p; if (x < acc) { v = k; break } } }
@@ -2492,10 +2633,11 @@ function renderOwner() {
   <div class="panel osec"><h3>PLAYER TOOLS</h3><div class="orow"><input id="o_t" list="plist" placeholder="player username"><input id="o_amt" type="number" placeholder="amount"></div><div class="orow"><button class="btn sm green" id="o_gc">GIVE COINS</button><button class="btn sm" id="o_sc">SET COINS</button><button class="btn sm" id="o_sr">SET BATTLE RANK</button><button class="btn sm red" id="o_ban">BAN</button><button class="btn sm alt" id="o_unban">UNBAN</button></div></div>
   <div class="panel osec"><h3>SEND A MESSAGE</h3><div class="orow"><input id="o_mt" list="plist" placeholder="player (blank = EVERYONE)" style="flex:1"><select id="o_mm"><option value="popup">POPUP</option><option value="top">TOP BANNER</option></select></div><div class="orow"><textarea id="o_msg" rows="2" maxlength="240" placeholder="Message..." style="flex:1"></textarea><button class="btn sm green" id="o_send">SEND</button></div></div>
   <div class="panel osec"><h3>EVENTS</h3><div class="orow"><span>Everyone earns</span><input id="o_gx" type="number" value="2" min="1" style="width:80px"><span>x coins for</span><input id="o_gm" type="number" value="30" min="1" style="width:90px"><span>minutes</span><button class="btn sm gold" id="o_gstart">START</button><button class="btn sm alt" id="o_gstop">STOP</button></div></div>
+  <div class="panel osec"><h3>SPECIAL SUBS</h3><div id="o_spec"></div><div class="orow"><button class="btn sm green" id="o_newspec">+ NEW SPECIAL</button><button class="btn sm alt" id="o_expspec">EXPORT specials.json</button></div><div class="small">Upload an image, crop it, and everyone online gets it. Players who join later get it while you are online, or permanently if you upload the exported specials.json next to index.html.</div></div>
   <div class="panel osec"><h3>PACKS</h3><div class="opacks">${PACKS.map(p => `<div class="opk"><i style="background:${p.color}"></i><span>${esc(p.name)} (${fmt(p.cost)})</span><button class="btn sm" data-ep="${p.id}">EDIT</button></div>`).join('')}</div></div>
   <div class="panel osec"><h3>PLAYER DATABASE</h3><div class="orow"><input id="o_q" placeholder="search..." style="flex:1"><button class="btn sm alt" id="o_csv">EXPORT CSV</button></div><div class="tblwrap" id="o_tbl"></div></div>
   <datalist id="plist">${L.map(p => `<option value="${esc(p.u)}">`).join('')}</datalist>`;
-  wirePicker('g'); renderOwnerTable();
+  wirePicker('g'); renderOwnerTable(); renderSpecPanel(); $('#o_newspec').onclick = newSpecialDialog; $('#o_expspec').onclick = exportSpecials;
   const num = id => +$('#' + id).value, tgt = () => $('#o_t').value.trim(), need = () => { if (!tgt()) { toast('Enter a player username.', 'bad'); return false } return true };
   const rep = (r, what) => toast(r === 'queued' ? `${what}: player offline - queued, delivers when they come online` : r === 'self' ? `${what}: applied to you` : `${what}: sent`, 'good');
   $('#o_setCoins').onclick = () => { S.coins = Math.max(0, num('o_coins') || 0); updateStats(); save(true); toast('Coins set', 'good') };
@@ -2518,6 +2660,60 @@ function renderOwnerTable() {
   box.innerHTML = `<table><tr><th>USER</th><th>FULL NAME</th><th>FROM</th><th>COINS</th><th>RANK</th><th>W/L</th><th>PACKS</th><th>STATUS</th><th></th></tr>${L.map(p => `<tr><td><b>${esc(p.u)}</b></td><td>${esc(p.fullName)}</td><td>${esc(p.from)}</td><td>${fmt(p.coins)}</td><td>${fmt(p.rank)}</td><td>${p.wins}/${p.losses}</td><td>${fmt(p.opens)}</td><td><span class="dot${p.online ? ' on' : ''}"></span>${p.banned ? 'BANNED' : p.online ? 'online' : (p.ts ? new Date(p.ts).toLocaleDateString() : '-')}</td><td><button class="btn sm alt" data-pick="${esc(p.u)}">SELECT</button></td></tr>`).join('') || '<tr><td colspan=9>No players yet.</td></tr>'}</table>`;
   $$('[data-pick]', box).forEach(b => b.onclick = () => { ['o_t', 'o_tsub', 'o_mt'].forEach(id => $('#' + id).value = b.dataset.pick); toast('Selected ' + b.dataset.pick) });
   ['os1', 'os2', 'os3', 'os4'].forEach((id, i) => { const el = $('#' + id); if (el) el.textContent = [allPlayers().length, allPlayers().filter(p => p.online).length, fmt(allPlayers().reduce((a, p) => a + p.coins, 0)), BANS.length][i] });
+}
+
+async function announceSpecials(ids) {
+  if (!isOwner() || Net.mode !== 'ably') return;
+  for (const id of (ids || Object.keys(SPEC))) { const s = SPEC[id]; if (!s) continue; const v = s.ver || 1; try { Net.pub('admin', 'a', await signMsg({ id: 'sp-' + id + '-' + v, to: '*', type: 'special', p: s, ts: v })) } catch (e) {} }
+}
+setInterval(() => announceSpecials(), 50000);
+function saveSpecial(s) {
+  s.ver = Date.now(); setSpecial(s); if (!OWNER_KEYS) toast('Saved on this device. To sync it to players, log out and back in (needs https).', 'bad'); else announceSpecials([s.id]);
+  toast('Special saved', 'good'); if (cur === 'owner') renderSpecPanel(); if (cur === 'index') renderIndex();
+}
+function cropImage(file, done) {
+  const im = new Image(), url = URL.createObjectURL(file);
+  im.onerror = () => toast('That file is not a usable image.', 'bad');
+  im.onload = () => {
+    const m = modal('<h3>CROP IMAGE</h3><canvas id="crc" width="240" height="240" style="touch-action:none;border:3px solid var(--deep);border-radius:12px;background:#222;cursor:grab;max-width:100%"></canvas><div class="small">Drag to move. Slider to zoom. The circle is how it shows in the game.</div><input type="range" id="crz" min="100" max="400" value="100" style="width:100%"><div class="mbtns"><button class="btn green" id="crok">SAVE</button><button class="btn alt" id="crno">CANCEL</button></div>');
+    const c = $('#crc', m), x = c.getContext('2d'), base = 240 / Math.min(im.width, im.height); let z = 1, ox = (240 - im.width * base) / 2, oy = (240 - im.height * base) / 2, drag = null;
+    const clampP = () => { ox = Math.min(0, Math.max(240 - im.width * base * z, ox)); oy = Math.min(0, Math.max(240 - im.height * base * z, oy)) };
+    const draw = () => { clampP(); x.fillStyle = '#222'; x.fillRect(0, 0, 240, 240); x.drawImage(im, ox, oy, im.width * base * z, im.height * base * z); x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 2; x.beginPath(); x.arc(120, 120, 118, 0, 7); x.stroke() };
+    $('#crz', m).oninput = e => { const cx = (120 - ox) / (base * z), cy = (120 - oy) / (base * z); z = e.target.value / 100; ox = 120 - cx * base * z; oy = 120 - cy * base * z; draw() };
+    c.onpointerdown = e => { drag = { x: e.clientX, y: e.clientY }; c.setPointerCapture && c.setPointerCapture(e.pointerId) };
+    c.onpointermove = e => { if (!drag) return; const k = 240 / c.getBoundingClientRect().width; ox += (e.clientX - drag.x) * k; oy += (e.clientY - drag.y) * k; drag = { x: e.clientX, y: e.clientY }; draw() };
+    c.onpointerup = c.onpointercancel = () => { drag = null };
+    $('#crno', m).onclick = () => { closeModal(); URL.revokeObjectURL(url) };
+    $('#crok', m).onclick = () => {
+      const o = document.createElement('canvas'); o.width = o.height = 160; const t = o.getContext('2d'), k = 160 / 240; t.fillStyle = '#fff'; t.fillRect(0, 0, 160, 160); t.drawImage(im, ox * k, oy * k, im.width * base * z * k, im.height * base * z * k);
+      let q = .86, d = o.toDataURL('image/jpeg', q); while (d.length > 60000 && q > .3) { q -= .12; d = o.toDataURL('image/jpeg', q) }
+      closeModal(); URL.revokeObjectURL(url); done(d);
+    };
+    draw();
+  };
+  im.src = url;
+}
+function pickImage(done) { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = () => { if (i.files && i.files[0]) cropImage(i.files[0], done) }; i.click() }
+function renderSpecPanel() {
+  const box = $('#o_spec'); if (!box) return;
+  box.innerHTML = HIDDEN.map(it => { const id = it.key.split('/')[1]; return '<div class="orow" style="align-items:center"><img class="pix" src="' + spriteURL(it.key) + '" style="width:48px;height:48px;border-radius:8px;border:2px solid var(--deep);background:#e8f4ff;object-fit:cover"><div style="flex:1"><b>' + esc(it.name) + '</b><div class="small">' + (it.pct > 0 ? fmtPct(it.pct) + ' chance per pack open' : esc(it.how || '')) + '</div></div><button class="btn sm" data-simg="' + id + '">IMAGE</button><button class="btn sm alt" data-sedit="' + id + '">EDIT</button>' + (SPEC[id] && SPEC[id].img ? '<button class="btn sm alt" data-sclr="' + id + '">DEFAULT ART</button>' : '') + '</div>' }).join('');
+  $$('[data-simg]', box).forEach(b => b.onclick = () => pickImage(d => saveSpecial({ id: b.dataset.simg, img: d })));
+  $$('[data-sclr]', box).forEach(b => b.onclick = () => saveSpecial({ id: b.dataset.sclr, img: '' }));
+  $$('[data-sedit]', box).forEach(b => b.onclick = () => editSpecial(b.dataset.sedit));
+}
+function editSpecial(id) {
+  const it = ITEMS['hidden/' + id]; if (!it) return; const hasPct = it.custom || it.pct > 0;
+  const m = modal('<h3>EDIT SPECIAL</h3><div class="orow"><input id="se_name" maxlength="40" value="' + esc(it.name) + '" style="flex:1" placeholder="name"></div>' + (hasPct ? '<div class="orow"><span>Chance per pack open (%)</span><input id="se_pct" type="number" step="any" min="0" max="100" value="' + it.pct + '" style="width:120px"></div><div class="small">0.01 means 1 in 10,000 pack opens. 100 means every pack.</div>' : '<div class="small">This one is unlocked by: ' + esc(it.how || '') + '</div>') + '<div class="mbtns"><button class="btn green" id="se_ok">SAVE</button><button class="btn alt" id="se_no">CANCEL</button></div>');
+  $('#se_no', m).onclick = closeModal;
+  $('#se_ok', m).onclick = () => { const s = { id, name: $('#se_name', m).value.trim() || it.name }; if (hasPct) s.pct = Math.max(0, Math.min(100, +$('#se_pct', m).value || 0)); closeModal(); saveSpecial(s) };
+}
+function newSpecialDialog() {
+  const m = modal('<h3>NEW SPECIAL</h3><div class="orow"><input id="ns_name" maxlength="40" placeholder="name" style="flex:1"></div><div class="orow"><span>Chance from ANY pack (%)</span><input id="ns_pct" type="number" step="any" min="0" max="100" value="0.01" style="width:120px"></div><div class="small">0.01 = 1 in 10,000 opens. It can drop from every pack, like Hot Ears Charlie. It shows up in everyone\'s Hidden Subs once they find it.</div><div class="mbtns"><button class="btn green" id="ns_ok">CHOOSE IMAGE</button><button class="btn alt" id="ns_no">CANCEL</button></div>');
+  $('#ns_no', m).onclick = closeModal;
+  $('#ns_ok', m).onclick = () => { const name = $('#ns_name', m).value.trim(), pct = Math.max(0, Math.min(100, +$('#ns_pct', m).value || 0)); if (!name) return toast('Give it a name first.', 'bad'); closeModal(); pickImage(d => saveSpecial({ id: 'x' + Date.now().toString(36), custom: true, name, pct, img: d })) };
+}
+function exportSpecials() {
+  const b = new Blob([JSON.stringify(SPEC)], { type: 'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'specials.json'; a.click(); toast('Upload specials.json next to index.html on GitHub to make them permanent for everyone.', 'good');
 }
 function exportCSV() {
   const rows = [['username', 'full_name', 'from', 'coins', 'rank', 'wins', 'losses', 'packs_opened', 'banned']].concat(allPlayers().map(p => [p.u, p.fullName, p.from, Math.floor(p.coins), p.rank, p.wins, p.losses, p.opens, p.banned]));
