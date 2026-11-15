@@ -1800,7 +1800,7 @@ function applyOneSpecial(s) {
   if (typeof s.img === 'string' && s.img.startsWith('data:image/') && s.img.length < 90000) SPR[it.key] = s.img; else if (s.img === '') delete SPR[it.key];
 }
 function setSpecial(s) {
-  if (!s || !s.id || typeof s.id !== 'string') return false; const old = SPEC[s.id]; if (old && (old.ver || 0) > (s.ver || 0)) return false;
+  if (!s || !s.id || typeof s.id !== 'string') return false; const old = SPEC[s.id]; if (old && (old.ver || 0) >= (s.ver || 0)) return false;
   SPEC[s.id] = Object.assign({}, old, s); lsSet('sc_specials', SPEC); applyOneSpecial(SPEC[s.id]); return true;
 }
 Object.values(SPEC).forEach(applyOneSpecial);
@@ -2110,6 +2110,7 @@ function onAdmin(m) {
     applyAdmin(d); if (d.to !== '*') Net.pub('admin', 'ack', { id: d.id }); save(true);
   });
 }
+const uiBusy = () => !!($('#modal-root').children.length || $('#reveal').className === 'on');
 function applyAdmin(d) {
   const p = d.p || {};
   switch (d.type) {
@@ -2118,7 +2119,7 @@ function applyAdmin(d) {
     case 'luck': LUCK = { x: Math.max(1, +p.x || 1), until: +p.until || 0 }; lsSet('sc_luck', LUCK); break;
     case 'goldrain': GOLDRAIN = +p.until || 0; lsSet('sc_gr', GOLDRAIN); break;
     case 'party': confetti(['#ffd23a', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8'], 180); sfx('ach'); break;
-    case 'special': if (setSpecial(p)) { if (cur === 'index') renderIndex(); else if (cur === 'shop') renderShop() } break;
+    case 'special': if (setSpecial(p) && !uiBusy()) { if (cur === 'index') renderIndex(); else if (cur === 'shop') renderShop() } break;
     case 'rank': S.rank = Math.max(0, +p.n || 0); break;
     case 'sub': if (ITEMS[p.key]) { addItem(p.key, VAR[p.v] ? p.v : 'n', Math.max(1, +p.n || 1)); showReveal({ key: p.key, v: VAR[p.v] ? p.v : 'n' }, null, d.by ? 'GIFT FROM AN ADMIN' : 'GIFT FROM THE OWNER') } break;
     case 'next': if (ITEMS[p.key]) S.nextOpen = { key: p.key, v: VAR[p.v] ? p.v : 'n' }; break;
@@ -2128,7 +2129,7 @@ function applyAdmin(d) {
     case 'mult': GM = { x: Math.max(1, +p.x || 1), until: +p.until || 0 }; lsSet('sc_gmult', GM); break;
     case 'grant': if (ME && !isOwner() && p.epk) openGrant(p).then(async j => { const c = j.cert; if (!c || String(c.p.u).toLowerCase() !== ME.username.toLowerCase() || !(await verifyOwnerSig(c))) return; ADMINCRED = { cert: c, priv: j.priv }; ADMKEY = null; lsSet('sc_adm_' + ME.username.toLowerCase(), ADMINCRED); updPanelBtn(); popupMsg('You are now an ADMIN! An ADMIN PANEL button appeared next to your menu.') }).catch(() => {}); break;
     case 'revokeadmin': { const u = String(p.u || '').toLowerCase(); if (!u) break; REVOKED[u] = Math.max(REVOKED[u] || 0, +p.at || Date.now()); lsSet('sc_revoked', REVOKED); if (ME && u === ME.username.toLowerCase() && ADMINCRED && ADMINCRED.cert.ts <= REVOKED[u] && !isOwner()) { ADMINCRED = null; ADMKEY = null; localStorage.removeItem('sc_adm_' + u); updPanelBtn(); if (cur === 'owner') go('shop') } break }
-    case 'packs': PACKEDITS = p.ov || {}; lsSet('sc_packedits', PACKEDITS); applyOverrides(PACKEDITS); if (cur === 'shop' || cur === 'index') go(cur); break;
+    case 'packs': { const nv = p.ov || {}; if (JSON.stringify(nv) === JSON.stringify(PACKEDITS)) break; PACKEDITS = nv; lsSet('sc_packedits', PACKEDITS); applyOverrides(PACKEDITS); if ((cur === 'shop' || cur === 'index') && !uiBusy()) go(cur); break }
   }
   recalc(); updateStats(); updateCoin();
 }
@@ -2469,7 +2470,7 @@ function offerCard(o, vault) {
 function renderShop() {
   const on = offerList().filter(o => offerState(o) === 'on');
   $('#page').innerHTML = `<div class="phead"><h2>SHOP</h2><div class="idxhead"><button class="btn alt" id="vaultBtn">VAULT</button><button class="btn ${S.instant ? 'green' : 'alt'}" id="inst">INSTANT OPEN: ${S.instant ? 'ON' : 'OFF'}</button></div></div>${on.length ? `<div class="offers-h">LIMITED SPECIALS</div><div class="offers">${on.map(o => offerCard(o)).join('')}</div>` : ''}<div class="packs">${PACKS.map(p => packHTML(p)).join('')}</div>`;
-  $('#inst').onclick = () => { S.instant = !S.instant; save(true); renderShop() }; $('#vaultBtn').onclick = openVault;
+  shopSig = on.map(o => o.id).join(','); $('#inst').onclick = () => { S.instant = !S.instant; save(true); renderShop() }; $('#vaultBtn').onclick = openVault;
   $$('.pack').forEach((el, i) => { el.style.animationDelay = Math.min(i * 30, 600) + 'ms'; el.onclick = () => { const p = PACKS.find(x => x.id === el.dataset.id); S.instant ? openPack(p) : previewPack(p) } });
   $$('.offer').forEach(el => el.onclick = () => buyOffer(el.dataset.of));
 }
@@ -2487,7 +2488,12 @@ function openVault() {
   const L = offerList().filter(o => offerState(o) === 'old');
   modal(`<h3>THE VAULT</h3><p class="small" style="margin-top:6px">Old Shop Specials that are not for sale right now. Yearly ones come back on their day.</p>${L.length ? `<div class="vgrid">${L.map(o => offerCard(o, true)).join('')}</div>` : '<p style="margin:14px 0">Nothing in the vault yet.</p>'}`);
 }
-setInterval(() => { if (S && cur === 'shop' && !$('#modal-root').children.length && $('#reveal').className !== 'on') renderShop() }, 30000);
+let shopSig = '';
+setInterval(() => {
+  if (!S || cur !== 'shop' || uiBusy()) return; const on = offerList().filter(o => offerState(o) === 'on'), sig = on.map(o => o.id).join(',');
+  if (sig !== shopSig) { shopSig = sig; renderShop(); return }
+  on.forEach(o => { const el = $('.offer[data-of="' + o.id + '"] .small'); if (el) el.textContent = offerLeft(o) });
+}, 30000);
 function previewPack(p) {
   const tot = packTotal(p), items = [...p.items].sort(byRar);
   const m = modal(`<div style="margin-top:10px">${packHTML(p, true)}</div><div class="chances">${items.map(it => `<div class="crow"><i style="background:${RAR[it.rarity].color}"></i><span class="cn">${esc(it.name)}</span><span class="cr">${RAR[it.rarity].name}</span><span class="cp">${fmtPct(it.w / tot * 100)}</span></div>`).join('')}</div><div class="mbtns"><button class="btn green" id="pvOpen">OPEN</button><button class="btn alt" id="pvCancel">CANCEL</button></div>`);
