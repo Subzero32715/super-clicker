@@ -312,6 +312,7 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
           <div id="coin"><img id="coinImg" alt="coin"></div>
           <div class="small" id="coinName" style="font-weight:700"></div>
           <div id="cmb"><div class="cmbTop"><span id="cmbTxt"></span><span id="cmbMul"></span></div><div class="cmbBar"><i id="cmbFill"></i></div><button class="btn gold sm" id="frenzy" hidden>FRENZY!</button></div>
+          <button class="btn gold sm" id="giftBtn" hidden style="margin-top:8px"></button><div class="small" id="goalBar" style="margin-top:6px;font-weight:700"></div>
           <button class="btn alt sm" id="resetCoin" hidden>BACK TO PENNY</button>
         </div>
       </div>
@@ -920,8 +921,11 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
     g.circ(10, 22, 7, '#8a8a96'); g.circ(20, 21, 8, '#9a9aa6'); g.circ(15, 13, 8, '#b0b0bc'); g.circ(23, 11, 5, '#c5c5d0'); g.circ(8, 10, 4, '#a8a8b4'); g.ell(14, 10, 4, 3, '#dcdce6'); g.ell(12, 20, 3, 2, '#b4b4c0'); g.rect(6, 27, 20, 3, '#6a6a76'); g.px(18, 24, '#ff8a2a'); g.px(10, 26, '#ff8a2a'); fin(g); g.rect(14, 18, 2, 2, '#16162a'); g.rect(19, 18, 2, 2, '#16162a');
   };
   ART['volcanic/Lava snake'] = g => {
-    for (let t = 0; t < 60; t++) { const a = t * .17, x = 5 + t * .42, y = 20 + Math.sin(a) * 7 - (t > 54 ? (t - 54) * 1.2 : 0); g.circ(x, y, 3.2 - t * .02, t % 6 < 3 ? '#ff6a1a' : '#e8420a') } g.circ(29, 11, 4, '#ff6a1a'); g.rect(27, 9, 2, 2, '#ffe45c'); g.px(28, 10, '#111'); g.line(30, 14, 31, 17, '#ff2a2a', 1);
-    g.noise(3, 10, 28, 20, '#ffe45c', .12, 3); g.noise(3, 10, 28, 20, '#3a1a10', .1, 5); fin(g);
+    const pts = []; for (let t = 0; t <= 40; t++) pts.push([3 + t * .62, 19 + Math.sin(t * .3) * 6.5]);
+    pts.forEach((p, t) => { const r = t > 36 ? 2.9 : 2.2; g.circ(p[0], p[1], r, t % 6 < 3 ? '#ff6a1a' : '#e8420a') });
+    pts.forEach((p, t) => { if (t % 6 === 1) g.px(p[0], p[1] - 1, '#ffe45c') });
+    const h = pts[40]; g.ell(h[0] + 1, h[1] - 1, 4.6, 3.6, '#ff8a2a'); g.rect(h[0] + 1, h[1] - 3, 2, 2, '#ffe45c'); g.px(h[0] + 2, h[1] - 2, '#111'); g.line(h[0] + 4, h[1], 31, h[1] + 1, '#ff2a2a', 1); g.px(30, h[1] - 1, '#ff2a2a'); g.px(30, h[1] + 3, '#ff2a2a');
+    g.bevel(.18); g.outline();
   };
   ART['volcanic/Lava bat'] = g => {
     g.poly([[14, 14], [1, 8], [3, 18], [8, 15], [10, 24], [14, 19]], '#3a2230'); g.poly([[18, 14], [31, 8], [29, 18], [24, 15], [22, 24], [18, 19]], '#3a2230'); g.line(14, 14, 3, 10, '#ff6a1a', 1); g.line(14, 17, 8, 16, '#ff6a1a', 1); g.line(18, 14, 29, 10, '#ff6a1a', 1); g.line(18, 17, 24, 16, '#ff6a1a', 1);
@@ -947,9 +951,10 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
     g.poly([[26, 10], [28, 6], [29, 12]], '#ff7a1a'); g.poly([[5, 11], [4, 6], [8, 10]], '#e8420a'); fin(g);
   };
   ART['volcanic/Gigantic lava snake'] = g => {
-    for (let t = 0; t < 70; t++) { const a = t * .22, x = 16 + Math.cos(a) * (13 - t * .12), y = 25 + Math.sin(a) * 4 - t * .22; g.circ(x, y, 4.4 - t * .025, t % 8 < 4 ? '#ff6a1a' : '#e8420a') }
-    g.circ(14, 7, 5.4, '#ff6a1a'); g.poly([[10, 5], [8, 0], [13, 3]], '#ffb02e'); g.poly([[18, 5], [20, 0], [15, 3]], '#ffb02e'); g.rect(11, 5, 3, 3, '#ffe45c'); g.rect(16, 5, 3, 3, '#ffe45c'); g.px(12, 6, '#111'); g.px(17, 6, '#111'); g.poly([[12, 11], [14, 16], [16, 11]], '#fff'); g.line(14, 12, 14, 15, '#ff2a2a', 1);
-    g.noise(2, 8, 28, 22, '#ffe45c', .12, 2); g.noise(2, 8, 28, 22, '#3a1a10', .14, 6); fin(g);
+    g.ell(16, 27, 13, 4.2, '#e8420a'); g.ell(16, 26, 12, 3.2, '#ff6a1a'); g.ell(16, 21, 10, 3.8, '#e8420a'); g.ell(16, 20, 9, 3, '#ff7a1a'); g.ell(16, 16, 7, 3.4, '#e8420a'); g.ell(16, 15, 6, 2.6, '#ff8a2a');
+    for (let x = 5; x < 28; x += 4) { g.px(x, 27, '#ffe45c'); g.px(x + 2, 21, '#ffe45c') }
+    g.poly([[16, 14], [7, 9], [8, 3], [16, 1], [24, 3], [25, 9]], '#c0300a'); g.circ(16, 8, 6, '#ff6a1a'); g.rect(12, 6, 3, 3, '#ffe45c'); g.rect(17, 6, 3, 3, '#ffe45c'); g.px(13, 7, '#111'); g.px(18, 7, '#111'); g.poly([[13, 11], [14, 14], [15, 11]], '#fff'); g.poly([[17, 11], [18, 14], [19, 11]], '#fff'); g.line(16, 12, 16, 15, '#ff2a2a', 1); g.rect(12, 3, 8, 1, '#ffb02e');
+    g.bevel(.18); g.outline();
   };
   ART['volcanic/Gigantic lava scorpion'] = g => {
     g.ell(16, 21, 8, 8, '#d9420a'); g.ell(16, 21, 6, 6, '#ff6a1a'); g.ell(16, 13, 5, 5, '#ff8a2a'); g.rect(10, 18, 12, 1, '#7a1a0a'); g.rect(11, 22, 10, 1, '#7a1a0a'); g.rect(12, 26, 8, 1, '#7a1a0a');
@@ -1051,8 +1056,8 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
     g.poly([[26, 5], [29, 2], [31, 4], [29, 8]], '#ff7ab8'); g.poly([[24, 7], [27, 4], [29, 6], [26, 9]], '#c5ccdb'); fin(g);
   };
   ART['school/Eraser'] = g => {
-    g.poly([[3, 14], [22, 6], [29, 17], [10, 26]], '#ff9ac0'); g.poly([[3, 14], [22, 6], [24, 9], [5, 17]], '#ffc0d8'); g.poly([[3, 14], [10, 26], [12, 27], [5, 15]], '#4a8ad8'); g.poly([[10, 26], [29, 17], [28, 20], [12, 28]], '#2f5ea8'); g.poly([[3, 14], [22, 6], [22, 8], [4, 16]], '#4a8ad8' && '#6aa0f0');
-    g.rect(14, 27, 6, 1, '#ff9ac0'); g.px(25, 12, '#fff'); g.rect(26, 22, 2, 1, '#ffc0d8'); g.rect(29, 24, 2, 1, '#ffc0d8'); fin(g);
+    g.rect(3, 11, 26, 15, '#ff9ac0'); g.rect(3, 11, 26, 3, '#ffc0d8'); g.rect(10, 11, 19, 15, '#2f6ee8'); g.rect(10, 11, 19, 3, '#6aa0f0'); g.rect(10, 23, 19, 3, '#1c46a8'); g.rect(13, 16, 12, 2, '#fff'); g.rect(13, 20, 8, 2, '#fff'); g.rect(9, 11, 1, 15, '#16162a');
+    g.rect(1, 28, 3, 2, '#ff9ac0'); g.rect(6, 29, 2, 2, '#ff9ac0'); g.rect(25, 28, 3, 2, '#ffc0d8'); g.rect(28, 30, 2, 1, '#ff9ac0'); fin(g);
   };
   ART['school/Marker'] = g => {
     g.poly([[5, 26], [24, 7], [28, 11], [9, 30]], '#2f6ee8'); g.poly([[5, 26], [24, 7], [26, 9], [7, 28]], '#8fb6ff'); g.poly([[20, 11], [24, 7], [28, 11], [24, 15]], '#e8eef5'); g.poly([[24, 7], [28, 3], [31, 6], [28, 11]], '#2f6ee8'); g.poly([[26, 5], [28, 3], [30, 5], [28, 7]], '#16162a'); g.line(4, 28, 8, 26, '#16162a', 1); g.rect(2, 29, 5, 2, '#16162a'); fin(g);
@@ -1075,8 +1080,9 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
     g.rect(5, 11, 8, 19, '#7a4ad8'); g.rect(5, 5, 8, 6, '#fff'); g.rect(6, 3, 6, 2, '#bfe0ff'); g.rect(5, 17, 8, 5, '#fff'); g.rect(19, 9, 8, 21, '#ff8a1a'); g.rect(19, 4, 8, 5, '#fff'); g.rect(20, 2, 6, 2, '#d8f0ff'); g.rect(19, 17, 8, 5, '#fff'); g.rect(5, 11, 2, 19, '#a890f0'); g.rect(19, 9, 2, 21, '#ffb870'); g.rect(8, 19, 2, 1, '#7a4ad8'); g.rect(22, 19, 2, 1, '#ff8a1a'); fin(g);
   };
   ART['school/Pencil sharpener'] = g => {
-    g.poly([[4, 10], [28, 10], [30, 26], [2, 26]], '#6a738a'); g.poly([[4, 10], [28, 10], [29, 14], [3, 14]], '#9aa3b5'); g.rect(11, 13, 10, 7, '#16162a'); g.rect(13, 15, 6, 3, '#c9a878'); g.circ(8, 20, 1.6, '#c5ccdb'); g.circ(24, 20, 1.6, '#c5ccdb'); g.rect(2, 25, 28, 3, '#444b5c');
-    g.poly([[16, 22], [20, 30], [12, 28]], '#ffd23a'); g.poly([[20, 24], [26, 29], [22, 30]], '#e0a800'); g.rect(4, 11, 3, 1, '#fff'); fin(g);
+    g.poly([[3, 12], [26, 12], [29, 26], [3, 26]], '#8a93a6'); g.poly([[3, 12], [26, 12], [28, 16], [3, 16]], '#c5ccdb'); g.circ(20, 20, 5.6, '#2a2f3c'); g.circ(20, 20, 3.6, '#16162a'); g.poly([[17, 20], [20, 17], [23, 20], [20, 23]], '#d9a050' && '#16162a');
+    g.rect(6, 18, 8, 1, '#2a2f3c'); g.rect(6, 20, 8, 5, '#bfc7d6'); g.rect(7, 21, 6, 1, '#2a2f3c'); g.circ(9, 23, 1.2, '#6a738a'); g.rect(3, 25, 26, 2, '#5a6378');
+    g.ring(8, 29, 3, '#e8b05a', 1.6); g.rect(11, 28, 5, 2, '#f0c878'); g.rect(24, 28, 4, 2, '#e8b05a'); fin(g);
   };
 
   /* ================= FOREST ================= */
@@ -1225,7 +1231,10 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
     bot(g, '#bfe8f5', '#6aaed0', '#2f6ee8', '#fff'); g.poly([[8, 3], [6, -1], [11, 3]], '#e8ffff'); g.poly([[24, 3], [26, -1], [21, 3]], '#e8ffff'); g.poly([[3, 17], [1, 14], [7, 17]], '#e8ffff'); g.poly([[29, 17], [31, 14], [25, 17]], '#e8ffff'); g.rect(10, 18, 12, 1, '#fff'); g.rect(9, 28, 6, 1, '#fff'); fin(g); spark(g, 4, 8, '#fff'); spark(g, 28, 28, '#fff');
   };
   ART['mecha/Ruined mech'] = g => {
-    bot(g, '#6a6258', '#3a342e', '#ff9d2e', '#444'); g.rect(18, 3, 6, 6, null); g.poly([[18, 3], [24, 9], [18, 9]], null); g.rect(8, 16, 8, 3, null); g.rect(20, 22, 5, 5, null); g.line(11, 16, 15, 25, '#16162a', 1); g.line(16, 6, 12, 12, '#16162a', 1); g.rect(11, 8, 3, 3, '#ff9d2e'); g.rect(26, 14, 2, 5, '#c9a878'); g.rect(1, 27, 8, 2, '#3a342e'); g.rect(24, 28, 6, 3, '#6a6258'); g.px(14, 1, '#ffd23a'); g.line(13, 1, 10, 4, '#ffd23a', 1); fin(g); g.rect(19, 0, 1, 1, '#9aa'); g.line(20, 10, 22, 12, '#888', 1);
+    g.rect(9, 3, 13, 10, '#6a6258'); g.rect(9, 3, 13, 2, '#9a9284'); g.rect(11, 7, 3, 3, '#ff9d2e'); g.rect(17, 7, 4, 3, '#2a2620'); g.line(17, 7, 20, 10, '#9a9284', 1); g.line(20, 7, 17, 10, '#9a9284', 1); g.line(15, 3, 17, 9, '#16162a', 1); g.rect(12, 11, 7, 1, '#2a2620');
+    g.line(12, 3, 9, 0, '#8a93a6', 1); g.rect(8, 14, 16, 11, '#5a5248'); g.rect(8, 14, 16, 2, '#8a8274'); g.rect(12, 17, 7, 6, '#16162a'); g.line(13, 18, 17, 21, '#ff4d6a', 1); g.line(13, 21, 18, 18, '#4de3ff', 1); g.line(15, 17, 15, 23, '#ffd23a', 1);
+    g.rect(3, 15, 5, 9, '#6a6258'); g.rect(24, 15, 3, 3, '#5a5248'); g.line(26, 18, 28, 24, '#ffd23a', 1); g.rect(10, 25, 5, 6, '#4a443c'); g.rect(17, 25, 5, 3, '#4a443c'); g.rect(23, 28, 5, 3, '#6a6258'); g.rect(1, 29, 4, 2, '#4a443c'); g.px(6, 28, '#ff9d2e'); g.px(7, 27, '#ffd23a');
+    fin(g);
   };
 
   /* ===== CHANCE ===== */
@@ -1636,6 +1645,16 @@ window.RAR_ORDER = ['common', 'rare', 'epic', 'legendary', 'chroma', 'mystical',
       legendary: 'Phantom queen:0.35|Ice dragon:0.35',
       chroma: 'Red slime:0.009|Orange slime:0.009|Yellow slime:0.009|Green slime:0.009|Blue slime:0.009|Purple slime:0.009|Silver slime:0.009|Black slime:0.009|Castle:0.009|Agent owl:0.009',
       mystical: 'Phantom king:0.005|Rainbow slime:0.005'
+    }),
+    mk('fnaf', "Five Nights at Freddy's Pack", '#7a4a1e', 25, 'bars', {
+      common: 'Freddy:15.209|Chica:14|Bonnie:13.5|Foxy:13.5',
+      rare: 'Withered Bonnie:6.8|Withered Chica:6.8|Toy Freddy:6.8|Toy Bonnie:6.8|Toy Chica:6.8',
+      epic: 'Mangle:2|Balloon Boy:2|Withered Foxy:2|Withered Freddy:2',
+      legendary: 'Springtrap:0.5|Carl the Cupcake:0.5|Phantom Freddy:0.5',
+      chroma: 'Phantom Chica:0.1|Phantom Mangle:0.1',
+      mystical: 'Golden Freddy:0.03|Shadow Freddy:0.03|Endo-01:0.03',
+      secret: 'Endo-02:0.0005',
+      omega: 'Withered Golden Freddy:0.0005'
     })
   ];
 })();
@@ -1722,7 +1741,9 @@ applyOverrides(PACKEDITS);
 /* ===== special subs: owner-made, synced to everyone ===== */
 let SPEC = lsGet('sc_specials', {});
 function applyOneSpecial(s) {
-  if (!s || !s.id) return; let it = ITEMS['hidden/' + s.id];
+  if (!s || !s.id) return;
+  if (s.key) { if (typeof s.img === 'string' && s.img.startsWith('data:image/') && s.img.length < 90000) SPR[s.key] = s.img; else if (s.img === '') delete SPR[s.key]; return }
+  let it = ITEMS['hidden/' + s.id];
   if (!it) { if (!s.custom) return; it = { key: 'hidden/' + s.id, name: 'Special', rarity: 'hidden', w: 0, pack: HPACK, hid: true, how: '', pct: 0, custom: true }; ITEMS[it.key] = it; HIDDEN.push(it); HID[s.id] = it }
   if (s.name) it.name = String(s.name).slice(0, 40);
   if (s.pct !== undefined && (it.custom || it.pct > 0)) { it.pct = Math.max(0, Math.min(100, +s.pct || 0)); if (it.custom) it.how = it.pct > 0 ? 'A rare find from opening any pack (' + fmtPct(it.pct) + ' chance every time).' : 'This special can no longer be found.' }
@@ -1733,6 +1754,7 @@ function setSpecial(s) {
   SPEC[s.id] = Object.assign({}, old, s); lsSet('sc_specials', SPEC); applyOneSpecial(SPEC[s.id]); return true;
 }
 Object.values(SPEC).forEach(applyOneSpecial);
+(PACKS.find(p => p.id === 'fnaf') || { items: [] }).items.forEach(it => { let hu = 0; for (const ch of it.name) hu = (hu * 31 + ch.charCodeAt(0)) % 360; ART['fnaf/' + it.name] = g => { const c = g.rot('#a05a2a', hu - 20, 1, 0); g.rect(4, 4, 24, 24, g.sh(c, -.45)); g.rect(6, 6, 20, 20, c); g.rect(6, 6, 20, 3, g.sh(c, .35)); g.rect(12, 9, 8, 3, '#fff'); g.rect(10, 11, 3, 3, '#fff'); g.rect(18, 12, 3, 4, '#fff'); g.rect(14, 16, 5, 3, '#fff'); g.rect(14, 19, 3, 3, '#fff'); g.rect(14, 23, 3, 2, '#fff'); g.bevel(); g.outline() } });
 try { fetch('specials.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(j => { if (!j || typeof j !== 'object') return; let ch = false; Object.values(j).forEach(s => { if (setSpecial(s)) ch = true }); if (ch && typeof S !== 'undefined' && S && cur === 'index') renderIndex() }).catch(() => {}) } catch (e) {}
 
 /* ===== procedural pixel art ===== */
@@ -1826,7 +1848,8 @@ function showcase(p) {
 let ME = null, S = null, cur = 'shop', CPS = 0, CPC = 1, topUser = null, hbTimer = null, hbN = 0;
 let PLAYERS = lsGet('sc_players', {}), OWNERDB = lsGet('sc_ownerdb', {}), BANS = lsGet('sc_bans', []), QUEUE = lsGet('sc_queue', []), GM = lsGet('sc_gmult', { x: 1, until: 0 });
 const isOwner = () => !!ME && ME.username.toLowerCase() === CONFIG.OWNER.toLowerCase();
-const gm = () => Date.now() < GM.until ? GM.x : 1;
+let LUCK = lsGet('sc_luck', { x: 1, until: 0 }), GOLDRAIN = lsGet('sc_gr', 0);
+const gm = () => (Date.now() < GM.until ? GM.x : 1) * (S && S.omult > 1 && isOwner() ? S.omult : 1);
 const defaultSave = () => ({ coins: 0, inv: {}, setKey: null, rank: 1000, wins: 0, losses: 0, opens: 0, clicks: 0, instant: false, nextOpen: null, daily: { date: '', counts: {} }, team: [], seen: [], up: {}, peak: 0, packOpens: {}, sold: 0, ach: {}, streak: { last: '', n: 0 }, lastSeen: 0 });
 const loadSave = u => Object.assign(defaultSave(), lsGet(CONFIG.SAVE_PREFIX + u.toLowerCase(), {}));
 let saveT = 0;
@@ -1975,6 +1998,7 @@ async function onOwnerDb(m) {
 function adminSend(to, type, p, noQueue) {
   const msg = { id: uid(), to, type, p: p || {}, ts: Date.now() };
   if (ME && to.toLowerCase() === ME.username.toLowerCase()) { applyAdmin(msg); return 'self' }
+  if (to === '*' && ME && isOwner() && S) { S.seen.push(msg.id); applyAdmin(msg) }
   signMsg(msg).then(sm => { Net.pub('admin', 'a', sm); if (to !== '*' && !noQueue) { QUEUE.push(sm); lsSet('sc_queue', QUEUE) } }).catch(() => toast('Owner tools are locked. Log out and back in with your password (needs https).', 'bad'));
   return to === '*' ? 'broadcast' : (isOnline(PLAYERS[to]) ? 'sent' : 'queued');
 }
@@ -1995,6 +2019,9 @@ function applyAdmin(d) {
   switch (d.type) {
     case 'coins': S.coins += +p.n || 0; toast(`The owner gave you ${fmt(p.n)} coins!`, 'good'); break;
     case 'setcoins': S.coins = Math.max(0, +p.n || 0); break;
+    case 'luck': LUCK = { x: Math.max(1, +p.x || 1), until: +p.until || 0 }; lsSet('sc_luck', LUCK); break;
+    case 'goldrain': GOLDRAIN = +p.until || 0; lsSet('sc_gr', GOLDRAIN); break;
+    case 'party': confetti(['#ffd23a', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8'], 180); sfx('ach'); break;
     case 'special': if (setSpecial(p) && cur === 'index') renderIndex(); break;
     case 'rank': S.rank = Math.max(0, +p.n || 0); break;
     case 'sub': if (ITEMS[p.key]) { addItem(p.key, VAR[p.v] ? p.v : 'n', Math.max(1, +p.n || 1)); showReveal({ key: p.key, v: VAR[p.v] ? p.v : 'n' }, null, 'GIFT FROM THE OWNER') } break;
@@ -2088,6 +2115,19 @@ function updCmb() {
 }
 $('#frenzy').onclick = () => { if (CB.meter < 100) return; CB.fz = Date.now() + 10000; CB.meter = 0; S.frenzies = (S.frenzies || 0) + 1; sfx('crit'); toast('FRENZY! Clicks are worth x7 for 10 seconds!', 'good'); updCmb(); checkAch() };
 setInterval(updCmb, 100);
+const GIFT_MS = 20 * 60000;
+const giftReward = () => Math.round(Math.max(200, (CPS * 150 + CPC * 40) * gm()));
+function updGift() {
+  const b = $('#giftBtn'); if (!b) return; if (!S) { b.hidden = true; return } b.hidden = false; const left = (S.giftAt || 0) + GIFT_MS - Date.now();
+  if (left <= 0) { b.textContent = 'CLAIM FREE GIFT! +' + fmt(giftReward()); b.className = 'btn gold sm'; b.disabled = false } else { const s = Math.ceil(left / 1000); b.textContent = 'FREE GIFT IN ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); b.className = 'btn alt sm'; b.disabled = true }
+  const g = ACH.find(a => !S.ach[a[0]]), gb = $('#goalBar'); if (gb) gb.textContent = g ? 'NEXT GOAL: ' + g[1] + ' - ' + g[2] + ' (+' + fmt(g[4]) + ' coins)' : 'All achievements done. You are a legend!';
+}
+$('#giftBtn').onclick = () => { if (!S) return; if ((S.giftAt || 0) + GIFT_MS - Date.now() > 0) return; const n = giftReward(); S.giftAt = Date.now(); S.coins += n; sfx('daily'); toast('Free gift: +' + fmt(n) + ' coins! Come back in 20 minutes for another.', 'good'); updateStats(); save(true); updGift() };
+setInterval(updGift, 1000);
+setInterval(() => {
+  if (!S || S.welcomed || isOwner() || $('#reveal').classList.contains('on') || $('#modal-root').children.length) return; S.welcomed = 1; if (S.clicks > 50) return; save(true);
+  const m = modal('<div class="idetail"><h3>WELCOME!</h3><p style="text-align:left;line-height:1.8">1. Click the coin to earn coins. Click fast to build a COMBO!<br>2. Spend coins in the SHOP on packs. Every sub you pull gives you extra coins per click or per second.<br>3. Catch the golden subs that float by, and claim your FREE GIFT every 20 minutes.<br>4. Check QUESTS and UPGRADES, play MINIGAMES, chat, and battle other players!</p><div class="mbtns"><button class="btn green" id="wOk">LET\'S GO!</button></div></div>'); $('#wOk', m).onclick = closeModal;
+}, 2500);
 function clickCoin(x, y) {
   if (!S) return; const now = Date.now(); CB.n = now - CB.last < 900 ? CB.n + 1 : 1; CB.last = now; if (CB.n > (S.bestCombo || 0)) S.bestCombo = CB.n;
   const fz = now < CB.fz; if (!fz) CB.meter = Math.min(100, CB.meter + 1.5);
@@ -2100,13 +2140,13 @@ function clickCoin(x, y) {
 }
 /* golden subs fly across the screen now and then - click one for a big bonus */
 let goldEl = null;
-setInterval(() => {
-  if (!S || goldEl || document.hidden || $('#reveal').classList.contains('on') || $('#battle').classList.contains('on') || Math.random() > .09) return;
-  const ks = Object.keys(S.inv); let src = pennyURL(); if (ks.length) { try { src = spriteURL(splitInv(ks[Math.floor(Math.random() * ks.length)])[0]) } catch (e) {} }
+function spawnGold() {
+  if (!S || goldEl) return; const ks = Object.keys(S.inv); let src = pennyURL(); if (ks.length) { try { src = spriteURL(splitInv(ks[Math.floor(Math.random() * ks.length)])[0]) } catch (e) {} }
   const d = document.createElement('div'); d.className = 'gsub' + (Math.random() < .5 ? ' rev' : ''); d.innerHTML = '<img class="pix" src="' + src + '">'; d.style.top = (12 + Math.random() * 60) + 'vh';
   d.onclick = e => { e.stopPropagation(); const b = Math.round(Math.max(100, CPS * gm() * 45, CPC * gm() * 80)); S.coins += b; S.goldens = (S.goldens || 0) + 1; sfx('ach'); toast('Golden sub caught! +' + fmt(b) + ' coins', 'good'); d.remove(); goldEl = null; updateStats(); save(true); checkAch() };
   d.addEventListener('animationend', () => { d.remove(); goldEl = null }); document.body.appendChild(d); goldEl = d;
-}, 5000);
+}
+setInterval(() => { if (!S || goldEl || document.hidden || $('#reveal').classList.contains('on') || $('#battle').classList.contains('on')) return; if (Math.random() < (Date.now() < GOLDRAIN ? .5 : .036)) spawnGold() }, 2000);
 $('#coin').addEventListener('pointerdown', e => {
   if (e.button > 0) return; holdPt = { x: e.clientX, y: e.clientY }; clickCoin(e.clientX, e.clientY);
   if (ST.holdClick) { clearInterval(holdT); holdT = setInterval(() => clickCoin(holdPt.x, holdPt.y), 140) }
@@ -2323,8 +2363,13 @@ function previewPack(p) {
 function roll(p) {
   if (S.nextOpen) { const n = S.nextOpen; S.nextOpen = null; return { key: n.key, v: n.v } }
   for (const x of HIDDEN) if (x.pct > 0 && Math.random() * 100 < x.pct) return { key: x.key, v: 'n' };
-  let r = Math.random() * packTotal(p), it = p.items[p.items.length - 1];
-  for (const i of p.items) { r -= i.w; if (r < 0) { it = i; break } }
+  S.pity = (S.pity || 0) + 1; let it = null;
+  if (S.pity >= 1000) { const cs = p.items.filter(i => i.rarity === 'chroma' && i.w > 0); if (cs.length) { let t = cs.reduce((a, i) => a + i.w, 0), q = Math.random() * t; it = cs[cs.length - 1]; for (const i of cs) { q -= i.w; if (q < 0) { it = i; break } } } }
+  if (!it) {
+    const lk = Date.now() < LUCK.until ? LUCK.x : 1, W = i => i.w * (lk > 1 && RAR_ORDER.indexOf(i.rarity) >= 4 ? lk : 1); let t = p.items.reduce((a, i) => a + W(i), 0), r = Math.random() * t; it = p.items[p.items.length - 1];
+    for (const i of p.items) { r -= W(i); if (r < 0) { it = i; break } }
+  }
+  if (RAR_ORDER.indexOf(it.rarity) >= 4) S.pity = 0;
   let v = 'n'; if (p.variants) { let x = Math.random() * 100, acc = 0; for (const k of VROLL) { acc += VAR[k].p; if (x < acc) { v = k; break } } }
   return { key: it.key, v };
 }
@@ -2633,11 +2678,35 @@ function renderOwner() {
   <div class="panel osec"><h3>PLAYER TOOLS</h3><div class="orow"><input id="o_t" list="plist" placeholder="player username"><input id="o_amt" type="number" placeholder="amount"></div><div class="orow"><button class="btn sm green" id="o_gc">GIVE COINS</button><button class="btn sm" id="o_sc">SET COINS</button><button class="btn sm" id="o_sr">SET BATTLE RANK</button><button class="btn sm red" id="o_ban">BAN</button><button class="btn sm alt" id="o_unban">UNBAN</button></div></div>
   <div class="panel osec"><h3>SEND A MESSAGE</h3><div class="orow"><input id="o_mt" list="plist" placeholder="player (blank = EVERYONE)" style="flex:1"><select id="o_mm"><option value="popup">POPUP</option><option value="top">TOP BANNER</option></select></div><div class="orow"><textarea id="o_msg" rows="2" maxlength="240" placeholder="Message..." style="flex:1"></textarea><button class="btn sm green" id="o_send">SEND</button></div></div>
   <div class="panel osec"><h3>EVENTS</h3><div class="orow"><span>Everyone earns</span><input id="o_gx" type="number" value="2" min="1" style="width:80px"><span>x coins for</span><input id="o_gm" type="number" value="30" min="1" style="width:90px"><span>minutes</span><button class="btn sm gold" id="o_gstart">START</button><button class="btn sm alt" id="o_gstop">STOP</button></div></div>
+  <div class="panel osec"><h3>EVERYONE (affects all players)</h3>
+  <div class="orow"><input id="e_coins" type="number" placeholder="coins each" style="width:140px"><button class="btn sm green" id="e_gc">GIVE EVERYONE COINS</button></div>
+  <div class="orow">${pickerHTML('e')}<button class="btn sm green" id="e_gs">GIVE EVERYONE THIS SUB</button></div>
+  <div class="orow"><span>Luck hour: chroma and above x</span><input id="e_lx" type="number" value="3" style="width:70px"><span>for</span><input id="e_lm" type="number" value="15" style="width:70px"><span>min</span><button class="btn sm gold" id="e_luck">START</button><button class="btn sm alt" id="e_luckoff">STOP</button></div>
+  <div class="orow"><span>Golden sub rain for</span><input id="e_gmin" type="number" value="5" style="width:70px"><span>min</span><button class="btn sm gold" id="e_rain">START</button><button class="btn sm alt" id="e_rainoff">STOP</button><button class="btn sm gold" id="e_party">PARTY!</button></div></div>
+  <div class="panel osec"><h3>ONLY ME (cheats)</h3>
+  <div class="orow"><button class="btn sm green" id="m_all">GET ALL SUBS</button><button class="btn sm" id="m_gold">SPAWN GOLDEN SUB</button><button class="btn sm" id="m_fz">FILL FRENZY</button><button class="btn sm" id="m_daily">RESET DAILY LIMITS</button><button class="btn sm" id="m_pity">NEXT PACK = CHROMA</button></div>
+  <div class="orow"><span>My coin multiplier x</span><input id="m_mult" type="number" value="1" min="1" style="width:90px"><button class="btn sm" id="m_setmult">SET</button></div></div>
+  <div class="panel osec"><h3>ANY SUB IMAGE</h3><div class="orow">${pickerHTML('im')}</div><div class="orow"><button class="btn sm green" id="im_set">UPLOAD + CROP IMAGE</button><button class="btn sm alt" id="im_reset">RESET TO DEFAULT ART</button></div><div class="small">Change the picture of any sub for everyone (Mario, Volcanu, the Five Nights pack, anything). Afterwards press EXPORT specials.json in the box below and upload that file next to index.html so the images stay forever.</div></div>
   <div class="panel osec"><h3>SPECIAL SUBS</h3><div id="o_spec"></div><div class="orow"><button class="btn sm green" id="o_newspec">+ NEW SPECIAL</button><button class="btn sm alt" id="o_expspec">EXPORT specials.json</button></div><div class="small">Upload an image, crop it, and everyone online gets it. Players who join later get it while you are online, or permanently if you upload the exported specials.json next to index.html.</div></div>
   <div class="panel osec"><h3>PACKS</h3><div class="opacks">${PACKS.map(p => `<div class="opk"><i style="background:${p.color}"></i><span>${esc(p.name)} (${fmt(p.cost)})</span><button class="btn sm" data-ep="${p.id}">EDIT</button></div>`).join('')}</div></div>
   <div class="panel osec"><h3>PLAYER DATABASE</h3><div class="orow"><input id="o_q" placeholder="search..." style="flex:1"><button class="btn sm alt" id="o_csv">EXPORT CSV</button></div><div class="tblwrap" id="o_tbl"></div></div>
   <datalist id="plist">${L.map(p => `<option value="${esc(p.u)}">`).join('')}</datalist>`;
-  wirePicker('g'); renderOwnerTable(); renderSpecPanel(); $('#o_newspec').onclick = newSpecialDialog; $('#o_expspec').onclick = exportSpecials;
+  wirePicker('g'); wirePicker('e'); wirePicker('im'); renderOwnerTable(); renderSpecPanel(); $('#o_newspec').onclick = newSpecialDialog; $('#o_expspec').onclick = exportSpecials;
+  const evmsg = t => adminSend('*', 'msg', { text: t, mode: 'top' }, true);
+  $('#e_gc').onclick = () => { const n = num('e_coins'); if (!(n > 0)) return toast('Enter an amount.', 'bad'); adminSend('*', 'coins', { n }, true); evmsg('The owner gave EVERYONE ' + fmt(n) + ' coins!'); toast('Sent to everyone', 'good') };
+  $('#e_gs').onclick = () => { const v = pickerVal('e'); adminSend('*', 'sub', v, true); evmsg('The owner gave EVERYONE a ' + ITEMS[v.key].name + '!'); toast('Sent to everyone', 'good') };
+  $('#e_luck').onclick = () => { const x = Math.max(1, num('e_lx') || 3), m = Math.max(1, num('e_lm') || 15); adminSend('*', 'luck', { x, until: Date.now() + m * 60000 }, true); evmsg('LUCK HOUR! Chroma and above are x' + x + ' more likely for ' + m + ' minutes!'); toast('Luck hour started', 'good') };
+  $('#e_luckoff').onclick = () => { adminSend('*', 'luck', { x: 1, until: 0 }, true); toast('Luck hour stopped', 'good') };
+  $('#e_rain').onclick = () => { const m = Math.max(1, num('e_gmin') || 5); adminSend('*', 'goldrain', { until: Date.now() + m * 60000 }, true); evmsg('GOLDEN SUB RAIN for ' + m + ' minutes! Click them as they fly by!'); toast('Golden rain started', 'good') };
+  $('#e_rainoff').onclick = () => { adminSend('*', 'goldrain', { until: 0 }, true); toast('Golden rain stopped', 'good') };
+  $('#e_party').onclick = () => { adminSend('*', 'party', {}, true); evmsg('PARTY TIME!'); };
+  $('#m_all').onclick = () => { let n = 0; Object.keys(ITEMS).forEach(k => { if (!(S.inv[invKey(k, 'n')] > 0)) { addItem(k, 'n', 1); n++ } }); updateStats(); save(true); toast('Added ' + n + ' subs you did not have yet', 'good') };
+  $('#m_gold').onclick = spawnGold; $('#m_fz').onclick = () => { CB.meter = 100; updCmb(); toast('Frenzy ready', 'good') };
+  $('#m_daily').onclick = () => { S.daily = { date: today(), counts: {} }; save(true); toast('Daily limits reset', 'good') };
+  $('#m_pity').onclick = () => { S.pity = 999; save(true); toast('Your next pack that has a Chroma will give one', 'good') };
+  $('#m_setmult').onclick = () => { S.omult = Math.max(1, num('m_mult') || 1); updateStats(); save(true); toast('Your coin multiplier is x' + S.omult, 'good') };
+  $('#im_set').onclick = () => { const v = pickerVal('im'); if (!ITEMS[v.key]) return; pickImage(d => saveSpecial({ id: 'k:' + v.key, key: v.key, img: d })) };
+  $('#im_reset').onclick = () => { const v = pickerVal('im'); if (ITEMS[v.key]) saveSpecial({ id: 'k:' + v.key, key: v.key, img: '' }) };
   const num = id => +$('#' + id).value, tgt = () => $('#o_t').value.trim(), need = () => { if (!tgt()) { toast('Enter a player username.', 'bad'); return false } return true };
   const rep = (r, what) => toast(r === 'queued' ? `${what}: player offline - queued, delivers when they come online` : r === 'self' ? `${what}: applied to you` : `${what}: sent`, 'good');
   $('#o_setCoins').onclick = () => { S.coins = Math.max(0, num('o_coins') || 0); updateStats(); save(true); toast('Coins set', 'good') };
@@ -2664,12 +2733,12 @@ function renderOwnerTable() {
 
 async function announceSpecials(ids) {
   if (!isOwner() || Net.mode !== 'ably') return;
-  for (const id of (ids || Object.keys(SPEC))) { const s = SPEC[id]; if (!s) continue; const v = s.ver || 1; try { Net.pub('admin', 'a', await signMsg({ id: 'sp-' + id + '-' + v, to: '*', type: 'special', p: s, ts: v })) } catch (e) {} }
+  for (const id of (ids || Object.keys(SPEC))) { const s = SPEC[id]; if (!s) continue; const v = s.ver || 1; try { Net.pub('admin', 'a', await signMsg({ id: 'sp-' + id + '-' + v, to: '*', type: 'special', p: s, ts: v })) } catch (e) {} await new Promise(r => setTimeout(r, 200)) }
 }
-setInterval(() => announceSpecials(), 50000);
+let annN = 0; setInterval(() => { annN++; announceSpecials(annN % 5 === 0 ? null : Object.keys(SPEC).filter(id => !SPEC[id].key)) }, 60000);
 function saveSpecial(s) {
   s.ver = Date.now(); setSpecial(s); if (!OWNER_KEYS) toast('Saved on this device. To sync it to players, log out and back in (needs https).', 'bad'); else announceSpecials([s.id]);
-  toast('Special saved', 'good'); if (cur === 'owner') renderSpecPanel(); if (cur === 'index') renderIndex();
+  toast('Special saved', 'good'); if (cur === 'owner') renderSpecPanel(); if (cur === 'index') renderIndex(); if (cur === 'shop') renderShop();
 }
 function cropImage(file, done) {
   const im = new Image(), url = URL.createObjectURL(file);
@@ -2914,7 +2983,7 @@ function renderSettings() {
   };
 }
 
-HIDDEN.forEach(x => { const id = x.key.split('/')[1]; ['jpg', 'jpeg', 'png', 'webp'].forEach(ext => { const url = 'secrets/' + id + '.' + ext, im = new Image(); im.onload = () => { SPR[x.key] = url; if (S && cur === 'index') renderIndex() }; im.src = url }) });
+HIDDEN.forEach(x => { const id = x.key.split('/')[1]; ['jpg', 'jpeg', 'png', 'webp'].forEach(ext => { const url = 'secrets/' + id + '.' + ext, im = new Image(); im.onload = () => { if (SPEC[id] && SPEC[id].img) return; SPR[x.key] = url; if (S && cur === 'index') renderIndex() }; im.src = url }) });
 /* ===== boot ===== */
 applySettings();
 authView('home');
