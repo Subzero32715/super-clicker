@@ -252,6 +252,7 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
 .reels{display:flex;justify-content:center;gap:10px;margin:14px 0}.reel{width:92px;height:92px;border:4px solid var(--deep);border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center}.reel img{width:75%;height:75%}.reel.win{animation:slotpulse .4s 3}
 @keyframes slotpulse{50%{transform:scale(1.12);background:#ffe45c}}
 .hlbox{display:flex;justify-content:center;gap:16px;align-items:center;margin:14px 0;flex-wrap:wrap}.hlc{width:140px;border:3px solid var(--deep);border-radius:14px;padding:10px;background:#fff}.hlc img{width:84px;height:84px}.hlc b{display:block;font-size:12px}.hlc .pc{font-family:'Press Start 2P',monospace;font-size:10px;margin-top:6px;min-height:14px}
+.admmode .own{display:none!important}
 </style>
 </head>
 <body>
@@ -1740,8 +1741,20 @@ applyOverrides(PACKEDITS);
 
 /* ===== special subs: owner-made, synced to everyone ===== */
 let SPEC = lsGet('sc_specials', {});
+const MOTIFS = ['stars', 'blocks', 'dots', 'rain', 'diag', 'bars', 'waves', 'tri'];
+function addCustomPack(def, del) {
+  if (!def || typeof def.id !== 'string' || !/^c_[a-z0-9]{1,16}$/.test(def.id)) return;
+  let p = PACKS.find(x => x.id === def.id);
+  if (del) { if (p) { p.items.forEach(i => delete ITEMS[i.key]); PACKS.splice(PACKS.indexOf(p), 1); delete ORIG[p.id]; delete BGC[p.id] } return }
+  if (!Array.isArray(def.items)) return;
+  if (!p) { p = { id: def.id, items: [], custom: true, motif: 'stars' }; PACKS.push(p) } else p.items.forEach(i => delete ITEMS[i.key]);
+  p.name = String(def.name || 'Pack').slice(0, 40); p.cost = Math.max(0, Math.floor(+def.cost || 0)); p.color = /^#[0-9a-f]{6}$/i.test(def.color || '') ? def.color : '#6c7a89'; p.motif = MOTIFS.includes(def.motif) ? def.motif : 'stars';
+  p.items = def.items.slice(0, 60).filter(i => i && i.n && RAR[i.r] && i.r !== 'hidden').map(i => { const it = { name: String(i.n).replace(/[#\/]/g, '').slice(0, 40), rarity: i.r, w: Math.max(0, +i.w || 0), pack: p }; it.key = p.id + '/' + it.name; ITEMS[it.key] = it; return it });
+  ORIG[p.id] = { name: p.name, cost: p.cost, color: p.color, w: Object.fromEntries(p.items.map(i => [i.name, i.w])) }; delete BGC[p.id]; applyOverrides(PACKEDITS);
+}
 function applyOneSpecial(s) {
   if (!s || !s.id) return;
+  if (typeof s.id === 'string' && s.id.startsWith('cp:')) { addCustomPack(s.cpack, s.del); return }
   if (s.key) { if (typeof s.img === 'string' && s.img.startsWith('data:image/') && s.img.length < 90000) SPR[s.key] = s.img; else if (s.img === '') delete SPR[s.key]; return }
   let it = ITEMS['hidden/' + s.id];
   if (!it) { if (!s.custom) return; it = { key: 'hidden/' + s.id, name: 'Special', rarity: 'hidden', w: 0, pack: HPACK, hid: true, how: '', pct: 0, custom: true }; ITEMS[it.key] = it; HIDDEN.push(it); HID[s.id] = it }
@@ -1902,7 +1915,49 @@ async function decFromPlayer(e) {
 }
 const sigText = m => JSON.stringify([m.id, m.to, m.type, m.p, m.ts]);
 async function signMsg(msg) { if (!OWNER_KEYS) throw new Error('locked'); const s = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, OWNER_KEYS.sig, new TextEncoder().encode(sigText(msg))); return Object.assign({}, msg, { sig: b64(new Uint8Array(s)) }) }
-async function verifyMsg(m) { try { if (!subtleOK() || !m.sig) return false; const k = await crypto.subtle.importKey('spki', unb64(CONFIG.OWNER_PUB.ver), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']); return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, k, unb64(m.sig), new TextEncoder().encode(sigText(m))) } catch (e) { return false } }
+async function verifyOwnerSig(m) { try { if (!subtleOK() || !m.sig) return false; const k = await crypto.subtle.importKey('spki', unb64(CONFIG.OWNER_PUB.ver), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']); return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, k, unb64(m.sig), new TextEncoder().encode(sigText(m))) } catch (e) { return false } }
+
+/* ===== admins: owner-signed certificates, per-device keys ===== */
+const ADMIN_CAPS = ['coins', 'setcoins', 'sub', 'msg', 'mult', 'luck', 'goldrain', 'party', 'ban', 'unban', 'rank'];
+let ADMINCRED = null, ADMKEY = null, MYEK = '', REVOKED = lsGet('sc_revoked', {}), ADMINS = lsGet('sc_admins', {});
+const ECP = { name: 'ECDH', namedCurve: 'P-256' }, ESP = { name: 'ECDSA', namedCurve: 'P-256' };
+async function ecdhPair() { let s = lsGet('sc_ecdh', null); if (!s) { const k = await crypto.subtle.generateKey(ECP, true, ['deriveKey']); s = { pub: b64(new Uint8Array(await crypto.subtle.exportKey('raw', k.publicKey))), priv: await crypto.subtle.exportKey('jwk', k.privateKey) }; lsSet('sc_ecdh', s) } return s }
+async function verifyMsg(m) {
+  if (!m.cert) return verifyOwnerSig(m);
+  try {
+    const c = m.cert; if (!(await verifyOwnerSig(c)) || c.type !== 'cert' || !c.p || !m.by || String(c.p.u).toLowerCase() !== String(m.by).toLowerCase() || !Array.isArray(c.p.caps) || !c.p.caps.includes(m.type) || !ADMIN_CAPS.includes(m.type)) return false;
+    const rv = REVOKED[String(m.by).toLowerCase()]; if (rv && c.ts <= rv) return false;
+    const k = await crypto.subtle.importKey('spki', unb64(c.p.pub), ESP, false, ['verify']);
+    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, k, unb64(m.sig), new TextEncoder().encode(sigText(m)));
+  } catch (e) { return false }
+}
+async function signAdminMsg(msg) {
+  if (!ADMINCRED) throw new Error('locked'); if (!ADMKEY) ADMKEY = await crypto.subtle.importKey('pkcs8', unb64(ADMINCRED.priv), ESP, false, ['sign']);
+  const m = Object.assign({}, msg, { by: ME.username, cert: ADMINCRED.cert }), s = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, ADMKEY, new TextEncoder().encode(sigText(m)));
+  return Object.assign(m, { sig: b64(new Uint8Array(s)) });
+}
+async function grantAdmin(u, ek) {
+  const ap = await crypto.subtle.generateKey(ESP, true, ['sign', 'verify']);
+  const pub = b64(new Uint8Array(await crypto.subtle.exportKey('spki', ap.publicKey))), priv = b64(new Uint8Array(await crypto.subtle.exportKey('pkcs8', ap.privateKey)));
+  const cert = await signMsg({ id: 'cert-' + uid(), to: u, type: 'cert', p: { u, pub, caps: ADMIN_CAPS }, ts: Date.now() });
+  const eph = await crypto.subtle.generateKey(ECP, true, ['deriveKey']), their = await crypto.subtle.importKey('raw', unb64(ek), ECP, false, []);
+  const aes = await crypto.subtle.deriveKey({ name: 'ECDH', public: their }, eph.privateKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt']), iv = crypto.getRandomValues(new Uint8Array(12));
+  const d = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, new TextEncoder().encode(JSON.stringify({ priv, cert })));
+  return { epk: b64(new Uint8Array(await crypto.subtle.exportKey('raw', eph.publicKey))), iv: b64(iv), d: b64(new Uint8Array(d)) };
+}
+async function openGrant(p) {
+  const s = await ecdhPair(), mine = await crypto.subtle.importKey('jwk', s.priv, ECP, false, ['deriveKey']), their = await crypto.subtle.importKey('raw', unb64(p.epk), ECP, false, []);
+  const aes = await crypto.subtle.deriveKey({ name: 'ECDH', public: their }, mine, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(p.iv) }, aes, unb64(p.d))));
+}
+const isAdmin = () => !!ADMINCRED && !isOwner(), canPanel = () => isOwner() || !!ADMINCRED;
+function updPanelBtn() { const b = $('#ownerBtn'); if (!b) return; b.hidden = !canPanel(); b.textContent = isOwner() ? 'OWNER PANEL' : 'ADMIN PANEL' }
+function promptUnlock() {
+  if (!isOwner() || OWNER_KEYS || !subtleOK() || $('#ul_pw')) return;
+  const m = modal(`<h3>UNLOCK OWNER TOOLS</h3><p class="small" style="margin:8px 0">Type your password to turn on owner powers (sending to players, specials, packs, admins).</p><div class="orow"><input id="ul_pw" type="password" placeholder="password" style="flex:1"></div><div class="small" id="ul_err" style="color:#c00"></div><div class="mbtns"><button class="btn green" id="ul_go">UNLOCK</button><button class="btn alt" id="ul_skip">LATER</button></div>`);
+  const go2 = async () => { try { await unlockOwner($('#ul_pw', m).value); closeModal(); toast('Owner tools unlocked', 'good'); if (cur === 'owner') renderOwner() } catch (e) { $('#ul_err', m).textContent = 'Wrong password.' } };
+  $('#ul_go', m).onclick = go2; $('#ul_pw', m).onkeydown = e => { if (e.key === 'Enter') go2() }; $('#ul_skip', m).onclick = closeModal; setTimeout(() => $('#ul_pw', m).focus(), 50);
+}
 
 /* ===== networking (Ably, or same-browser local fallback) ===== */
 const Net = {
@@ -1961,14 +2016,14 @@ function showNetInfo() {
 }
 $('#net').onclick = showNetInfo;
 function startNet() {
-  Net.init(ME.username);
+  Net.init(ME.username); if (subtleOK()) ecdhPair().then(s => { MYEK = s.pub }).catch(() => {});
   Net.sub('profiles', onProfile); Net.sub('chat', onChat); Net.sub('admin', onAdmin); Net.sub('mm', onMM);
   if (isOwner()) Net.sub('ownerdb', onOwnerDb);
   heartbeat(); hbTimer = setInterval(heartbeat, 8000);
 }
 function heartbeat() {
   if (!ME || !S) return;
-  const d = { u: ME.username, coins: Math.floor(S.coins), rank: S.rank, ts: Date.now(), set: S.setKey };
+  const d = { u: ME.username, coins: Math.floor(S.coins), rank: S.rank, ts: Date.now(), set: S.setKey, ek: MYEK };
   Net.pub('profiles', 'p', d); PLAYERS[ME.username] = Object.assign(PLAYERS[ME.username] || {}, d, { seen: Date.now() });
   if (hbN++ % 4 === 0 && subtleOK()) encForOwner({ fullName: ME.fullName, from: ME.from, created: ME.created, coins: Math.floor(S.coins), rank: S.rank, wins: S.wins, losses: S.losses, opens: S.opens }).then(e => Net.pub('ownerdb', 'db', { u: ME.username, ts: Date.now(), e })).catch(() => {});
   computeTop(); lsSet('sc_players', PLAYERS);
@@ -1987,6 +2042,7 @@ function onProfile(m) {
   computeTop();
   if (isOwner() && first) flushQueue(d.u);
   if (isOwner() && BANS.includes(d.u.toLowerCase()) && Date.now() - (onProfile.b || 0) > 15000) { onProfile.b = Date.now(); adminSend('*', 'ban', { u: d.u }, true) }
+  { const ad = isOwner() && ADMINS[d.u.toLowerCase()]; if (ad && ad.revoked && Date.now() - (onProfile.r || 0) > 15000) { onProfile.r = Date.now(); adminSend('*', 'revokeadmin', { u: d.u, at: ad.revoked }, true) } }
   if (cur === 'board' && Date.now() - boardT > 1500) { boardT = Date.now(); renderBoard() }
 }
 async function onOwnerDb(m) {
@@ -1996,11 +2052,12 @@ async function onOwnerDb(m) {
 
 /* ===== admin messaging ===== */
 function adminSend(to, type, p, noQueue) {
-  const msg = { id: uid(), to, type, p: p || {}, ts: Date.now() };
-  if (ME && to.toLowerCase() === ME.username.toLowerCase()) { applyAdmin(msg); return 'self' }
-  if (to === '*' && ME && isOwner() && S) { S.seen.push(msg.id); applyAdmin(msg) }
-  signMsg(msg).then(sm => { Net.pub('admin', 'a', sm); if (to !== '*' && !noQueue) { QUEUE.push(sm); lsSet('sc_queue', QUEUE) } }).catch(() => toast('Owner tools are locked. Log out and back in with your password (needs https).', 'bad'));
-  return to === '*' ? 'broadcast' : (isOnline(PLAYERS[to]) ? 'sent' : 'queued');
+  const msg = { id: uid(), to, type, p: p || {}, ts: Date.now() }, own = isOwner();
+  if (!own && !ADMINCRED) { toast('You are not an admin.', 'bad'); return 'blocked' }
+  if (ME && to.toLowerCase() === ME.username.toLowerCase()) { if (!own) { toast("Admins can't give things to themselves.", 'bad'); return 'blocked' } applyAdmin(msg); return 'self' }
+  if (to === '*' && own && S) { S.seen.push(msg.id); applyAdmin(msg) }
+  (own ? signMsg : signAdminMsg)(msg).then(sm => { Net.pub('admin', 'a', sm); if (own && to !== '*' && !noQueue) { QUEUE.push(sm); lsSet('sc_queue', QUEUE) } }).catch(() => { if (own) { toast('Owner tools are locked. Type your password to unlock.', 'bad'); promptUnlock() } else toast('Could not send (your admin key is missing).', 'bad') });
+  return to === '*' ? 'broadcast' : (!own || isOnline(PLAYERS[to]) ? 'sent' : 'queued');
 }
 function flushQueue(u) { QUEUE.filter(m => m.to.toLowerCase() === u.toLowerCase()).forEach(m => Net.pub('admin', 'a', m)) }
 function onAdmin(m) {
@@ -2009,6 +2066,7 @@ function onAdmin(m) {
   if (typeof d.to !== 'string' || (d.to !== '*' && d.to.toLowerCase() !== ME.username.toLowerCase())) return;
   verifyMsg(d).then(ok => {
     if (!ok || !S) return;
+    if (d.by && ME && d.by.toLowerCase() === ME.username.toLowerCase() && ['coins', 'setcoins', 'sub', 'rank'].includes(d.type)) return;
     if (S.seen.includes(d.id)) { if (d.to !== '*') Net.pub('admin', 'ack', { id: d.id }); return }
     S.seen.push(d.id); if (S.seen.length > 200) S.seen.shift();
     applyAdmin(d); if (d.to !== '*') Net.pub('admin', 'ack', { id: d.id }); save(true);
@@ -2017,19 +2075,21 @@ function onAdmin(m) {
 function applyAdmin(d) {
   const p = d.p || {};
   switch (d.type) {
-    case 'coins': S.coins += +p.n || 0; toast(`The owner gave you ${fmt(p.n)} coins!`, 'good'); break;
+    case 'coins': S.coins += +p.n || 0; toast(`${d.by ? 'An admin' : 'The owner'} gave you ${fmt(p.n)} coins!`, 'good'); break;
     case 'setcoins': S.coins = Math.max(0, +p.n || 0); break;
     case 'luck': LUCK = { x: Math.max(1, +p.x || 1), until: +p.until || 0 }; lsSet('sc_luck', LUCK); break;
     case 'goldrain': GOLDRAIN = +p.until || 0; lsSet('sc_gr', GOLDRAIN); break;
     case 'party': confetti(['#ffd23a', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8'], 180); sfx('ach'); break;
-    case 'special': if (setSpecial(p) && cur === 'index') renderIndex(); break;
+    case 'special': if (setSpecial(p)) { if (cur === 'index') renderIndex(); else if (cur === 'shop') renderShop() } break;
     case 'rank': S.rank = Math.max(0, +p.n || 0); break;
-    case 'sub': if (ITEMS[p.key]) { addItem(p.key, VAR[p.v] ? p.v : 'n', Math.max(1, +p.n || 1)); showReveal({ key: p.key, v: VAR[p.v] ? p.v : 'n' }, null, 'GIFT FROM THE OWNER') } break;
+    case 'sub': if (ITEMS[p.key]) { addItem(p.key, VAR[p.v] ? p.v : 'n', Math.max(1, +p.n || 1)); showReveal({ key: p.key, v: VAR[p.v] ? p.v : 'n' }, null, d.by ? 'GIFT FROM AN ADMIN' : 'GIFT FROM THE OWNER') } break;
     case 'next': if (ITEMS[p.key]) S.nextOpen = { key: p.key, v: VAR[p.v] ? p.v : 'n' }; break;
-    case 'ban': { const u = String(p.u || '').toLowerCase(); if (u && !BANS.includes(u)) { BANS.push(u); lsSet('sc_bans', BANS) } if (ME && u === ME.username.toLowerCase() && !isOwner()) showBanned(); break }
+    case 'ban': { const u = String(p.u || '').toLowerCase(); if (u === CONFIG.OWNER.toLowerCase()) break; if (u && !BANS.includes(u)) { BANS.push(u); lsSet('sc_bans', BANS) } if (ME && u === ME.username.toLowerCase() && !isOwner()) showBanned(); break }
     case 'unban': BANS = BANS.filter(x => x !== String(p.u || '').toLowerCase()); lsSet('sc_bans', BANS); break;
     case 'msg': if (p.mode === 'top') showBanner(p.text); else popupMsg(p.text); break;
     case 'mult': GM = { x: Math.max(1, +p.x || 1), until: +p.until || 0 }; lsSet('sc_gmult', GM); break;
+    case 'grant': if (ME && !isOwner() && p.epk) openGrant(p).then(async j => { const c = j.cert; if (!c || String(c.p.u).toLowerCase() !== ME.username.toLowerCase() || !(await verifyOwnerSig(c))) return; ADMINCRED = { cert: c, priv: j.priv }; ADMKEY = null; lsSet('sc_adm_' + ME.username.toLowerCase(), ADMINCRED); updPanelBtn(); popupMsg('You are now an ADMIN! An ADMIN PANEL button appeared next to your menu.') }).catch(() => {}); break;
+    case 'revokeadmin': { const u = String(p.u || '').toLowerCase(); if (!u) break; REVOKED[u] = Math.max(REVOKED[u] || 0, +p.at || Date.now()); lsSet('sc_revoked', REVOKED); if (ME && u === ME.username.toLowerCase() && ADMINCRED && ADMINCRED.cert.ts <= REVOKED[u] && !isOwner()) { ADMINCRED = null; ADMKEY = null; localStorage.removeItem('sc_adm_' + u); updPanelBtn(); if (cur === 'owner') go('shop') } break }
     case 'packs': PACKEDITS = p.ov || {}; lsSet('sc_packedits', PACKEDITS); applyOverrides(PACKEDITS); if (cur === 'shop' || cur === 'index') go(cur); break;
   }
   recalc(); updateStats(); updateCoin();
@@ -2077,11 +2137,11 @@ $('#a-login').onsubmit = async e => {
 };
 function enter(acct) {
   ME = acct; S = loadSave(acct.username); lsSet('sc_session', acct.username.toLowerCase());
-  $('#auth').hidden = true; $('#app').hidden = false; $('#who').innerHTML = nm(ME.username); $('#ownerBtn').hidden = !isOwner();
+  $('#auth').hidden = true; $('#app').hidden = false; $('#who').innerHTML = nm(ME.username); ADMINCRED = lsGet('sc_adm_' + acct.username.toLowerCase(), null); ADMKEY = null; { const rv = REVOKED[acct.username.toLowerCase()]; if (ADMINCRED && rv && ADMINCRED.cert.ts <= rv) ADMINCRED = null } updPanelBtn();
   buildDD(); recalc(); offlineEarn(); applySettings(); updateStats(); updateCoin(); startNet(); go('shop');
 }
 function logout() {
-  save(true); clearInterval(hbTimer); Net.close(); ME = null; S = null; localStorage.removeItem('sc_session');
+  save(true); clearInterval(hbTimer); Net.close(); ME = null; S = null; ADMINCRED = null; ADMKEY = null; localStorage.removeItem('sc_session');
   closeModal(); closeReveal(true); $('#battle').className = ''; $('#app').hidden = true; $('#auth').hidden = false; authView('home');
 }
 $('#logout').onclick = logout;
@@ -2097,7 +2157,7 @@ document.addEventListener('click', () => $('#dd').classList.remove('open'));
 $('#ownerBtn').onclick = () => go('owner');
 $('#resetCoin').onclick = () => { S.setKey = null; recalc(); updateStats(); updateCoin(); save(true) };
 function go(p) {
-  stopGames(); if (p === 'owner' && !isOwner()) p = 'shop'; cur = p; $('#ddLabel').textContent = PAGES[p][0];
+  stopGames(); if (p === 'owner' && !canPanel()) p = 'shop'; cur = p; $('#ddLabel').textContent = p === 'owner' && !isOwner() ? 'ADMIN PANEL' : PAGES[p][0];
   $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p));
   ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, games: renderGames, settings: renderSettings, owner: renderOwner })[p](); sfx('ui');
 }
@@ -2670,11 +2730,11 @@ function pickerHTML(pre) { return `<select id="${pre}_pack">${PACKS.map(p => `<o
 function wirePicker(pre) { const fill = () => { const p = PACKS.find(x => x.id === $('#' + pre + '_pack').value); $('#' + pre + '_item').innerHTML = [...p.items].sort(byRar).map(i => `<option value="${esc(i.key)}">${esc(i.name)} (${RAR[i.rarity].name})</option>`).join('') }; $('#' + pre + '_pack').onchange = fill; fill() }
 const pickerVal = pre => ({ key: $('#' + pre + '_item').value, v: $('#' + pre + '_var').value, n: Math.max(1, +$('#' + pre + '_n').value || 1) });
 function renderOwner() {
-  const L = allPlayers();
-  $('#page').innerHTML = `<div class="phead"><h2>OWNER PANEL</h2></div>
-  <div class="ostats"><div class="panel"><span>PLAYERS KNOWN</span><b id="os1">${L.length}</b></div><div class="panel"><span>ONLINE NOW</span><b id="os2">${L.filter(p => p.online).length}</b></div><div class="panel"><span>COINS IN GAME</span><b id="os3">${fmt(L.reduce((a, p) => a + p.coins, 0))}</b></div><div class="panel"><span>BANNED</span><b id="os4">${BANS.length}</b></div><div class="panel"><span>PENDING DELIVERIES</span><b>${QUEUE.length}</b></div></div>
-  <div class="panel osec"><h3>YOUR ACCOUNT</h3><div class="orow"><input id="o_coins" type="number" placeholder="coins"><button class="btn sm" id="o_setCoins">SET MY COINS</button><input id="o_rank" type="number" placeholder="battle rank"><button class="btn sm" id="o_setRank">SET MY BATTLE RANK</button></div></div>
-  <div class="panel osec"><h3>SUBS</h3><div class="orow">${pickerHTML('g')}</div><div class="orow"><input id="o_tsub" list="plist" placeholder="player (blank = me)"><button class="btn sm green" id="o_give">GIVE SUB</button><button class="btn sm gold" id="o_next">SET NEXT PACK OPEN</button></div></div>
+  const L = allPlayers(), own = isOwner();
+  $('#page').innerHTML = `<div class="${own ? '' : 'admmode'}"><div class="phead"><h2>${own ? 'OWNER' : 'ADMIN'} PANEL</h2></div>
+  <div class="ostats"><div class="panel"><span>PLAYERS KNOWN</span><b id="os1">${L.length}</b></div><div class="panel"><span>ONLINE NOW</span><b id="os2">${L.filter(p => p.online).length}</b></div><div class="panel"><span>COINS IN GAME</span><b id="os3">${fmt(L.reduce((a, p) => a + p.coins, 0))}</b></div><div class="panel"><span>BANNED</span><b id="os4">${BANS.length}</b></div><div class="panel own"><span>PENDING DELIVERIES</span><b>${QUEUE.length}</b></div></div>
+  <div class="panel osec own"><h3>YOUR ACCOUNT</h3><div class="orow"><input id="o_coins" type="number" placeholder="coins"><button class="btn sm" id="o_setCoins">SET MY COINS</button><input id="o_rank" type="number" placeholder="battle rank"><button class="btn sm" id="o_setRank">SET MY BATTLE RANK</button></div></div>
+  <div class="panel osec"><h3>SUBS</h3><div class="orow">${pickerHTML('g')}</div><div class="orow"><input id="o_tsub" list="plist" placeholder="player (blank = me)"><button class="btn sm green" id="o_give">GIVE SUB</button><button class="btn sm gold own" id="o_next">SET NEXT PACK OPEN</button></div></div>
   <div class="panel osec"><h3>PLAYER TOOLS</h3><div class="orow"><input id="o_t" list="plist" placeholder="player username"><input id="o_amt" type="number" placeholder="amount"></div><div class="orow"><button class="btn sm green" id="o_gc">GIVE COINS</button><button class="btn sm" id="o_sc">SET COINS</button><button class="btn sm" id="o_sr">SET BATTLE RANK</button><button class="btn sm red" id="o_ban">BAN</button><button class="btn sm alt" id="o_unban">UNBAN</button></div></div>
   <div class="panel osec"><h3>SEND A MESSAGE</h3><div class="orow"><input id="o_mt" list="plist" placeholder="player (blank = EVERYONE)" style="flex:1"><select id="o_mm"><option value="popup">POPUP</option><option value="top">TOP BANNER</option></select></div><div class="orow"><textarea id="o_msg" rows="2" maxlength="240" placeholder="Message..." style="flex:1"></textarea><button class="btn sm green" id="o_send">SEND</button></div></div>
   <div class="panel osec"><h3>EVENTS</h3><div class="orow"><span>Everyone earns</span><input id="o_gx" type="number" value="2" min="1" style="width:80px"><span>x coins for</span><input id="o_gm" type="number" value="30" min="1" style="width:90px"><span>minutes</span><button class="btn sm gold" id="o_gstart">START</button><button class="btn sm alt" id="o_gstop">STOP</button></div></div>
@@ -2683,14 +2743,15 @@ function renderOwner() {
   <div class="orow">${pickerHTML('e')}<button class="btn sm green" id="e_gs">GIVE EVERYONE THIS SUB</button></div>
   <div class="orow"><span>Luck hour: chroma and above x</span><input id="e_lx" type="number" value="3" style="width:70px"><span>for</span><input id="e_lm" type="number" value="15" style="width:70px"><span>min</span><button class="btn sm gold" id="e_luck">START</button><button class="btn sm alt" id="e_luckoff">STOP</button></div>
   <div class="orow"><span>Golden sub rain for</span><input id="e_gmin" type="number" value="5" style="width:70px"><span>min</span><button class="btn sm gold" id="e_rain">START</button><button class="btn sm alt" id="e_rainoff">STOP</button><button class="btn sm gold" id="e_party">PARTY!</button></div></div>
-  <div class="panel osec"><h3>ONLY ME (cheats)</h3>
+  <div class="panel osec own"><h3>ONLY ME (cheats)</h3>
   <div class="orow"><button class="btn sm green" id="m_all">GET ALL SUBS</button><button class="btn sm" id="m_gold">SPAWN GOLDEN SUB</button><button class="btn sm" id="m_fz">FILL FRENZY</button><button class="btn sm" id="m_daily">RESET DAILY LIMITS</button><button class="btn sm" id="m_pity">NEXT PACK = CHROMA</button></div>
   <div class="orow"><span>My coin multiplier x</span><input id="m_mult" type="number" value="1" min="1" style="width:90px"><button class="btn sm" id="m_setmult">SET</button></div></div>
-  <div class="panel osec"><h3>ANY SUB IMAGE</h3><div class="orow">${pickerHTML('im')}</div><div class="orow"><button class="btn sm green" id="im_set">UPLOAD + CROP IMAGE</button><button class="btn sm alt" id="im_reset">RESET TO DEFAULT ART</button></div><div class="orow"><span>Strength</span><input id="bb_tol" type="range" min="10" max="200" value="60" style="flex:1"><button class="btn sm gold" id="bb_run">REMOVE BACKGROUNDS FROM ALL UPLOADED IMAGES</button><button class="btn sm alt" id="bb_undo">RESTORE ORIGINALS</button></div><div class="small">Special subs are left alone. Originals are kept so you can restore them.</div><div class="small">Change the picture of any sub for everyone (Mario, Volcanu, the Five Nights pack, anything). Afterwards press EXPORT specials.json in the box below and upload that file next to index.html so the images stay forever.</div></div>
-  <div class="panel osec"><h3>SPECIAL SUBS</h3><div id="o_spec"></div><div class="orow"><button class="btn sm green" id="o_newspec">+ NEW SPECIAL</button><button class="btn sm alt" id="o_expspec">EXPORT specials.json</button></div><div class="small">Upload an image, crop it, and everyone online gets it. Players who join later get it while you are online, or permanently if you upload the exported specials.json next to index.html.</div></div>
-  <div class="panel osec"><h3>PACKS</h3><div class="opacks">${PACKS.map(p => `<div class="opk"><i style="background:${p.color}"></i><span>${esc(p.name)} (${fmt(p.cost)})</span><button class="btn sm" data-ep="${p.id}">EDIT</button></div>`).join('')}</div></div>
-  <div class="panel osec"><h3>PLAYER DATABASE</h3><div class="orow"><input id="o_q" placeholder="search..." style="flex:1"><button class="btn sm alt" id="o_csv">EXPORT CSV</button></div><div class="tblwrap" id="o_tbl"></div></div>
-  <datalist id="plist">${L.map(p => `<option value="${esc(p.u)}">`).join('')}</datalist>`;
+  <div class="panel osec own"><h3>ANY SUB IMAGE</h3><div class="orow">${pickerHTML('im')}</div><div class="orow"><button class="btn sm green" id="im_set">UPLOAD + CROP IMAGE</button><button class="btn sm alt" id="im_reset">RESET TO DEFAULT ART</button></div><div class="orow"><span>Strength</span><input id="bb_tol" type="range" min="10" max="200" value="60" style="flex:1"><button class="btn sm gold" id="bb_run">REMOVE BACKGROUNDS FROM ALL UPLOADED IMAGES</button><button class="btn sm alt" id="bb_undo">RESTORE ORIGINALS</button></div><div class="small">Special subs are left alone. Originals are kept so you can restore them.</div><div class="small">Change the picture of any sub for everyone (Mario, Volcanu, the Five Nights pack, anything). Afterwards press EXPORT specials.json in the box below and upload that file next to index.html so the images stay forever.</div></div>
+  <div class="panel osec own"><h3>SPECIAL SUBS</h3><div id="o_spec"></div><div class="orow"><button class="btn sm green" id="o_newspec">+ NEW SPECIAL</button><button class="btn sm alt" id="o_expspec">EXPORT specials.json</button></div><div class="small">Upload an image, crop it, and everyone online gets it. Players who join later get it while you are online, or permanently if you upload the exported specials.json next to index.html.</div></div>
+  <div class="panel osec own"><h3>PACKS</h3><div class="opacks">${PACKS.map(p => `<div class="opk"><i style="background:${p.color}"></i><span>${esc(p.name)} (${fmt(p.cost)})</span><button class="btn sm" data-ep="${p.id}">EDIT</button>${p.custom ? `<button class="btn sm red" data-dp="${p.id}">DELETE</button>` : ''}</div>`).join('')}</div><div class="orow"><button class="btn sm green" id="o_newpack">+ MAKE A NEW PACK</button></div><div class="small">Name it, set the price, pick a colour, add monsters with a rarity, a chance and a picture. Everyone online gets it right away; export specials.json afterwards to keep it forever.</div></div>
+  <div class="panel osec own"><h3>ADMINS</h3><div class="orow"><input id="ad_u" list="plist" placeholder="player username" style="flex:1"><button class="btn sm green" id="ad_give">MAKE ADMIN</button><button class="btn sm red" id="ad_rev">REMOVE ADMIN</button></div><div class="small" id="ad_list"></div><div class="small">Admins get an ADMIN PANEL button where yours is. They can give coins and subs to OTHER players, send messages, run events and ban or unban. They cannot edit packs, specials or images, and cannot give things to themselves. The player must have opened the updated game once while you were online.</div></div>
+  <div class="panel osec"><h3>PLAYER DATABASE</h3><div class="orow"><input id="o_q" placeholder="search..." style="flex:1"><button class="btn sm alt own" id="o_csv">EXPORT CSV</button></div><div class="tblwrap" id="o_tbl"></div></div>
+  <datalist id="plist">${L.map(p => `<option value="${esc(p.u)}">`).join('')}</datalist></div>`;
   wirePicker('g'); wirePicker('e'); wirePicker('im'); renderOwnerTable(); renderSpecPanel(); $('#o_newspec').onclick = newSpecialDialog; $('#o_expspec').onclick = exportSpecials;
   const evmsg = t => adminSend('*', 'msg', { text: t, mode: 'top' }, true);
   $('#e_gc').onclick = () => { const n = num('e_coins'); if (!(n > 0)) return toast('Enter an amount.', 'bad'); adminSend('*', 'coins', { n }, true); evmsg('The owner gave EVERYONE ' + fmt(n) + ' coins!'); toast('Sent to everyone', 'good') };
@@ -2712,7 +2773,7 @@ function renderOwner() {
   const rep = (r, what) => toast(r === 'queued' ? `${what}: player offline - queued, delivers when they come online` : r === 'self' ? `${what}: applied to you` : `${what}: sent`, 'good');
   $('#o_setCoins').onclick = () => { S.coins = Math.max(0, num('o_coins') || 0); updateStats(); save(true); toast('Coins set', 'good') };
   $('#o_setRank').onclick = () => { S.rank = Math.max(0, num('o_rank') || 0); save(true); toast('Rank set', 'good') };
-  $('#o_give').onclick = () => { const v = pickerVal('g'), t = $('#o_tsub').value.trim() || ME.username; rep(adminSend(t, 'sub', v), 'Give sub') };
+  $('#o_give').onclick = () => { const v = pickerVal('g'), t = $('#o_tsub').value.trim() || (own ? ME.username : ''); if (!t) return toast('Enter a player username.', 'bad'); rep(adminSend(t, 'sub', v), 'Give sub') };
   $('#o_next').onclick = () => { const v = pickerVal('g'), t = $('#o_tsub').value.trim() || ME.username; rep(adminSend(t, 'next', v), 'Next pack open') };
   $('#o_gc').onclick = () => need() && rep(adminSend(tgt(), 'coins', { n: num('o_amt') }), 'Give coins');
   $('#o_sc').onclick = () => need() && rep(adminSend(tgt(), 'setcoins', { n: num('o_amt') }), 'Set coins');
@@ -2720,9 +2781,20 @@ function renderOwner() {
   $('#o_ban').onclick = () => { if (!need()) return; if (tgt().toLowerCase() === ME.username.toLowerCase()) return toast("You can't ban yourself.", 'bad'); const u = tgt().toLowerCase(); if (!BANS.includes(u)) { BANS.push(u); lsSet('sc_bans', BANS) } adminSend('*', 'ban', { u }, true); toast('Banned ' + tgt(), 'good'); renderOwnerTable() };
   $('#o_unban').onclick = () => { if (!need()) return; adminSend('*', 'unban', { u: tgt() }, true); BANS = BANS.filter(x => x !== tgt().toLowerCase()); lsSet('sc_bans', BANS); toast('Unbanned', 'good'); renderOwnerTable() };
   $('#o_send').onclick = () => { const text = $('#o_msg').value.trim(); if (!text) return toast('Write a message first.', 'bad'); const t = $('#o_mt').value.trim() || '*'; rep(adminSend(t, 'msg', { text, mode: $('#o_mm').value }, t === '*'), 'Message'); $('#o_msg').value = '' };
-  $('#o_gstart').onclick = () => { const x = Math.max(1, num('o_gx') || 2), mins = Math.max(1, num('o_gm') || 30); adminSend('*', 'mult', { x, until: Date.now() + mins * 60000 }, true); adminSend(ME.username, 'mult', { x, until: Date.now() + mins * 60000 }); adminSend('*', 'msg', { text: `COIN EVENT! Everyone earns x${x} coins for ${mins} minutes!`, mode: 'top' }, true); toast('Event started', 'good') };
-  $('#o_gstop').onclick = () => { adminSend('*', 'mult', { x: 1, until: 0 }, true); adminSend(ME.username, 'mult', { x: 1, until: 0 }); toast('Event stopped', 'good') };
+  $('#o_gstart').onclick = () => { const x = Math.max(1, num('o_gx') || 2), mins = Math.max(1, num('o_gm') || 30); adminSend('*', 'mult', { x, until: Date.now() + mins * 60000 }, true); adminSend('*', 'msg', { text: `COIN EVENT! Everyone earns x${x} coins for ${mins} minutes!`, mode: 'top' }, true); toast('Event started', 'good') };
+  $('#o_gstop').onclick = () => { adminSend('*', 'mult', { x: 1, until: 0 }, true); toast('Event stopped', 'good') };
   $$('[data-ep]').forEach(b => b.onclick = () => editPack(b.dataset.ep));
+  $('#o_newpack').onclick = () => newPackDialog();
+  $$('[data-dp]').forEach(b => b.onclick = () => { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'SURE?'; return } saveSpecial({ id: 'cp:' + b.dataset.dp, cpack: { id: b.dataset.dp }, del: true }); toast('Pack deleted', 'good'); renderOwner() });
+  const paintAd = () => { $('#ad_list').textContent = 'Admins: ' + (Object.values(ADMINS).filter(a => !a.revoked).map(a => a.u).join(', ') || 'none') };
+  paintAd();
+  $('#ad_give').onclick = async () => {
+    const u = $('#ad_u').value.trim(), pl = Object.values(PLAYERS).find(x => x.u && x.u.toLowerCase() === u.toLowerCase());
+    if (!u) return toast('Enter a player username.', 'bad'); if (u.toLowerCase() === ME.username.toLowerCase()) return toast('You are the owner already.', 'bad');
+    if (!OWNER_KEYS) return promptUnlock(); if (!pl || !pl.ek) return toast(u + ' must open the updated game once while you are online first.', 'bad');
+    try { const g = await grantAdmin(pl.u, pl.ek); ADMINS[pl.u.toLowerCase()] = { u: pl.u, ts: Date.now() }; lsSet('sc_admins', ADMINS); adminSend(pl.u, 'grant', g); toast(pl.u + ' is now an admin', 'good'); paintAd() } catch (e) { toast('Could not make admin.', 'bad') }
+  };
+  $('#ad_rev').onclick = () => { const u = $('#ad_u').value.trim(), a = ADMINS[u.toLowerCase()]; if (!a) return toast('That player is not an admin.', 'bad'); a.revoked = Date.now(); lsSet('sc_admins', ADMINS); adminSend('*', 'revokeadmin', { u: a.u, at: a.revoked }, true); toast(a.u + ' is no longer an admin', 'good'); paintAd() };
   $('#o_q').oninput = renderOwnerTable; $('#o_csv').onclick = exportCSV;
 }
 function renderOwnerTable() {
@@ -2738,7 +2810,7 @@ async function announceSpecials(ids) {
 }
 let annN = 0; setInterval(() => { annN++; announceSpecials(annN % 5 === 0 ? null : Object.keys(SPEC).filter(id => !SPEC[id].key)) }, 60000);
 function saveSpecial(s) {
-  s.ver = Date.now(); setSpecial(s); if (!OWNER_KEYS) toast('Saved on this device. To sync it to players, log out and back in (needs https).', 'bad'); else announceSpecials([s.id]);
+  s.ver = Date.now(); setSpecial(s); if (!OWNER_KEYS) { toast('Saved on this device. Unlock owner tools to sync it to players.', 'bad'); promptUnlock() } else announceSpecials([s.id]);
   toast('Special saved', 'good'); if (cur === 'owner') renderSpecPanel(); if (cur === 'index') renderIndex(); if (cur === 'shop') renderShop();
 }
 function removeBG(cv, tol, picks) {
@@ -2839,6 +2911,29 @@ function editPack(id) {
   $$('[data-ix]', m).forEach(bt => bt.onclick = () => { const it = items[+bt.dataset.ix]; saveSpecial({ id: 'k:' + it.key, key: it.key, img: '' }); editPack(id) });
   $('#ep_save', m).onclick = () => { const w = {}; $$('[data-i]', m).forEach(inp => { w[items[+inp.dataset.i].name] = Math.max(0, +inp.value || 0) }); PACKEDITS[id] = { name: $('#ep_name', m).value.trim() || p.name, cost: Math.max(0, +$('#ep_cost', m).value || 0), color: $('#ep_color', m).value, w }; pushPacks(); closeModal(); toast('Pack saved', 'good') };
   $('#ep_reset', m).onclick = () => { delete PACKEDITS[id]; pushPacks(); closeModal(); toast('Pack reset', 'good') };
+}
+let NP = null;
+function newPackDialog() {
+  if (!NP) NP = { name: '', cost: 100, color: '#6a4cff', motif: 'stars', imgs: {}, rows: [['Monster 1', 'common', 50], ['Monster 2', 'common', 25], ['Monster 3', 'rare', 15], ['Monster 4', 'epic', 7], ['Monster 5', 'legendary', 3]].map(r => ({ id: uid(), n: r[0], r: r[1], w: r[2] })) };
+  const rars = RAR_ORDER.filter(r => r !== 'hidden');
+  const m = modal(`<h3>MAKE A NEW PACK</h3><div class="orow"><input id="np_name" placeholder="Pack name" maxlength="40" style="flex:1" value="${esc(NP.name)}"><input id="np_cost" type="number" min="0" style="width:100px" value="${NP.cost}"><input id="np_col" type="color" style="width:56px;padding:2px" value="${NP.color}"><select id="np_motif">${MOTIFS.map(x => `<option${x === NP.motif ? ' selected' : ''}>${x}</option>`).join('')}</select></div><div class="chances" id="np_rows" style="max-height:290px"></div><div class="small" style="margin-top:6px">Chances are relative weights (the shop shows them as percentages). No picture? The game draws a default one. Add a Chroma or higher monster to be covered by the hidden 1000-pack guarantee.</div><div class="mbtns"><button class="btn alt" id="np_add">+ ADD MONSTER</button><button class="btn green" id="np_ok">CREATE PACK</button></div>`);
+  const sync = () => { NP.name = $('#np_name', m).value; NP.cost = +$('#np_cost', m).value || 0; NP.color = $('#np_col', m).value; NP.motif = $('#np_motif', m).value; NP.rows.forEach(r => { const el = $('[data-r="' + r.id + '"]', m); if (el) { r.n = $('.rn', el).value; r.r = $('.rr', el).value; r.w = +$('.rw', el).value || 0 } }) };
+  const paint = () => {
+    $('#np_rows', m).innerHTML = NP.rows.map(r => `<div class="editrow" data-r="${r.id}"><img class="pix" src="${NP.imgs[r.id] || ''}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;background:#e8f4ff"><input class="rn" value="${esc(r.n)}" maxlength="40" style="flex:1;min-width:0"><select class="rr">${rars.map(x => `<option value="${x}"${x === r.r ? ' selected' : ''}>${RAR[x].name}</option>`).join('')}</select><input class="rw" type="number" step="any" min="0" value="${r.w}" style="width:70px"><button class="btn sm" data-img>IMG</button><button class="btn sm red" data-del>X</button></div>`).join('');
+    $$('[data-img]', m).forEach(b => b.onclick = () => { sync(); const id = b.parentNode.dataset.r; pickImage(d => { NP.imgs[id] = d; newPackDialog() }) });
+    $$('[data-del]', m).forEach(b => b.onclick = () => { sync(); NP.rows = NP.rows.filter(r => r.id !== b.parentNode.dataset.r); paint() });
+  };
+  paint();
+  $('#np_add', m).onclick = () => { sync(); NP.rows.push({ id: uid(), n: 'Monster ' + (NP.rows.length + 1), r: 'common', w: 10 }); paint() };
+  $('#np_ok', m).onclick = () => {
+    sync(); const name = NP.name.trim().slice(0, 40); if (!name) return toast('Give the pack a name.', 'bad');
+    const seen = new Set(), items = []; NP.rows.forEach(r => { const n = r.n.replace(/[#\/]/g, '').trim().slice(0, 40); if (!n || seen.has(n.toLowerCase())) return; seen.add(n.toLowerCase()); items.push({ n, r: rars.includes(r.r) ? r.r : 'common', w: Math.max(0.0001, r.w), id: r.id }) });
+    if (items.length < 2) return toast('Add at least 2 monsters with different names.', 'bad');
+    let id = 'c_' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 12) || 'pack'); while (PACKS.some(p => p.id === id)) id += Math.floor(Math.random() * 10);
+    const def = { id, name, cost: Math.max(0, Math.floor(NP.cost)), color: NP.color, motif: NP.motif, items: items.map(x => ({ n: x.n, r: x.r, w: x.w })) };
+    items.forEach(x => { if (NP.imgs[x.id]) saveSpecial({ id: 'k:' + id + '/' + x.n, key: id + '/' + x.n, img: NP.imgs[x.id] }) });
+    saveSpecial({ id: 'cp:' + id, cpack: def }); NP = null; closeModal(); toast('Pack created: ' + name, 'good'); if (cur === 'owner') renderOwner()
+  };
 }
 function pushPacks() { lsSet('sc_packedits', PACKEDITS); applyOverrides(PACKEDITS); adminSend('*', 'packs', { ov: PACKEDITS }, true); renderOwner() }
 setInterval(() => { if (isOwner() && PACKS.length) { /* re-announce pack edits to latecomers every 2 min */ if (Object.keys(PACKEDITS).length && Date.now() % 120000 < 5000) adminSend('*', 'packs', { ov: PACKEDITS }, true) } }, 5000);
@@ -3033,7 +3128,7 @@ HIDDEN.forEach(x => { const id = x.key.split('/')[1]; ['jpg', 'jpeg', 'png', 'we
 applySettings();
 authView('home');
 { const A = ACCTS(), k = CONFIG.OWNER_ACCOUNT.username.toLowerCase(); A[k] = Object.assign({}, CONFIG.OWNER_ACCOUNT, { created: (A[k] && A[k].created) || Date.now() }); lsSet('sc_accounts', A) }
-(async () => { const s = lsGet('sc_session', null), a = s && ACCTS()[s]; if (a && s !== CONFIG.OWNER.toLowerCase() && !BANS.includes(s)) enter(a) })();
+(async () => { const s = lsGet('sc_session', null), a = s && ACCTS()[s]; if (!a) return; const ow = s === CONFIG.OWNER.toLowerCase(); if (!ow && BANS.includes(s)) return; enter(a); if (ow) setTimeout(promptUnlock, 500) })();
 </script>
 </body>
 </html>
