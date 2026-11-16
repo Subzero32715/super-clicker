@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -95,11 +95,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue)}
 .crow i{width:11px;height:11px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.3)}
 .crow .cn{flex:1;font-weight:700}.crow .cr{opacity:.65;font-size:11px}.crow .cp{font-family:'Press Start 2P',monospace;font-size:9px;min-width:70px;text-align:right}
 /* reveal */
-#reveal{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,.84);padding:20px;text-align:center}
-#reveal.on{display:flex;animation:fade .15s}
-#reveal.rainbow{background:linear-gradient(120deg,#ff3b3b,#ff9d00,#fff200,#38e24a,#18d4ff,#3a5bff,#b13bff,#ff3b3b);background-size:500% 500%;animation:rb 4s linear infinite}
+#reveal{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,.92);padding:20px;text-align:center}
+#reveal.on{display:flex}
+#reveal.rainbow{background:linear-gradient(120deg,#8f1f1f,#9a5a00,#8a7d00,#1d7a30,#0b6f8a,#233a9a,#6a1f9a,#8f1f1f);background-size:500% 500%;animation:rb 4s linear infinite}
 @keyframes rb{0%{background-position:0 50%}100%{background-position:100% 50%}}
-.rvspot{position:relative;width:min(260px,60vw);aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.1) 0,rgba(255,255,255,0) 68%);animation:popin .35s cubic-bezier(.2,1.6,.4,1)}
+.rvspot{position:relative;width:min(260px,60vw);aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;background:none}
 .rvspot img{width:74%;image-rendering:pixelated;filter:drop-shadow(0 6px 0 rgba(0,0,0,.25))}
 @keyframes popin{from{transform:scale(.2) rotate(-12deg);opacity:0}}
 .rvtag{margin-top:18px;font-family:'Press Start 2P',monospace;font-size:11px;padding:8px 12px;border-radius:10px;border:3px solid #fff;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.5)}
@@ -263,7 +263,7 @@ img[src^="secrets/"]{object-fit:cover;border-radius:50%;image-rendering:auto!imp
 @keyframes pgin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 #page.pgin{animation:pgin .38s ease both}
 @keyframes cardin{from{opacity:0;transform:translateY(18px) scale(.94)}}
-#page.pgin .pack,#page.pgin .offer,#page.pgin .tile,#page.pgin .idxpack,#page.pgin .panel.osec{animation:cardin .45s ease backwards}
+#page.pgin .offer,#page.pgin .tile,#page.pgin .idxpack,#page.pgin .panel.osec{animation:cardin .45s ease backwards}
 @keyframes bob{50%{transform:translateY(-4px)}}
 .offer img{animation:bob 2.6s ease-in-out infinite}
 .modal{animation:cardin .22s ease backwards}
@@ -3369,7 +3369,7 @@ $('#ownerBtn').onclick = () => go('owner');
 $('#resetCoin').onclick = () => { S.setKey = null; recalc(); updateStats(); updateCoin(); save(true) };
 function go(p) {
   stopGames(); if (p === 'owner' && !canPanel()) p = 'shop'; cur = p; $('#ddLabel').textContent = p === 'owner' && !isOwner() ? 'ADMIN PANEL' : PAGES[p][0];
-  $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p)); { const pg = $('#page'); pg.classList.remove('pgin'); void pg.offsetWidth; pg.classList.add('pgin'); setTimeout(() => pg.classList.remove('pgin'), 900) }
+  $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p)); { const pg = $('#page'); pg.classList.remove('pgin'); void pg.offsetWidth; if (p !== 'shop') pg.classList.add('pgin'); setTimeout(() => pg.classList.remove('pgin'), 900) }
   ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, games: renderGames, settings: renderSettings, owner: renderOwner })[p](); sfx('ui');
 }
 
@@ -3651,7 +3651,7 @@ function renderShop() {
   const on = offerList().filter(o => offerState(o) === 'on');
   $('#page').innerHTML = `<div class="phead"><h2>SHOP</h2><div class="idxhead"><button class="btn alt" id="vaultBtn">VAULT</button><button class="btn ${S.instant ? 'green' : 'alt'}" id="inst">INSTANT OPEN: ${S.instant ? 'ON' : 'OFF'}</button></div></div>${on.length ? `<div class="offers-h">LIMITED SPECIALS</div><div class="offers">${on.map(o => offerCard(o)).join('')}</div>` : ''}<div class="packs">${PACKS.filter(packVisible).sort((a, b) => (b.seasonal ? 1 : 0) - (a.seasonal ? 1 : 0)).map(p => packHTML(p)).join('')}</div>`;
   shopSig = on.map(o => o.id).join(','); $('#inst').onclick = () => { S.instant = !S.instant; save(true); renderShop() }; $('#vaultBtn').onclick = openVault;
-  $$('.pack').forEach((el, i) => { el.style.animationDelay = Math.min(i * 30, 600) + 'ms'; el.onclick = () => { const p = PACKS.find(x => x.id === el.dataset.id); S.instant ? openPack(p) : previewPack(p) } });
+  $$('.pack').forEach((el, i) => { el.onclick = () => { const p = PACKS.find(x => x.id === el.dataset.id); S.instant ? openPack(p) : previewPack(p) } });
   $$('.offer').forEach(el => el.onclick = () => buyOffer(el.dataset.of));
 }
 function buyOffer(id) {
@@ -3699,7 +3699,6 @@ function openPack(p) {
   if (dailyLeft(p) <= 0) return toast('Daily limit reached for ' + p.name, 'bad');
   if (S.coins < p.cost) return toast('Not enough coins!', 'bad');
   S.coins -= p.cost; if (p.daily) S.daily.counts[p.id] = (S.daily.counts[p.id] || 0) + 1;
-  { const pk = $('.packs'); if (pk) pk.classList.add('out') }
   const r = roll(p); addItem(r.key, r.v, 1);
   { const i0 = ITEMS[r.key]; if (i0 && !i0.hid && RAR_ORDER.indexOf(i0.rarity) >= RAR_ORDER.indexOf('mystical') && ME) Net.pub('chat', 'm', { id: uid(), u: 'SUB_BOT', t: ME.username + ' just pulled ' + i0.name + ' (' + RAR[i0.rarity].name + ') from the ' + p.name + '!', ts: Date.now() }) } S.opens++; S.packOpens[p.id] = (S.packOpens[p.id] || 0) + 1;
   let note = ''; const it0 = ITEMS[r.key];
@@ -3711,7 +3710,7 @@ let revealLock = 0, lockT = null;
 function closeReveal(force) {
   if (!force && Date.now() < revealLock) return;
   revealLock = 0; clearInterval(lockT); const r = $('#reveal'); r.className = ''; r.innerHTML = ''; r.onclick = null;
-  if (cur === 'shop' && S && !uiBusy()) { renderShop(); const pg = $('#page'); pg.classList.remove('pgin'); void pg.offsetWidth; pg.classList.add('pgin'); setTimeout(() => pg.classList.remove('pgin'), 900) }
+  if (cur === 'shop' && S && !uiBusy()) renderShop();
 }
 function showReveal(r, p, label) {
   const it = ITEMS[r.key], rar = RAR[it.rarity], box = $('#reveal'), gate = RAR_ORDER.indexOf(it.rarity) >= CHI;
@@ -3729,7 +3728,7 @@ function showReveal(r, p, label) {
     const upd = () => { const left = Math.ceil((revealLock - Date.now()) / 1000); if (left > 0) btns.forEach(b => { b.disabled = true; b.textContent = 'WAIT ' + left + '...' }); else { clearInterval(lockT); btns.forEach((b, i) => { b.disabled = false; b.textContent = base[i] }) } };
     upd(); lockT = setInterval(upd, 200);
   }
-  confetti(rar.fancy ? ['#ff3b3b', '#ff9d00', '#fff200', '#38e24a', '#18d4ff', '#b13bff', '#fff'] : [rar.color, '#ffffff', shade(rar.color, .4)], rar.fancy ? 260 : 140);
+  confetti(rar.fancy ? ['#ff3b3b', '#ff9d00', '#fff200', '#38e24a', '#18d4ff', '#b13bff'] : [rar.color, shade(rar.color, .4), shade(rar.color, -.3)], rar.fancy ? 260 : 140);
 }
 function confetti(colors, n) {
   if (!ST.confetti) return;
@@ -4251,7 +4250,13 @@ setInterval(() => { if (isOwner() && PACKS.length) { /* re-announce pack edits t
 
 /* ===== bonuses: each sub gives EITHER coins per click OR coins per second ===== */
 const bonusKind = k => hash('bk' + k) % 2 ? 'cpc' : 'cps';
-function bonusVal(k, v = 'n') { const r = RAR[ITEMS[k].rarity], vf = Math.sqrt((VAR[v] || VAR.n).mult); return bonusKind(k) === 'cpc' ? r.cpc * .5 * vf : r.cps * vf }
+function chanceRank(k) { const it = ITEMS[k]; if (!it || it.hid || it.shopsp) return null; const c = chanceOf(it); return c > 0 ? Math.log10(100 / c) : null }
+/* boosts grow with how RARE the drop chance is (not just the rarity name); the rarity table is the minimum */
+function bonusVal(k, v = 'n') {
+  const r = RAR[ITEMS[k].rarity], vf = Math.sqrt((VAR[v] || VAR.n).mult), rk = chanceRank(k); let cps = r.cps, cpc = r.cpc * .5;
+  if (rk !== null) { const e = rk - .8; cps = Math.max(cps, .05 * Math.pow(10, e)); cpc = Math.max(cpc, .5 * Math.pow(10, e)) }
+  return bonusKind(k) === 'cpc' ? cpc * vf : cps * vf;
+}
 function bonusText(k, v) { const x = bonusVal(k, v); return bonusKind(k) === 'cpc' ? `+${fmtCps(x)} coins per click` : `+${fmtCps(x)} coins per second` }
 
 /* ===== sound ===== */
