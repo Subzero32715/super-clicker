@@ -3400,7 +3400,7 @@ const isOnline = p => p && Date.now() - p.ts < 25000;
 function boardList() {
   if (ME && PLAYERS[ME.username]) { PLAYERS[ME.username].coins = Math.floor(S.coins); PLAYERS[ME.username].rank = S.rank; PLAYERS[ME.username].hs = S.hs || {} }
   const L = Object.values(PLAYERS).filter(p => p.u && p.u.toLowerCase() !== CONFIG.OWNER.toLowerCase() && !BANS.includes(p.u.toLowerCase()));
-  if (ME && !L.some(p => p.u === ME.username)) L.push({ u: ME.username, coins: Math.floor(S.coins), rank: S.rank, hs: S.hs || {}, ts: Date.now() });
+  if (ME && !isOwner() && !L.some(p => p.u === ME.username)) L.push({ u: ME.username, coins: Math.floor(S.coins), rank: S.rank, hs: S.hs || {}, ts: Date.now() });
   return L.sort((a, b) => b.coins - a.coins);
 }
 function computeTop() { const l = boardList(), t = l[0] && l[0].coins > 0 ? l[0].u : null; if (t !== topUser) { topUser = t; if (ME) { $('#who').innerHTML = nm(ME.username); if (['board', 'chat'].includes(cur)) go(cur) } } }
