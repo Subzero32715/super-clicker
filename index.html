@@ -357,6 +357,7 @@ body[data-motion=off] #bgsubs{animation:none}
           <button class="btn gold sm" id="giftBtn" hidden style="margin-top:8px"></button><div class="small" id="goalBar" style="margin-top:6px;font-weight:700"></div>
           <button class="btn alt sm" id="resetCoin" hidden>BACK TO PENNY</button>
         </div>
+        <button class="btn red" id="rebirthBtn" style="margin-top:12px;width:100%">REBIRTH</button>
       </div>
     </aside>
     <main class="page" id="page"></main>
@@ -3223,7 +3224,7 @@ const isBanned = u => BANS.includes(String(u || '').toLowerCase());
 let PLAYERS = lsGet('sc_players', {}), OWNERDB = lsGet('sc_ownerdb', {}), BANS = lsGet('sc_bans', []), QUEUE = lsGet('sc_queue', []), GM = lsGet('sc_gmult', { x: 1, until: 0 });
 const isOwner = () => !!ME && ME.username.toLowerCase() === CONFIG.OWNER.toLowerCase();
 let LUCK = lsGet('sc_luck', { x: 1, until: 0 }), GOLDRAIN = lsGet('sc_gr', 0);
-const gm = () => (Date.now() < GM.until ? GM.x : 1) * (S && S.omult > 1 && isOwner() ? S.omult : 1);
+const gm = () => (Date.now() < GM.until ? GM.x : 1) * (S && S.omult > 1 && isOwner() ? S.omult : 1) * (1 + .1 * ((S && S.rbp) || 0));
 const defaultSave = () => ({ coins: 0, inv: {}, setKey: null, rank: 1000, wins: 0, losses: 0, opens: 0, clicks: 0, instant: false, nextOpen: null, daily: { date: '', counts: {} }, team: [], seen: [], up: {}, peak: 0, packOpens: {}, sold: 0, ach: {}, streak: { last: '', n: 0 }, lastSeen: 0 });
 const loadSave = u => Object.assign(defaultSave(), lsGet(CONFIG.SAVE_PREFIX + u.toLowerCase(), {}));
 let saveT = 0;
@@ -4645,6 +4646,21 @@ function applySettings() {
 }
 
 /* ===== hidden subs, achievements, checks ===== */
+
+/* ===== rebirth ===== */
+const rbNeed = () => 5e6 * Math.pow(3, (S && S.rb) || 0), rbPoints = () => Math.floor(Math.sqrt(Math.max(0, (S.runPeak || 0)) / 1e6));
+function rbUpdate() { const b = $('#rebirthBtn'); if (!b || !S) return; S.runPeak = Math.max(S.runPeak || 0, S.coins); const ok = S.runPeak >= rbNeed(); b.textContent = ok ? 'REBIRTH +' + rbPoints() + ' (READY)' : 'REBIRTH' + (S.rbp ? ' (x' + (1 + .1 * S.rbp).toFixed(1) + ')' : ''); b.className = 'btn ' + (ok ? 'gold' : 'red') }
+function openRebirth() {
+  S.runPeak = Math.max(S.runPeak || 0, S.coins); const need = rbNeed(), ok = S.runPeak >= need, pts = rbPoints(), cur = 1 + .1 * (S.rbp || 0), nxt = 1 + .1 * ((S.rbp || 0) + pts);
+  const m = modal(`<div class="idetail"><h3>REBIRTH</h3><p style="margin:8px 0">Start over with a permanent bonus: <b>+10% coins on everything for every point</b>.</p><div class="setrow"><label>Rebirths so far</label><b>${S.rb || 0}</b></div><div class="setrow"><label>Best coins this run</label><b>${fmt(S.runPeak)}</b></div><div class="setrow"><label>You need</label><b>${fmt(need)}</b></div><div class="setrow"><label>Points you would get</label><b>${ok ? '+' + pts : '-'}</b></div><div class="setrow"><label>Coin bonus</label><b>x${cur.toFixed(1)}${ok ? ' → x' + nxt.toFixed(1) : ''}</b></div><p class="small" style="margin:8px 0">You lose: coins, your subs, upgrades and pack prices reset. You keep: hidden and shop-special subs, achievements, minigame scores, battle record and your daily streak.</p><div class="mbtns"><button class="btn red" id="rbYes"${ok ? '' : ' disabled'}>REBIRTH NOW</button><button class="btn alt" id="rbNo">CANCEL</button></div></div>`);
+  $('#rbNo', m).onclick = closeModal; $('#rbYes', m).onclick = () => { closeModal(); doRebirth() };
+}
+function doRebirth() {
+  if (S.runPeak < rbNeed()) return; const pts = rbPoints(), keep = {}; for (const ik in S.inv) { const it = ITEMS[splitInv(ik)[0]]; if (it && (it.hid || it.shopsp)) keep[ik] = S.inv[ik] }
+  S.inv = keep; S.coins = 0; S.up = {}; S.setKey = null; S.team = []; S.packOpens = {}; S.pity = 0; S.nextRar = null; S.nextOpen = null; S.runPeak = 0; S.pk = 0; S.rb = (S.rb || 0) + 1; S.rbp = (S.rbp || 0) + pts;
+  recalc(); updateStats(); updateCoin(); save(true); sfx('ach'); confetti(['#ffd23a', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8'], 220); toast('REBIRTH! Coins now x' + (1 + .1 * S.rbp).toFixed(1) + ' forever.', 'good'); go('shop'); rbUpdate();
+}
+$('#rebirthBtn').onclick = openRebirth; setInterval(rbUpdate, 1000);
 const ownsHidden = id => (S.inv[invKey('hidden/' + id, 'n')] || 0) > 0, pendingH = new Set();
 function grantHidden(id) {
   if (pendingH.has(id)) return; pendingH.add(id);
