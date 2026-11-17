@@ -2894,10 +2894,17 @@ window.SEASONAL = [
 ];
 
 (window.SEASONAL || []).forEach(s => { const items = []; for (const r in s.tiers) s.tiers[r].split('|').forEach(x => { const i = x.lastIndexOf(':'); items.push({ name: x.slice(0, i), rarity: r, w: +x.slice(i + 1) }) }); PACKS.push({ id: s.id, name: s.name, cost: s.cost, color: s.color, motif: s.motif, items, seasonal: true, when: s.when, fixed: true }) });
+
+[['c1', 'Royal Vault', 1500000, '#c9a227', 'stars', ['Copper Coin', 'Silver Goblet', 'Velvet Pillow', 'Ruby Ring', 'Gold Bar', 'Emerald Tiara', 'Royal Scepter', 'Jeweled Crown', 'Golden Throne', 'Prismatic Chalice', 'Phantom King', 'Omega Emperor']],
+ ['c2', 'Cosmic Forge', 2500000, '#5b2bd6', 'dots', ['Star Dust', 'Iron Comet', 'Lava Rock', 'Plasma Orb', 'Nebula Hammer', 'Quasar Anvil', 'Pulsar Blade', 'Black Hole Gem', 'Galaxy Gauntlet', 'Prismatic Supernova', 'Mystic Singularity', 'Omega Big Bang']],
+ ['c3', "Dragon's Hoard", 4000000, '#c0392b', 'tri', ['Dragon Egg', 'Tiny Wyrmling', 'Scale Shield', 'Fire Drake', 'Frost Drake', 'Wyvern Rider', 'Dragon Knight', 'Elder Dragon', 'Dragon Lord', 'Prismatic Dragon', 'Mystic Leviathan', 'Omega Dragon God']],
+ ['c4', 'Time Rift', 6500000, '#16a085', 'blocks', ['Broken Clock', 'Sand Timer', 'Pocket Watch', 'Echo Wisp', 'Time Moth', 'Chrono Knight', 'Rift Walker', 'Paradox Cat', 'Hourglass Titan', 'Prismatic Paradox', 'Mystic Timekeeper', 'Omega Eternity']],
+ ['c5', 'The Omega Realm', 10000000, '#111827', 'stars', ['Void Pebble', 'Shadow Wisp', 'Null Cube', 'Rift Imp', 'Abyss Eye', 'Void Walker', 'Entropy Knight', 'Eclipse Giant', 'Oblivion Queen', 'Prismatic Void', 'Mystic Annihilator', 'Omega Nothing']]
+].forEach(([id, name, cost, color, motif, n]) => { const W = [17, 16, 15, 10, 7, 3, 1.5, .7, .2, .05, .005, .0005], R = ['common', 'common', 'common', 'rare', 'rare', 'epic', 'epic', 'legendary', 'supreme', 'chroma', 'mystical', 'omega']; PACKS.push({ id: 'elite_' + id, name, cost, color, motif, items: n.map((nm, i) => ({ name: nm, rarity: R[i], w: W[i] })), elite: true, fixed: true }) });
 { const BAND = { common: [15, 18], rare: [5, 12], epic: [1, 4], legendary: [.4, .9], supreme: [.1, .3], chroma: [.01, .09], mystical: [.001, .009], secret: [.001, .009], omega: [.0002, .0009] };
   PACKS.filter(p => !p.fixed && !['fnaf', 'chance', 'glitch'].includes(p.id)).forEach(p => { const g = {}; p.items.forEach(i => (g[i.rarity] = g[i.rarity] || []).push(i)); for (const r in g) { const b = BAND[r]; if (!b) continue; const L = g[r].sort((a, c) => c.w - a.w); L.forEach((i, k) => { i.w = L.length === 1 ? (b[0] + b[1]) / 2 : b[1] - (b[1] - b[0]) * k / (L.length - 1) }) } });
   PACKS.filter(p => p.id !== 'chance').forEach(p => { const t = p.items.reduce((a, i) => a + i.w, 0); p.items.forEach(i => { if (i.w > 0 && i.w / t * 100 < 0.001) i.rarity = 'omega' }) }) }
-{ const L = PACKS.filter(p => !p.daily && !p.seasonal), nice = x => { const e = Math.pow(10, Math.floor(Math.log10(x)) - 1); return Math.round(x / e) * e }; L.forEach((p, i) => { p.cost = i === L.length - 1 ? 1000000 : nice(25 * Math.pow(40000, i / (L.length - 1))) }) }
+{ const L = PACKS.filter(p => !p.daily && !p.seasonal && !p.elite), nice = x => { const e = Math.pow(10, Math.floor(Math.log10(x)) - 1); return Math.round(x / e) * e }; L.forEach((p, i) => { p.cost = i === L.length - 1 ? 1000000 : nice(25 * Math.pow(40000, i / (L.length - 1))) }) }
 PACKS.forEach(p => {
   ORIG[p.id] = { name: p.name, cost: p.cost, color: p.color, w: Object.fromEntries(p.items.map(i => [i.name, i.w])) };
   p.items.forEach(it => { it.key = p.id + '/' + it.name; it.pack = p; ITEMS[it.key] = it });
@@ -3480,10 +3487,11 @@ const GAMES = [
   { id: 'math', t: 'MATH DASH', d: 'Solve sums against the clock. Wrong answers cost time!', c: '#fd79a8', ic: 'mineral/Diamond', r: () => renderMath(), b: () => bestOf('math', 0) },
   { id: 'mine', t: 'MINE SWEEP', d: 'Clear the board without hitting a bomb.', c: '#636e72', ic: 'weapon/Katana', r: () => renderMine(), b: () => bestOf('mine', '-') + (S.hs && S.hs.mine !== undefined ? 's' : '') },
   { id: 'ttt', t: 'TIC TAC TOE', d: 'Beat the bot and build a win streak.', c: '#e84393', ic: 'chance/Jackpot', r: () => renderTTT(), b: () => bestOf('ttt', 0) },
+  { id: 'castle', t: 'CASTLEVANIA', d: 'Super Castlevania IV. Starts right away, no button needed.', c: '#8e44ad', ic: 'shadow/Shadow', r: () => renderCastle(), b: () => '', nb: 1 },
   { id: 'guess', t: "WHO'S THAT SUB?", d: 'Name the sub from its shadow.', c: '#00a8a8', ic: 'shadow/Shadow', r: () => renderGuess(), b: () => bestOf('guess', 0) + '/10' }
 ];
 function renderGames() {
-  $('#page').innerHTML = '<div class="phead"><h2>MINIGAMES</h2><span class="rtag" style="background:var(--deep)">JUST FOR FUN</span></div><div class="small" style="margin-bottom:12px">Nothing to buy here. Beat your personal best in any game for a small coin bonus.</div><div class="gcards">' + GAMES.map(g => '<div class="gcard" data-g="' + g.id + '" style="--c:' + g.c + '"><img class="pix" src="' + spriteURL(g.ic) + '"><b>' + g.t + '</b><span>' + g.d + '</span><em>BEST: ' + g.b() + '</em></div>').join('') + '</div>';
+  $('#page').innerHTML = '<div class="phead"><h2>MINIGAMES</h2><span class="rtag" style="background:var(--deep)">JUST FOR FUN</span></div><div class="small" style="margin-bottom:12px">Nothing to buy here. Beat your personal best in any game for a small coin bonus.</div><div class="gcards">' + GAMES.map(g => '<div class="gcard" data-g="' + g.id + '" style="--c:' + g.c + '"><img class="pix" src="' + spriteURL(g.ic) + '"><b>' + g.t + '</b><span>' + g.d + '</span>' + (g.nb ? '<em>PLAY NOW</em>' : '<em>BEST: ' + g.b() + '</em>') + '</div>').join('') + '</div>';
   $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); GAMES.find(x => x.id === el.dataset.g).r() });
 }
 const heads = (t, k, v) => '<div class="phead"><h2>' + t + '</h2><span class="rtag" style="background:var(--deep)">BEST ' + v + '</span></div>';
@@ -3548,6 +3556,14 @@ function renderTTT() {
   }
   function me(i) { if (busy || b[i]) return; b[i] = 'X'; draw(); sfx('ui'); if (win(b, 'X')) return end('You win!', 1); if (b.every(v => v)) return end('Draw!', 0); busy = true; T_(bot, 350) }
   init();
+}
+
+
+/* ---- CASTLEVANIA ---- */
+function renderCastle() {
+  stopGames(); window.CASTLE = true; musicApply(); GT.push(() => { window.CASTLE = false; musicApply() });
+  $('#page').innerHTML = '<div class="phead"><h2>CASTLEVANIA</h2><span class="rtag" style="background:var(--deep)">SUPER CASTLEVANIA IV</span></div><div class="panel gpanel"><div style="position:relative;width:100%;max-width:min(860px,calc((100vh - 220px) * 4 / 3));margin:0 auto;aspect-ratio:4/3;background:#000;border:3px solid var(--deep);border-radius:10px;overflow:hidden"><iframe id="cvFrame" src="https://www.retrogames.cc/embed/23973-super-castlevania-iv-usa.html" style="position:absolute;inset:0;width:100%;height:100%;border:0" frameborder="no" scrolling="no" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="cross-origin-isolated; fullscreen; gamepad; autoplay"></iframe></div><div class="mbtns" style="margin-top:10px"><button class="btn sm alt" id="cvFs">FULLSCREEN</button></div><div class="small" style="text-align:center;margin-top:8px">Click inside the game once so it gets your keyboard. The background music is paused while you play.</div></div>'; addBack();
+  $('#cvFs').onclick = () => { const f = $('#cvFrame'); try { (f.requestFullscreen || f.webkitRequestFullscreen).call(f) } catch (e) {} };
 }
 
 /* ---- SUB CATCHER ---- */
@@ -3801,7 +3817,7 @@ function showReveal(r, p, label) {
   if (it.hid && !label) label = 'SECRET UNLOCKED!';
   box.className = 'on' + (rar.fancy ? ' rainbow' : '');
   const ch = it.shopsp ? 'Limited Shop Special' : it.hid ? (it.pct ? fmtPct(it.pct) : 'Secret reward') : fmtPct(chanceOf(it)) + (r.v !== 'n' ? ` · ${VAR[r.v].name} variant ${fmtPct(VAR[r.v].p)}` : '');
-  box.innerHTML = `${label ? `<div class="rvmsg" style="margin:0 0 10px;font-size:16px">${esc(label)}</div>` : ''}<div class="rvspot"><img class="${vcls(r.v).trim()}" src="${spriteURL(r.key)}"></div><div class="rvtag" style="background:${rar.color}">${rar.name.toUpperCase()}${r.v !== 'n' ? ' · ' + VAR[r.v].name.toUpperCase() : ''}</div><div class="rvname" style="--rc:${rar.color}">${esc(it.name)}</div><div class="rvchance">Chance: ${ch}</div><div class="rvbonus">${bonusText(r.key, r.v)}</div><div class="mbtns"><button class="btn green" id="rvKeep">KEEP</button>${p ? `<button class="btn" id="rvAgain">OPEN AGAIN (${fmt(p.cost)})</button>` : ''}</div>`;
+  box.innerHTML = `<div class="rvmsg" style="margin:0 0 10px;font-size:16px;min-height:24px;line-height:24px;margin-top:0">${label ? esc(label) : '&nbsp;'}</div><div class="rvspot"><img class="${vcls(r.v).trim()}" src="${spriteURL(r.key)}"></div><div class="rvtag" style="background:${rar.color}">${rar.name.toUpperCase()}${r.v !== 'n' ? ' · ' + VAR[r.v].name.toUpperCase() : ''}</div><div class="rvname" style="--rc:${rar.color}">${esc(it.name)}</div><div class="rvchance">Chance: ${ch}</div><div class="rvbonus">${bonusText(r.key, r.v)}</div><div class="mbtns"><button class="btn green" id="rvKeep">KEEP</button>${p ? `<button class="btn" id="rvAgain">OPEN AGAIN (${fmt(p.cost)})</button>` : ''}</div>`;
   const keep = $('#rvKeep'), again = $('#rvAgain');
   keep.onclick = () => closeReveal();
   if (again) again.onclick = () => { closeReveal(true); openPack(p) };
@@ -4090,16 +4106,16 @@ function renderOwner() {
   const L = allPlayers(), own = isOwner() && !ADMVIEW;
   $('#page').innerHTML = `<div class="${own ? '' : 'admmode'}"><div class="phead"><h2>${own ? 'OWNER' : 'ADMIN'} PANEL</h2></div>
   <div class="ostats"><div class="panel"><span>PLAYERS KNOWN</span><b id="os1">${L.length}</b></div><div class="panel"><span>ONLINE NOW</span><b id="os2">${L.filter(p => p.online).length}</b></div><div class="panel"><span>COINS IN GAME</span><b id="os3">${fmt(L.reduce((a, p) => a + p.coins, 0))}</b></div><div class="panel"><span>BANNED</span><b id="os4">${BANS.length}</b></div><div class="panel own"><span>PENDING DELIVERIES</span><b>${QUEUE.length}</b></div></div>
-  <div class="panel osec"><h3>YOUR ACCOUNT</h3><div class="orow"><input id="o_coins" type="number" placeholder="coins"><button class="btn sm" id="o_setCoins">SET MY COINS</button><input id="o_rank" type="number" placeholder="battle rank"><button class="btn sm" id="o_setRank">SET MY BATTLE RANK</button></div></div>
+  <div class="panel osec"><h3>YOUR ACCOUNT</h3><div class="orow"><input id="o_coins" type="number" placeholder="${own ? 'coins' : 'coins (max 1,000,000)'}"><button class="btn sm" id="o_setCoins">SET MY COINS</button><input id="o_rank" class="own" type="number" placeholder="battle rank"><button class="btn sm own" id="o_setRank">SET MY BATTLE RANK</button></div></div>
   <div class="panel osec"><h3>SUBS (for me)</h3><div class="orow">${pickerHTML('g')}</div><div class="orow"><button class="btn sm green" id="o_give">GIVE ME THIS SUB</button><button class="btn sm gold own" id="o_next">SET MY NEXT PACK OPEN</button></div></div>
-  <div class="panel osec"><h3>NEXT PULL RARITY</h3><div class="orow"><select id="nr_r">${RAR_ORDER.filter(r => r !== 'hidden' && (own || RAR_ORDER.indexOf(r) <= RAR_ORDER.indexOf('supreme'))).map(r => `<option value="${r}">${RAR[r].name}</option>`).join('')}</select><button class="btn sm gold" id="nr_me">JUST ME</button><button class="btn sm gold" id="nr_all">EVERYONE</button><button class="btn sm alt" id="nr_clr">CLEAR FOR EVERYONE</button></div><div class="small">${own ? '' : 'Admins: up to Supreme, one use every 2 minutes. '}The next pack opened gives a sub of that rarity.</div></div>
+  <div class="panel osec own"><h3>NEXT PULL RARITY</h3><div class="orow"><select id="nr_r">${RAR_ORDER.filter(r => r !== 'hidden' && (own || RAR_ORDER.indexOf(r) <= RAR_ORDER.indexOf('supreme'))).map(r => `<option value="${r}">${RAR[r].name}</option>`).join('')}</select><button class="btn sm gold" id="nr_me">JUST ME</button><button class="btn sm gold" id="nr_all">EVERYONE</button><button class="btn sm alt" id="nr_clr">CLEAR FOR EVERYONE</button></div><div class="small">${own ? '' : 'Admins: up to Supreme, one use every 2 minutes. '}The next pack opened gives a sub of that rarity.</div></div>
   <div class="panel osec"><h3>PLAYER TOOLS</h3><div class="orow"><input id="o_t" list="plist" placeholder="player username"><input id="o_amt" type="number" placeholder="amount"></div><div class="orow"><button class="btn sm own" id="o_sc">SET COINS</button><button class="btn sm own" id="o_sr">SET BATTLE RANK</button><button class="btn sm red own" id="o_ban">BAN</button><button class="btn sm alt own" id="o_unban">UNBAN</button></div></div>
   <div class="panel osec"><h3>SEND A MESSAGE</h3><div class="orow"><input id="o_mt" list="plist" placeholder="player (blank = EVERYONE)" style="flex:1"><select id="o_mm"><option value="popup">POPUP</option><option value="top">TOP BANNER</option></select></div><div class="orow"><textarea id="o_msg" rows="2" maxlength="240" placeholder="Message..." style="flex:1"></textarea><button class="btn sm green" id="o_send">SEND</button></div></div>
-  <div class="panel osec"><h3>EVENTS</h3><div class="orow"><span>Everyone earns</span><input id="o_gx" type="number" value="2" min="1" style="width:80px"><span>x coins for</span><input id="o_gm" type="number" value="30" min="1" style="width:90px"><span>minutes</span><button class="btn sm gold" id="o_gstart">START</button><button class="btn sm alt" id="o_gstop">STOP</button></div></div>
-  <div class="panel osec"><h3>EVERYONE (affects all players)</h3>
+  <div class="panel osec own"><h3>EVENTS</h3><div class="orow"><span>Everyone earns</span><input id="o_gx" type="number" value="2" min="1" style="width:80px"><span>x coins for</span><input id="o_gm" type="number" value="30" min="1" style="width:90px"><span>minutes</span><button class="btn sm gold" id="o_gstart">START</button><button class="btn sm alt" id="o_gstop">STOP</button></div></div>
+  <div class="panel osec own"><h3>EVERYONE (affects all players)</h3>
   <div class="orow"><span>Luck hour: chroma and above x</span><input id="e_lx" type="number" value="3" style="width:70px"><span>for</span><input id="e_lm" type="number" value="15" style="width:70px"><span>min</span><button class="btn sm gold" id="e_luck">START</button><button class="btn sm alt" id="e_luckoff">STOP</button></div>
   <div class="orow"><span>Golden sub rain for</span><input id="e_gmin" type="number" value="5" style="width:70px"><span>min</span><button class="btn sm gold" id="e_rain">START</button><button class="btn sm alt" id="e_rainoff">STOP</button><button class="btn sm gold" id="e_party">PARTY!</button></div></div>
-  <div class="panel osec"><h3>ONLY ME (cheats)</h3>
+  <div class="panel osec own"><h3>ONLY ME (cheats)</h3>
   <div class="orow"><button class="btn sm green" id="m_all">GET ALL SUBS</button><button class="btn sm" id="m_gold">SPAWN GOLDEN SUB</button><button class="btn sm" id="m_fz">FILL FRENZY</button><button class="btn sm" id="m_daily">RESET DAILY LIMITS</button><button class="btn sm" id="m_pity">NEXT PACK = CHROMA</button><button class="btn sm" id="m_showall">SHOW ALL PACKS (me)</button></div>
   <div class="orow"><span>My coin multiplier x</span><input id="m_mult" type="number" value="1" min="1" style="width:90px"><button class="btn sm" id="m_setmult">SET</button></div><div class="orow own"><button class="btn sm gold" id="m_maxup">MAX ALL UPGRADES</button><button class="btn sm gold" id="m_ach">COMPLETE ALL ACHIEVEMENTS</button><button class="btn sm gold" id="m_bil">+1 BILLION COINS</button><button class="btn sm red" id="m_god">GOD MODE x1,000,000</button></div></div>
   <div class="panel osec"><h3>SCREEN EFFECTS</h3><div class="orow"><select id="fx_k">${Object.entries(FXK).map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select><input id="fx_min" type="number" value="1" min="1" style="width:70px"><span>min</span></div><div class="orow"><button class="btn sm gold" id="fx_go">START FOR EVERYONE</button><button class="btn sm" id="fx_off">STOP</button><button class="btn sm alt" id="fx_me">TRY ON ME</button></div></div>
@@ -4143,7 +4159,7 @@ function renderOwner() {
   $('#im_reset').onclick = () => { const v = pickerVal('im'); if (ITEMS[v.key]) saveSpecial({ id: 'k:' + v.key, key: v.key, img: '' }) };
   const num = id => +$('#' + id).value, tgt = () => $('#o_t').value.trim(), need = () => { if (!tgt()) { toast('Enter a player username.', 'bad'); return false } return true };
   const rep = (r, what) => toast(r === 'queued' ? `${what}: player offline - queued, delivers when they come online` : r === 'self' ? `${what}: applied to you` : `${what}: sent`, 'good');
-  $('#o_setCoins').onclick = () => { S.coins = Math.max(0, num('o_coins') || 0); updateStats(); save(true); toast('Coins set', 'good') };
+  $('#o_setCoins').onclick = () => { let n = Math.max(0, num('o_coins') || 0); if (!own) { const left = (+lsGet('sc_admcoin', 0) || 0) + 1800000 - Date.now(); if (left > 0) return toast('You can set coins again in ' + Math.ceil(left / 60000) + ' min', 'bad'); if (n > 1e6) { n = 1e6; toast('Capped at 1,000,000', 'good') } lsSet('sc_admcoin', Date.now()) } S.coins = n; updateStats(); save(true); toast('Coins set', 'good') };
   $('#o_setRank').onclick = () => { S.rank = Math.max(0, num('o_rank') || 0); save(true); toast('Rank set', 'good') };
   $('#o_give').onclick = () => { const v = pickerVal('g'); rep(adminSend(ME.username, 'sub', v), 'Give sub') };
   $('#o_next').onclick = () => { const v = pickerVal('g'); rep(adminSend(ME.username, 'next', v), 'Next pack open') };
@@ -4182,6 +4198,16 @@ function renderOwner() {
   $('#ad_rev').onclick = () => { const u = $('#ad_u').value.trim(), a = ADMINS[u.toLowerCase()]; if (!a) return toast('That player is not an admin.', 'bad'); a.revoked = Date.now(); lsSet('sc_admins', ADMINS); adminSend('*', 'revokeadmin', { u: a.u, at: a.revoked }, true); toast(a.u + ' is no longer an admin', 'good'); paintAd() };
   $('#o_q').oninput = renderOwnerTable; $('#o_csv').onclick = exportCSV;
 }
+
+function askPw(cb) {
+  const m = modal(`<h3>ENTER YOUR PASSWORD</h3><p class="small" style="margin:8px 0">Admin actions need your password.</p><div class="orow"><input id="ap_pw" type="password" placeholder="password" style="flex:1"></div><div class="small" id="ap_err" style="color:#c0392b;min-height:18px"></div><div class="mbtns"><button class="btn green" id="ap_go">OK</button><button class="btn alt" id="ap_no">CANCEL</button></div>`);
+  const go2 = async () => { const a = ACCTS()[ME.username.toLowerCase()]; let ok = false; try { const ph = a ? await pwHash(a.salt, $('#ap_pw', m).value) : ''; ok = !!a && (ph === a.hash || ph === a.hashF) } catch (e) {} if (!ok) { $('#ap_err', m).textContent = 'Wrong password. Nothing was done.'; return } closeModal(); cb() };
+  $('#ap_go', m).onclick = go2; $('#ap_pw', m).onkeydown = e => { if (e.key === 'Enter') go2() }; $('#ap_no', m).onclick = closeModal; setTimeout(() => $('#ap_pw', m).focus(), 50);
+}
+document.addEventListener('click', e => {
+  if (cur !== 'owner' || (isOwner() && !ADMVIEW) || !ME) return; const pg = $('#page'), b = e.target.closest && e.target.closest('button'); if (!b || !pg || !pg.contains(b) || b.dataset.pwok) return;
+  e.stopPropagation(); e.preventDefault(); askPw(() => { b.dataset.pwok = 1; b.click(); delete b.dataset.pwok });
+}, true);
 function renderOwnerTable() {
   const box = $('#o_tbl'); if (!box) return; const q = ($('#o_q').value || '').toLowerCase(), L = allPlayers().filter(p => !q || (p.u + p.fullName + p.from).toLowerCase().includes(q));
   box.innerHTML = `<table><tr><th>USER</th><th>FULL NAME</th><th>FROM</th><th>COINS</th><th>RANK</th><th>W/L</th><th>PACKS</th><th>STATUS</th><th></th></tr>${L.map(p => `<tr><td><b>${esc(p.u)}</b></td><td>${esc(p.fullName)}</td><td>${esc(p.from)}</td><td>${fmt(p.coins)}</td><td>${fmt(p.rank)}</td><td>${p.wins}/${p.losses}</td><td>${fmt(p.opens)}</td><td><span class="dot${p.online ? ' on' : ''}"></span>${p.banned ? 'BANNED' : p.online ? 'online' : (p.ts ? new Date(p.ts).toLocaleDateString() : '-')}</td><td><button class="btn sm alt" data-pick="${esc(p.u)}">SELECT</button></td></tr>`).join('') || '<tr><td colspan=9>No players yet.</td></tr>'}</table>`;
@@ -4354,7 +4380,7 @@ function chanceRank(k) { const it = ITEMS[k]; if (!it || it.hid || it.shopsp) re
 /* boosts grow with how RARE the drop chance is (not just the rarity name); the rarity table is the minimum */
 function bonusVal(k, v = 'n') {
   const r = RAR[ITEMS[k].rarity], vf = Math.sqrt((VAR[v] || VAR.n).mult), rk = chanceRank(k); let cps = r.cps, cpc = r.cpc * .5;
-  if (rk !== null) { const e = rk - .8, cm = RAR_ORDER.indexOf(ITEMS[k].rarity) >= CHI ? 3 : 1; cps = .08 * Math.pow(10, e) * cm; cpc = .8 * Math.pow(10, e) * cm }
+  if (rk !== null) { const e = rk - .8; if (RAR_ORDER.indexOf(ITEMS[k].rarity) >= CHI) { cps = Math.max(1000, 1000 * Math.pow(10, rk - 3)); cpc = cps * 10 } else { cps = .08 * Math.pow(10, e); cpc = .8 * Math.pow(10, e) } }
   return bonusKind(k) === 'cpc' ? cpc * vf : cps * vf;
 }
 function bonusText(k, v) { const x = bonusVal(k, v); return bonusKind(k) === 'cpc' ? `+${fmtCps(x)} coins per click` : `+${fmtCps(x)} coins per second` }
@@ -4409,7 +4435,7 @@ const MUS = { a: null, on: false };
 function musicApply() {
   try {
     if (!MUS.a) { const el = document.getElementById('musicdata'); if (!el) return; const bin = atob(el.textContent.trim()), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); MUS.a = new Audio(URL.createObjectURL(new Blob([u], { type: 'audio/mpeg' }))); MUS.a.loop = true }
-    MUS.a.volume = Math.max(0, Math.min(1, (ST.musicVol == null ? 25 : ST.musicVol) / 100 * .6)); if (ST.music && MUS.on) MUS.a.play().catch(() => {}); else MUS.a.pause();
+    MUS.a.volume = Math.max(0, Math.min(1, (ST.musicVol == null ? 25 : ST.musicVol) / 100 * .6)); if (ST.music && MUS.on && !window.CASTLE) MUS.a.play().catch(() => {}); else MUS.a.pause();
   } catch (e) {}
 }
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (MUS.on) return; MUS.on = true; musicApply() }, true));
