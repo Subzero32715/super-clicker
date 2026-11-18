@@ -3458,6 +3458,7 @@ function onProfile(m) {
   if (Array.isArray(d.sh)) { d.sh.forEach(i => { (SOLD[i] = SOLD[i] || {})[d.u.toLowerCase()] = 1 }); lsSet('sc_sold', SOLD) }
   computeTop();
   if (isOwner() && first) flushQueue(d.u);
+  { const br = lsGet('sc_banraw', null); if (!isOwner() && br && br.p && (+br.p.v || 0) > (+d.bv || 0) && Date.now() - (onProfile.g || 0) > 10000) { onProfile.g = Date.now(); Net.pub('admin', 'a', br) } }
   if (isOwner() && (+d.bv || 0) !== BANV && Date.now() - (onProfile.b || 0) > 8000) { onProfile.b = Date.now(); adminSend('*', 'banlist', { list: BANS, v: BANV }, true) }
   { const ad = isOwner() && ADMINS[d.u.toLowerCase()]; if (ad && ad.revoked && Date.now() - (onProfile.r || 0) > 15000) { onProfile.r = Date.now(); adminSend('*', 'revokeadmin', { u: d.u, at: ad.revoked }, true) } }
   if (cur === 'board' && Date.now() - boardT > 1500) { boardT = Date.now(); renderBoard() }
@@ -3473,7 +3474,7 @@ function adminSend(to, type, p, noQueue) {
   if (!own && !ADMINCRED) { toast('You are not an admin.', 'bad'); return 'blocked' }
   if (ME && to.toLowerCase() === ME.username.toLowerCase()) { if (!own) msg.by = ME.username; applyAdmin(msg); return 'self' }
   if (to === '*' && own && S) { S.seen.push(msg.id); applyAdmin(msg) }
-  (own ? signMsg : signAdminMsg)(msg).then(sm => { Net.pub('admin', 'a', sm); if (own && to !== '*' && !noQueue) { QUEUE.push(sm); lsSet('sc_queue', QUEUE) } }).catch(() => { if (own) { toast('Owner tools are locked. Type your password to unlock.', 'bad'); promptUnlock() } else toast('Could not send (your admin key is missing).', 'bad') });
+  (own ? signMsg : signAdminMsg)(msg).then(sm => { if (sm.type === 'banlist') lsSet('sc_banraw', sm); Net.pub('admin', 'a', sm); if (own && to !== '*' && !noQueue) { QUEUE.push(sm); lsSet('sc_queue', QUEUE) } }).catch(() => { if (own) { toast('Owner tools are locked. Type your password to unlock.', 'bad'); promptUnlock() } else toast('Could not send (your admin key is missing).', 'bad') });
   return to === '*' ? 'broadcast' : (!own || isOnline(PLAYERS[to]) ? 'sent' : 'queued');
 }
 function flushQueue(u) { QUEUE.filter(m => m.to.toLowerCase() === u.toLowerCase()).forEach(m => Net.pub('admin', 'a', m)) }
@@ -3482,7 +3483,7 @@ function onAdmin(m) {
   if (m.name !== 'a' || !m.data || !S) return; const d = m.data;
   if (typeof d.to !== 'string' || (d.to !== '*' && d.to.toLowerCase() !== ME.username.toLowerCase())) return;
   verifyMsg(d).then(ok => {
-    if (!ok || !S) return;
+    if (!ok || !S) return; if (d.type === 'banlist' && d.p && (+d.p.v || 0) >= ((lsGet('sc_banraw', null) || { p: {} }).p.v || 0)) lsSet('sc_banraw', d);
     if (d.by && ME && d.by.toLowerCase() === ME.username.toLowerCase() && ['coins', 'setcoins', 'sub', 'rank'].includes(d.type)) return;
     if (S.seen.includes(d.id)) { if (d.to !== '*') Net.pub('admin', 'ack', { id: d.id }); return }
     if (isOwner() && d.by && d.to === '*' && !ADMLOG.some(x => x.id === d.id)) { ADMLOG.unshift({ id: d.id, by: d.by, type: d.type, p: d.p, ts: d.ts }); ADMLOG.length = Math.min(ADMLOG.length, 40); lsSet('sc_admlog', ADMLOG); if (cur === 'owner' && $('#o_alog')) paintLog() }
