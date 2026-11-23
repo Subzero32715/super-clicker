@@ -357,6 +357,7 @@ body.elite .phead h2,body.elite .offers-h{color:#e9d8ff;text-shadow:0 2px 0 #3b0
 #evpill{position:fixed;left:10px;bottom:10px;z-index:9300;display:flex;flex-direction:column;gap:4px}#evpill span{background:#1b0b2ee6;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:10px;border:2px solid #ffd34d}
 body.compact .panel{padding:8px}body.compact .pack{transform:scale(.92)}body.compact .setrow{padding:3px 0}
 body.calm *{animation-duration:0s!important;animation-iteration-count:1!important}body.calm #reveal.omegabg,body.calm #reveal.rainbow{animation:none!important}
+.capgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px 10px;margin:8px 0;font-size:12px;font-weight:700}.capgrid input{margin-right:6px}
 </style>
 </head>
 <body>
@@ -3244,7 +3245,7 @@ window.SEASONAL = [
  ['c4', 'Time Rift', 65000000, '#16a085', 'blocks', ['Broken Clock', 'Sand Timer', 'Pocket Watch', 'Echo Wisp', 'Time Moth', 'Chrono Knight', 'Rift Walker', 'Paradox Cat', 'Hourglass Titan', 'Prismatic Paradox', 'Mystic Timekeeper', 'Omega Eternity']],
  ['c5', 'The Omega Realm', 100000000, '#111827', 'stars', ['Void Pebble', 'Shadow Wisp', 'Null Cube', 'Rift Imp', 'Abyss Eye', 'Void Walker', 'Entropy Knight', 'Eclipse Giant', 'Oblivion Queen', 'Prismatic Void', 'Mystic Annihilator', 'Omega Nothing']]
 ].forEach(([id, name, cost, color, motif, n]) => { const W = [17, 16, 15, 10, 7, 3, 1.5, .7, .2, .05, .005, .0005], R = ['common', 'common', 'common', 'rare', 'rare', 'epic', 'epic', 'legendary', 'supreme', 'chroma', 'mystical', 'omega']; PACKS.push({ id: 'elite_' + id, name, cost, color, motif, items: n.map((nm, i) => ({ name: nm, rarity: R[i], w: W[i] })), elite: true, fixed: true }) });
-PACKS.push({ id: 'rb_relics', name: 'Reborn Relics', cost: 3000000, color: '#a03dff', motif: 'stars', rebirth: true, elite: true, fixed: true, items: ['Ash Pile', 'Ember', 'Charred Twig', 'Cracked Eggshell', 'Flame Feather', 'Phoenix Chick', 'Ash Wolf', 'Rebirth Candle', 'Ember Knight', 'Prismatic Phoenix', 'Reborn Spirit', 'Eternal Flame'].map((nm, i) => ({ name: nm, rarity: ['common', 'common', 'common', 'rare', 'rare', 'epic', 'epic', 'legendary', 'supreme', 'chroma', 'mystical', 'omega'][i], w: [17, 16, 15, 10, 7, 3, 1.5, .7, .2, .05, .005, .0005][i] })) });
+PACKS.push({ id: 'rb_relics', name: 'Reborn Relics', rbpt: 3, cost: 3000000, color: '#a03dff', motif: 'stars', rebirth: true, elite: true, fixed: true, items: ['Ash Pile', 'Ember', 'Charred Twig', 'Cracked Eggshell', 'Flame Feather', 'Phoenix Chick', 'Ash Wolf', 'Rebirth Candle', 'Ember Knight', 'Prismatic Phoenix', 'Reborn Spirit', 'Eternal Flame'].map((nm, i) => ({ name: nm, rarity: ['common', 'common', 'common', 'rare', 'rare', 'epic', 'epic', 'legendary', 'supreme', 'chroma', 'mystical', 'omega'][i], w: [17, 16, 15, 10, 7, 3, 1.5, .7, .2, .05, .005, .0005][i] })) });
 { const BAND = { common: [15, 18], rare: [5, 12], epic: [1, 4], legendary: [.4, .9], supreme: [.1, .3], chroma: [.01, .09], mystical: [.001, .009], secret: [.001, .009], omega: [.0002, .0009] };
   PACKS.filter(p => !p.fixed && !['fnaf', 'chance', 'glitch'].includes(p.id)).forEach(p => { const g = {}; p.items.forEach(i => (g[i.rarity] = g[i.rarity] || []).push(i)); for (const r in g) { const b = BAND[r]; if (!b) continue; const L = g[r].sort((a, c) => c.w - a.w); L.forEach((i, k) => { i.w = L.length === 1 ? (b[0] + b[1]) / 2 : b[1] - (b[1] - b[0]) * k / (L.length - 1) }) } });
   PACKS.filter(p => p.id !== 'chance').forEach(p => { const t = p.items.reduce((a, i) => a + i.w, 0); p.items.forEach(i => { if (i.w > 0 && i.w / t * 100 < 0.001) i.rarity = 'omega' }) }) }
@@ -3445,7 +3446,7 @@ const isBanned = u => BANS.includes(String(u || '').toLowerCase());
 let PLAYERS = lsGet('sc_players', {}), OWNERDB = lsGet('sc_ownerdb', {}), BANS = lsGet('sc_bans', []), BANV = lsGet('sc_banv', 0), QUEUE = lsGet('sc_queue', []), GM = lsGet('sc_gmult', { x: 1, until: 0 });
 const isOwner = () => !!ME && ME.username.toLowerCase() === CONFIG.OWNER.toLowerCase();
 let LUCK = lsGet('sc_luck', { x: 1, until: 0 }), GOLDRAIN = lsGet('sc_gr', 0);
-const gm = () => (Date.now() < GM.until ? GM.x : 1) * (S && S.omult > 1 && isOwner() ? S.omult : 1) * (1 + .04 * ((S && S.rbp) || 0)) * (1 + .25 * ((S && S.up && S.up.ecrown) || 0));
+const gm = () => (Date.now() < GM.until ? GM.x : 1) * (S && S.omult > 1 && isOwner() ? S.omult : 1) * (1 + .04 * ((S && S.rbp) || 0)) * (1 + .25 * ((S && S.up && S.up.ecrown) || 0)) * (1 + .05 * ((S && S.rpk && S.rpk.mega) || 0)) * (S && S.rb >= 15 ? 1.1 : 1);
 const defaultSave = () => ({ coins: 0, inv: {}, setKey: null, rank: 1000, wins: 0, losses: 0, opens: 0, clicks: 0, instant: false, nextOpen: null, daily: { date: '', counts: {} }, team: [], seen: [], up: {}, peak: 0, packOpens: {}, sold: 0, ach: {}, streak: { last: '', n: 0 }, lastSeen: 0 });
 const loadSave = u => Object.assign(defaultSave(), lsGet(CONFIG.SAVE_PREFIX + u.toLowerCase(), {}));
 let saveT = 0;
@@ -3507,16 +3508,20 @@ async function verifyOwnerSig(m) { try { if (!subtleOK() || !m.sig) return false
 
 /* ===== admins: owner-signed certificates, per-device keys ===== */
 const ADMIN_CAPS = ['msg', 'clearchat', 'mult', 'luck', 'goldrain'];
-const TIERS = [null, { n: 'HELPER', caps: ['msg'], d: 'Popup messages to one player, one free sub for yourself (5 min cooldown)' }, { n: 'MODERATOR', caps: ['msg', 'clearchat'], d: 'Helper + clear the chat' }, { n: 'ADMIN', caps: ['msg', 'clearchat', 'mult'], d: 'Moderator + message everyone, x2 coin event (10 min)' }, { n: 'SENIOR ADMIN', caps: ['msg', 'clearchat', 'mult', 'luck', 'goldrain'], d: 'Admin + x3 events, luck hour, golden rain, set own coins up to 250K' }, { n: 'HEAD ADMIN', caps: ['msg', 'clearchat', 'mult', 'luck', 'goldrain'], d: 'Senior + longer events, set own coins up to 1M, hidden from the leaderboards' }];
-const tierCaps = t => TIERS[Math.min(5, Math.max(1, +t || 1))].caps, certTier = d => Math.min(5, Math.max(1, +(d.cert && d.cert.p && d.cert.p.tier) || 1));
-function myTier() { return isOwner() ? (ADMVIEW ? 5 : 9) : ADMINCRED ? Math.min(5, Math.max(1, +((ADMINCRED.cert || {}).p || {}).tier || 1)) : 0 }
+const ALLCAPS = [['msg', 'Message one player'], ['msgall', 'Message everyone'], ['clearchat', 'Clear the chat'], ['mult', 'Coin event'], ['luck', 'Luck hour'], ['goldrain', 'Golden rain'], ['mgift', 'Mystery gift'], ['clickx', 'Click power event'], ['vaulthint', 'Vault hint'], ['freepack', 'Free pack opens'], ['timewarp', 'Time warp'], ['frenzyall', 'Frenzy for all'], ['boss', 'Boss fight'], ['ownsub', 'Give self a sub'], ['owncoins', 'Edit own coins']];
+const TC = [[], ['msg'], ['clearchat'], ['msgall', 'mult', 'ownsub'], ['luck', 'goldrain', 'owncoins'], [], ['mgift', 'clickx', 'vaulthint'], ['freepack', 'timewarp', 'frenzyall'], ['boss']];
+const TIERS = [null, ...[['HELPER', 'Popup messages to one player'], ['MODERATOR', 'Helper + clear the chat'], ['ADMIN', 'Moderator + message everyone, coin event, one free sub for self'], ['SENIOR ADMIN', 'Admin + luck hour, golden rain, set own coins up to 250K'], ['HEAD ADMIN', 'Senior + longer events, hidden from the leaderboards'], ['ELDER ADMIN', 'Head + mystery gifts, click power events, vault hints'], ['COMMANDER', 'Elder + free pack opens, time warp, frenzy for all'], ['CO-HEAD', 'Commander + boss fights, strongest limits']].map((x, i) => ({ n: x[0], d: x[1], caps: [].concat(...TC.slice(1, i + 2)) }))];
+const tierCaps = t => TIERS[Math.min(8, Math.max(1, +t || 1))].caps, certTier = d => Math.min(8, Math.max(1, +(d.cert && d.cert.p && d.cert.p.tier) || 1));
+const capsOf = c => { const p = (c && c.p) || {}; return new Set((p.cap2 && Array.isArray(p.caps) ? p.caps : tierCaps(p.tier)).filter(x => ALLCAPS.some(y => y[0] === x))) };
+const hasCap = k => isOwner() || (!!ADMINCRED && capsOf(ADMINCRED.cert).has(k));
+function myTier() { return isOwner() ? (ADMVIEW ? 5 : 9) : ADMINCRED ? Math.min(8, Math.max(1, +((ADMINCRED.cert || {}).p || {}).tier || 1)) : 0 }
 let ADMINCRED = null, ADMKEY = null, MYEK = '', REVOKED = lsGet('sc_revoked', {}), ADMINS = lsGet('sc_admins', {});
 const ECP = { name: 'ECDH', namedCurve: 'P-256' }, ESP = { name: 'ECDSA', namedCurve: 'P-256' };
 async function ecdhPair() { let s = lsGet('sc_ecdh', null); if (!s) { const k = await crypto.subtle.generateKey(ECP, true, ['deriveKey']); s = { pub: b64(new Uint8Array(await crypto.subtle.exportKey('raw', k.publicKey))), priv: await crypto.subtle.exportKey('jwk', k.privateKey) }; lsSet('sc_ecdh', s) } return s }
 async function verifyMsg(m) {
   if (!m.cert) return verifyOwnerSig(m);
   try {
-    const c = m.cert; if (!(await verifyOwnerSig(c)) || c.type !== 'cert' || !c.p || !m.by || String(c.p.u).toLowerCase() !== String(m.by).toLowerCase() || !tierCaps(c.p.tier).includes(m.type)) return false;
+    const c = m.cert; if (!(await verifyOwnerSig(c)) || c.type !== 'cert' || !c.p || !m.by || String(c.p.u).toLowerCase() !== String(m.by).toLowerCase() || !capsOf(c).has(m.type)) return false;
     const rv = REVOKED[String(m.by).toLowerCase()]; if (rv && c.ts <= rv) return false;
     const k = await crypto.subtle.importKey('spki', unb64(c.p.pub), ESP, false, ['verify']);
     return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, k, unb64(m.sig), new TextEncoder().encode(sigText(m)));
@@ -3527,10 +3532,10 @@ async function signAdminMsg(msg) {
   const m = Object.assign({}, msg, { by: ME.username, cert: ADMINCRED.cert }), s = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, ADMKEY, new TextEncoder().encode(sigText(m)));
   return Object.assign(m, { sig: b64(new Uint8Array(s)) });
 }
-async function grantAdmin(u, ek, tier) {
+async function grantAdmin(u, ek, tier, caps) {
   const ap = await crypto.subtle.generateKey(ESP, true, ['sign', 'verify']);
   const pub = b64(new Uint8Array(await crypto.subtle.exportKey('spki', ap.publicKey))), priv = b64(new Uint8Array(await crypto.subtle.exportKey('pkcs8', ap.privateKey)));
-  const cert = await signMsg({ id: 'cert-' + uid(), to: u, type: 'cert', p: { u, pub, tier: tier || 1, caps: tierCaps(tier) }, ts: Date.now() });
+  const cert = await signMsg({ id: 'cert-' + uid(), to: u, type: 'cert', p: { u, pub, tier: tier || 1, caps: (caps || tierCaps(tier)).filter(x => ALLCAPS.some(y => y[0] === x)), cap2: 1 }, ts: Date.now() });
   const eph = await crypto.subtle.generateKey(ECP, true, ['deriveKey']), their = await crypto.subtle.importKey('raw', unb64(ek), ECP, false, []);
   const aes = await crypto.subtle.deriveKey({ name: 'ECDH', public: their }, eph.privateKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt']), iv = crypto.getRandomValues(new Uint8Array(12));
   const d = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, new TextEncoder().encode(JSON.stringify({ priv, cert })));
@@ -3669,7 +3674,14 @@ function onAdmin(m) {
     if (isOwner() && d.by && d.to === '*' && !ADMLOG.some(x => x.id === d.id)) { ADMLOG.unshift({ id: d.id, by: d.by, type: d.type, p: d.p, ts: d.ts }); ADMLOG.length = Math.min(ADMLOG.length, 40); lsSet('sc_admlog', ADMLOG); if (cur === 'owner' && $('#o_alog')) paintLog() }
     if (d.by) { const tr = certTier(d), cdk = k => { const m_ = lsGet('sc_admcd', {}); if (d.ts - (m_[d.by + k] || 0) < 600000) return true; m_[d.by + k] = d.ts; lsSet('sc_admcd', m_); return false };
       if (Math.abs(Date.now() - (d.ts || 0)) > 12 * 60000) return; const pp = d.p || (d.p = {});
-      if (d.type === 'msg' && d.to === '*' && tr < 3) return;
+      if (d.type === 'msg' && d.to === '*' && !capsOf(d.cert).has('msgall')) return;
+      if (d.type === 'clickx') { if (cdk('clickx')) return; pp.x = Math.min(+pp.x || 1, tr >= 8 ? 5 : 3); pp.until = Math.min(+pp.until || 0, d.ts + 10 * 60000) }
+      if (d.type === 'frenzyall') { if (cdk('frenzy')) return; pp.until = Math.min(+pp.until || 0, d.ts + 3 * 60000) }
+      if (d.type === 'freepack') { if (cdk('freepack')) return; pp.n = Math.min(+pp.n || 1, 3) }
+      if (d.type === 'mgift') { if (cdk('mgift')) return; pp.max = Math.min(+pp.max || 1, 50000) }
+      if (d.type === 'timewarp') { if (cdk('tw')) return; pp.min = Math.min(+pp.min || 1, 5) }
+      if (d.type === 'boss') { if (cdk('boss')) return; pp.hp = Math.min(+pp.hp || 30, 60); pp.sec = Math.min(+pp.sec || 25, 25) }
+      if (d.type === 'vaulthint') { if (cdk('vh')) return }
       if (d.type === 'mult') { if (cdk('mult')) return; pp.x = Math.min(+pp.x || 1, tr >= 4 ? 3 : 2); pp.until = Math.min(+pp.until || 0, d.ts + (tr >= 5 ? 20 : 10) * 60000) }
       if (d.type === 'luck') { if (tr < 4 || cdk('luck')) return; pp.x = Math.min(+pp.x || 1, tr >= 5 ? 3 : 2); pp.until = Math.min(+pp.until || 0, d.ts + (tr >= 5 ? 15 : 10) * 60000) }
       if (d.type === 'goldrain') { if (tr < 4 || cdk('rain')) return; pp.until = Math.min(+pp.until || 0, d.ts + 5 * 60000) } }
@@ -3965,9 +3977,9 @@ function renderVault() {
   addBack(); paintVault(); I_(paintVault, 1000);
   const go_ = () => { const g = $('#vIn').value.toUpperCase().trim(), v2 = vaultInit(); if (g.length < 4) return toast('Enter all 4 letters.', 'bad');
     if (g !== v2.code) { sfx('err'); $('#vDoor').classList.add('shake'); setTimeout(() => $('#vDoor') && $('#vDoor').classList.remove('shake'), 500); return toast('Wrong code. The vault stays shut.', 'bad') }
-    const reward = Math.round(Math.max(1e9, S.peak * .4 + CPS * gm() * 43200) * (1 + .25 * (v2.n || 0))), om = Object.keys(ITEMS).filter(k => ITEMS[k].rarity === 'omega' && !(ITEMS[k].pack && ITEMS[k].pack.ew)), k = om[Math.floor(Math.random() * om.length)];
+    const reward = Math.round(Math.max(1e9, S.peak * .4 + CPS * gm() * 43200) * (1 + .25 * (v2.n || 0)) * (1 + .1 * ((S.rpk || {}).vaultp || 0))), om = Object.keys(ITEMS).filter(k => ITEMS[k].rarity === 'omega' && !(ITEMS[k].pack && ITEMS[k].pack.ew)), k = om[Math.floor(Math.random() * om.length)];
     S.coins += reward; if (k) addItem(k, 'n', 1); S.vaultN = (S.vaultN || 0) + 1; v2.n = (v2.n || 0) + 1; sfx('ach'); $('#vDoor').classList.add('open'); confetti(['#ffd34d', '#fff0a8', '#ffffff', '#ffb700'], 260); updateStats(); save(true); tickChecks();
-    setTimeout(() => { vaultInit(true); if (k) showReveal({ key: k, v: 'n' }, null, 'VAULT REWARD: +' + fmt(reward) + ' COINS!'); save(true); if (cur === 'games') renderVault() }, 2400) };
+    setTimeout(() => { vaultInit(true); if (k) showReveal({ key: k, v: 'n' }, null, 'VAULT REWARD: +' + fmt(reward) + ' COINS!'); save(true); if (cur === 'games' || cur === 'vault') renderVault() }, 2400) };
   $('#vGo').onclick = go_; $('#vIn').onkeydown = e => { if (e.key === 'Enter') go_() };
 }
 /* ===== SNAKE ===== */
@@ -4013,7 +4025,7 @@ function bossStart(hp, ms) {
   $('#bossB').onpointerdown = e => { e.preventDefault(); if (!BOSS) return; BOSS.hp--; sfx('click'); $('#bossF').style.width = Math.max(0, BOSS.hp / BOSS.max * 100) + '%'; const b = $('#bossB'); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 80); if (BOSS.hp <= 0) bossEnd(true) };
   BOSS.iv = setInterval(() => { if (!BOSS) return; const left = Math.ceil((BOSS.end - Date.now()) / 1000); const t = $('#bossT'); if (t) t.textContent = left + 's left'; if (left <= 0) bossEnd(false) }, 250);
 }
-function bossEnd(win) { if (!BOSS) return; clearInterval(BOSS.iv); const d = $('#boss'); if (d) d.remove(); BOSS = null; if (win) { const r = Math.round(Math.max(5000, CPS * gm() * 900, S.coins * .02)); S.coins += r; S.bosses = (S.bosses || 0) + 1; confetti(['#ffd34d', '#ff5a5f', '#ffffff'], 200); sfx('ach'); toast('BOSS DEFEATED! +' + fmt(r) + ' coins', 'good'); updateStats(); save(true); tickChecks() } else toast('The boss got away...', 'bad') }
+function bossEnd(win) { if (!BOSS) return; clearInterval(BOSS.iv); const d = $('#boss'); if (d) d.remove(); BOSS = null; if (win) { const r = Math.round(Math.max(5000, CPS * gm() * 900, S.coins * .02) * (1 + .2 * ((S.rpk || {}).boss || 0))); S.coins += r; S.bosses = (S.bosses || 0) + 1; confetti(['#ffd34d', '#ff5a5f', '#ffffff'], 200); sfx('ach'); toast('BOSS DEFEATED! +' + fmt(r) + ' coins', 'good'); updateStats(); save(true); tickChecks() } else toast('The boss got away...', 'bad') }
 const RANDEV = [
   ['COIN STORM: your clicks are worth x3 for 45 seconds!', () => { CLKX = { x: 3, until: Date.now() + 45000 }; lsSet('sc_clkx', CLKX) }],
   ['LUCKY MINUTE: x2 luck for 60 seconds!', () => { if (Date.now() > LUCK.until) { LUCK = { x: 2, until: Date.now() + 60000 }; lsSet('sc_luck', LUCK) } }],
@@ -4036,7 +4048,8 @@ async function encodeSound(file) {
 }
 
 /* ===== what's new popup ===== */
-const VERSION = 39, CHANGELOG = [
+const VERSION = 40, CHANGELOG = [
+  { v: 40, t: 'More admin tiers and rebirth rewards', items: ['Admin now has 8 tiers, and the owner can tick exactly which buttons each admin gets (LOAD THEIR SETUP to edit).', '8 new rebirth perks and a POINT SHOP for one-time goodies.', 'The Reborn Relics pack now costs rebirth points.', 'New rebirth milestones at 15 and 40 rebirths.'] },
   { v: 39, t: 'The big fun update', items: ['THE VAULT (under Minigames): finish 4 hard tasks to find the 4-letter code and win a humongous reward.', '3 new minigames: Snake, Balloon Pop and Digit Recall.', '6 more elite packs (16 total) with new custom models and 3 more Elite subs.', 'Random events now happen while you play: coin storms, lucky minutes, golden showers, mini bosses and gifts.', 'New settings: random events, event timers, auto-claim gift, owner sounds, compact layout and a calm mode.', 'The menu is organised into groups and the owner panel has a jump bar.', 'Owner: 7 new events, a sound board that plays a sound for everyone, and more.'] },
   { v: 38, t: 'Clicking matters + rebirth balance', items: ['Clicking is stronger: bigger combos (up to x5.8), clicks earn a share of your coins per second, and a small base crit chance. Passive income drops to 60% when you stop clicking for 8 seconds.', 'Settings > Gameplay: turn off the 3-second rare-pull wait, or choose which rarity starts it.', 'Numbers now go up to the Centillion range, and the cap shows as GOOGOLPLEX.', 'Rebirth is less powerful: fewer points, +4% coins per point, smaller perks.', 'Faster animations and safer error handling.'] },
   { v: 37, t: 'Elite names and fixes', items: ['Elite players have purple usernames. Gold or blue names blend into a gradient.', 'The #1 player on the Elite leaderboard gets a purple crown.', 'Fixed the login box showing at the bottom of the page.', 'New owner tools: banner announcements, chat lock, gifts, kick, grant elite and more.'] },
@@ -4059,9 +4072,9 @@ function logout() { document.body.classList.remove('elite');
 $('#logout').onclick = logout;
 
 /* ===== navigation ===== */
-const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], profile: ['PROFILE', '#00a8ff'], quests: ['QUESTS', '#00b894'], rebirth: ['REBIRTH', '#9b4dff'], games: ['MINIGAMES', '#e17055'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
+const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], profile: ['PROFILE', '#00a8ff'], quests: ['QUESTS', '#00b894'], rebirth: ['REBIRTH', '#9b4dff'], games: ['MINIGAMES', '#e17055'], vault: ['THE VAULT', '#f1c40f'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
 function buildDD() {
-  const G = [['YOU', ['profile', 'quests', 'rebirth']], ['PLAY', ['shop', 'upgrades', 'index', 'games']], ['SOCIAL', ['chat', 'board', 'battles']], ['', ['settings']]];
+  const G = [['YOU', ['profile', 'quests', 'rebirth']], ['PLAY', ['shop', 'upgrades', 'index', 'games', 'vault']], ['SOCIAL', ['chat', 'board', 'battles']], ['', ['settings']]];
   $('#ddList').innerHTML = G.map(([h, ks]) => (h ? `<div class="ddh">${h}</div>` : '') + ks.map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('')).join('');
   $$('.ddi').forEach(el => el.onclick = () => { $('#dd').classList.remove('open'); go(el.dataset.p) });
 }
@@ -4072,13 +4085,13 @@ $('#resetCoin').onclick = () => { S.setKey = null; recalc(); updateStats(); upda
 function go(p) {
   stopGames(); if (p === 'owner' && !canPanel()) p = 'shop'; cur = p; $('#ddLabel').textContent = p === 'owner' && !isOwner() ? 'ADMIN PANEL' : PAGES[p][0];
   $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p)); { const pg = $('#page'); pg.classList.remove('pgin'); void pg.offsetWidth; if (p !== 'shop') pg.classList.add('pgin'); setTimeout(() => pg.classList.remove('pgin'), 900) }
-  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, games: renderGames, settings: renderSettings, owner: renderOwner, rebirth: renderRebirth, profile: renderProfile })[p](); sfx('ui');
+  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, games: renderGames, vault: renderVault, settings: renderSettings, owner: renderOwner, rebirth: renderRebirth, profile: renderProfile })[p](); sfx('ui');
 }
 
 /* ===== clicker ===== */
 let lastClickSfx = 0, holdT = null, holdPt = { x: 0, y: 0 };
 const CB = { n: 0, last: 0, meter: 0, fz: 0 };
-const comboMul = () => 1 + Math.min(CB.n, 60) * .08, activeMul = () => Date.now() - CB.last < 8000 ? 1 : .6;
+const comboMul = () => 1 + Math.min(CB.n, 60) * .08 * (1 + .06 * ((S && S.rpk && S.rpk.combo) || 0)), activeMul = () => Date.now() - CB.last < 8000 ? 1 : Math.min(1, .6 + .08 * ((S && S.rpk && S.rpk.idle) || 0));
 function updCmb() {
   const t = $('#cmbTxt'); if (!t) return; const now = Date.now(), live = now - CB.last < 1200 && CB.n > 0, fz = now < CB.fz;
   if (!live && CB.n) CB.n = 0; if (!live && now - CB.last > 1500 && !fz) CB.meter = Math.max(0, CB.meter - .25);
@@ -4090,7 +4103,7 @@ function updCmb() {
 $('#frenzy').onclick = () => { if (CB.meter < 100) return; CB.fz = Date.now() + 10000; CB.meter = 0; S.frenzies = (S.frenzies || 0) + 1; sfx('crit'); toast('FRENZY! Clicks are worth x7 for 10 seconds!', 'good'); updCmb(); checkAch() };
 setInterval(updCmb, 100);
 const GIFT_MS = 20 * 60000;
-const giftReward = () => Math.round(Math.max(100, (CPS * 150 + CPC * 40) * gm(), S.coins * .01));
+const giftReward = () => Math.round(Math.max(100, (CPS * 150 + CPC * 40) * gm(), S.coins * .01) * (1 + .15 * ((S.rpk || {}).gift || 0)));
 function updGift() {
   const b = $('#giftBtn'); if (!b) return; if (!S) { b.hidden = true; return } b.hidden = false; const left = (S.giftAt || 0) + GIFT_MS - Date.now(); if (left <= 0 && ST.autoGift) setTimeout(() => { const g_ = $('#giftBtn'); if (g_ && !g_.disabled) g_.click() }, 60);
   if (left <= 0) { b.textContent = 'CLAIM FREE GIFT! +' + fmt(giftReward()); b.className = 'btn gold sm'; b.disabled = false } else { const s = Math.ceil(left / 1000); b.textContent = 'FREE GIFT IN ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); b.className = 'btn alt sm'; b.disabled = true }
@@ -4404,7 +4417,7 @@ const today = () => new Date().toDateString();
 function dailyLeft(p) { if (!p.daily) return Infinity; if (S.daily.date !== today()) S.daily = { date: today(), counts: {} }; return p.daily - (S.daily.counts[p.id] || 0) }
 function packHTML(p, st) {
   const sub = showcase(p), left = p.daily ? dailyLeft(p) : null;
-  return `<div class="pack${st ? ' static' : ''}" data-id="${p.id}" style="background-image:url(${packBG(p)})"><div class="pcost">${fmt(packCost(p))}<img class="pix" src="${pennyURL()}"></div>${sub.map((it, i) => `<img class="ps ps${i}" src="${spriteURL(it.key)}">`).join('')}<div class="pname">${esc(p.name.toUpperCase())}</div>${left !== null ? `<div class="plimit">${left}/${p.daily} LEFT TODAY</div>` : ''}</div>`;
+  return `<div class="pack${st ? ' static' : ''}" data-id="${p.id}" style="background-image:url(${packBG(p)})"><div class="pcost">${p.rbpt ? p.rbpt + ' PT' : fmt(packCost(p))}${p.rbpt ? '' : '<img class="pix" src="' + pennyURL() + '">'}</div>${sub.map((it, i) => `<img class="ps ps${i}" src="${spriteURL(it.key)}">`).join('')}<div class="pname">${esc(p.name.toUpperCase())}</div>${left !== null ? `<div class="plimit">${left}/${p.daily} LEFT TODAY</div>` : ''}</div>`;
 }
 const SOLD = lsGet('sc_sold', {}), soldN = id => Object.keys(SOLD[id] || {}).length;
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], offerList = () => Object.values(OFFERS).sort((a, b) => (a.created || 0) - (b.created || 0));
@@ -4440,7 +4453,7 @@ const FREE_MS = 20 * 60000;
 function freePackLeft() { return (S.freeAt || 0) + FREE_MS - Date.now() }
 function freePackPick() { const lim = Math.max(250, S.peak * .03), L = PACKS.filter(p => !p.daily && !p.elite && packVisible(p) && p.cost <= lim).sort((a, b) => b.cost - a.cost).slice(0, 4); return L.length ? L[Math.floor(Math.random() * L.length)] : null }
 function claimFree() { if (freePackLeft() > 0) return; const p = freePackPick(); if (!p) return; S.freeAt = Date.now(); S.coins += packCost(p); save(true); openPack(p) }
-function goalPack() { const c = PACKS.filter(p => !p.daily && packVisible(p) && packCost(p) > S.coins).sort((a, b) => a.cost - b.cost)[0]; return c || null }
+function goalPack() { const c = PACKS.filter(p => !p.daily && packVisible(p) && packCost(p) > S.coins && !p.rbpt).sort((a, b) => a.cost - b.cost)[0]; return c || null }
 function goalHTML() { const g = goalPack(), fl = freePackLeft(), mm = Math.ceil(fl / 60000);
   return `<div class="panel" style="margin:10px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn ${fl > 0 ? 'alt' : 'gold'}" id="freeBtn"${fl > 0 ? ' disabled' : ''}>${fl > 0 ? 'FREE PACK IN ' + mm + ' MIN' : 'FREE PACK READY!'}</button>${g ? `<div style="flex:1;min-width:200px"><div class="small" id="goalTx">NEXT GOAL: ${esc(g.name)} - ${fmt(S.coins)} / ${fmt(packCost(g))}</div><div style="height:8px;background:#0002;border-radius:5px;margin-top:4px"><div id="goalFill" style="height:8px;width:${Math.min(100, Math.round(S.coins / packCost(g) * 100))}%;background:${g.color};border-radius:5px"></div></div></div>` : ''}</div>` }
 setInterval(() => { if (cur !== 'shop' || !S) return; const b = $('#freeBtn'); if (b) { const fl = freePackLeft(); if (fl <= 0 && b.disabled) { b.disabled = false; b.className = 'btn gold' } b.textContent = fl > 0 ? 'FREE PACK IN ' + Math.ceil(fl / 60000) + ' MIN' : 'FREE PACK READY!' } const g = goalPack(), t = $('#goalTx'), f = $('#goalFill'); if (g && t && f) { t.textContent = 'NEXT GOAL: ' + g.name + ' - ' + fmt(S.coins) + ' / ' + fmt(packCost(g)); f.style.width = Math.min(100, Math.round(S.coins / packCost(g) * 100)) + '%' } }, 1000);
@@ -4494,7 +4507,7 @@ function roll(p) {
 function openPack(p) {
   if (!packVisible(p)) return toast('That pack is not in the shop right now.', 'bad');
   if (dailyLeft(p) <= 0) return toast('Daily limit reached for ' + p.name, 'bad');
-  const free_ = (S.freeOpens || 0) > 0, pc_ = free_ ? 0 : packCost(p); if (S.coins < pc_) return toast('Not enough coins!', 'bad'); if (free_) S.freeOpens--;
+  if (p.rbpt) { if (rbAvail() < p.rbpt) return toast('You need ' + p.rbpt + ' rebirth points (you have ' + rbAvail() + ')', 'bad'); S.rbx = (S.rbx || 0) + p.rbpt } const free_ = !p.rbpt && (S.freeOpens || 0) > 0, pc_ = p.rbpt || free_ ? 0 : packCost(p); if (S.coins < pc_) return toast('Not enough coins!', 'bad'); if (free_) S.freeOpens--;
   S.coins -= pc_; if (p.daily) S.daily.counts[p.id] = (S.daily.counts[p.id] || 0) + 1;
   const r = roll(p); addItem(r.key, r.v, 1);
   { const ri = RAR_ORDER.indexOf((ITEMS[r.key] || {}).rarity); if (ri >= 2) S.epicp = (S.epicp || 0) + 1; S.pk = (S.pk || 0) + 1; if (S.pk % 10 === 0) { const back = Math.round(pc_ * .5); S.coins += back; setTimeout(() => toast('10th pack bonus! +' + fmt(back) + ' coins back', 'good'), 600) } }
@@ -4825,12 +4838,12 @@ function renderOwner() {
   $('#page').innerHTML = `<div class="${own ? '' : 'admmode'}"><div class="phead"><h2>${own ? 'OWNER' : 'ADMIN'} PANEL</h2></div>
   <div class="ostats"><div class="panel"><span>PLAYERS KNOWN</span><b id="os1">${L.length}</b></div><div class="panel"><span>ONLINE NOW</span><b id="os2">${L.filter(p => p.online).length}</b></div><div class="panel"><span>COINS IN GAME</span><b id="os3">${fmt(L.reduce((a, p) => a + p.coins, 0))}</b></div><div class="panel"><span>BANNED</span><b id="os4">${BANS.length}</b></div><div class="panel own"><span>PENDING DELIVERIES</span><b>${QUEUE.length}</b></div></div>
   <div class="panel osec own" style="border:3px solid #ffc800"><h3>MINI ADMIN ABUSE</h3><div class="small" style="margin-bottom:6px">Gives EVERYONE x2 coins, x3 luck for Chroma and above, and golden sub rain for 10 minutes.</div><div class="orow"><button class="btn gold" id="ab_go">START MINI ADMIN ABUSE (10 MIN)</button><button class="btn sm" id="ab_off">STOP</button></div></div>
-  <div class="panel osec" data-tier="4"><h3>YOUR ACCOUNT</h3><div class="orow"><input id="o_coins" type="number" placeholder="${own ? 'coins' : 'coins (max 1,000,000)'}"><button class="btn sm" id="o_setCoins">SET MY COINS</button><input id="o_rank" class="own" type="number" placeholder="battle rank"><button class="btn sm own" id="o_setRank">SET MY BATTLE RANK</button></div></div>
-  <div class="panel osec" data-tier="3"><h3>SUBS (for me)</h3><div class="small admonly2">Admins get 1 sub at a time, then wait 5 minutes.</div><div class="orow">${pickerHTML('g')}</div><div class="orow"><button class="btn sm green" id="o_give">GIVE ME THIS SUB</button><button class="btn sm gold own" id="o_next">SET MY NEXT PACK OPEN</button></div></div>
+  <div class="panel osec" data-cap="owncoins"><h3>YOUR ACCOUNT</h3><div class="orow"><input id="o_coins" type="number" placeholder="${own ? 'coins' : 'coins (max 1,000,000)'}"><button class="btn sm" id="o_setCoins">SET MY COINS</button><input id="o_rank" class="own" type="number" placeholder="battle rank"><button class="btn sm own" id="o_setRank">SET MY BATTLE RANK</button></div></div>
+  <div class="panel osec" data-cap="ownsub"><h3>SUBS (for me)</h3><div class="small admonly2">Admins get 1 sub at a time, then wait 5 minutes.</div><div class="orow">${pickerHTML('g')}</div><div class="orow"><button class="btn sm green" id="o_give">GIVE ME THIS SUB</button><button class="btn sm gold own" id="o_next">SET MY NEXT PACK OPEN</button></div></div>
   <div class="panel osec own"><h3>NEXT PULL RARITY</h3><div class="orow"><select id="nr_r">${RAR_ORDER.filter(r => r !== 'hidden' && (own || RAR_ORDER.indexOf(r) <= RAR_ORDER.indexOf('supreme'))).map(r => `<option value="${r}">${RAR[r].name}</option>`).join('')}</select><button class="btn sm gold" id="nr_me">JUST ME</button><button class="btn sm gold" id="nr_all">EVERYONE</button><button class="btn sm alt" id="nr_clr">CLEAR FOR EVERYONE</button></div><div class="small">${own ? '' : 'Admins: up to Supreme, one use every 2 minutes. '}The next pack opened gives a sub of that rarity.</div></div>
   <div class="panel osec"><h3>PLAYER TOOLS</h3><div class="orow"><input id="o_t" list="plist" placeholder="player username"><input id="o_amt" type="number" placeholder="amount"></div><div class="orow"><button class="btn sm own" id="o_sc">SET COINS</button><button class="btn sm own" id="o_sr">SET BATTLE RANK</button><button class="btn sm red own" id="o_ban">BAN</button><button class="btn sm alt own" id="o_unban">UNBAN</button></div></div>
   <div class="panel osec"><h3>SEND A MESSAGE</h3><div class="orow"><input id="o_mt" list="plist" placeholder="player (blank = EVERYONE)" style="flex:1"><select id="o_mm"><option value="popup">POPUP</option><option value="top">TOP BANNER</option></select></div><div class="orow"><textarea id="o_msg" rows="2" maxlength="240" placeholder="Message..." style="flex:1"></textarea><button class="btn sm green" id="o_send">SEND</button></div><div class="orow"><button class="btn sm red" id="o_clrchat">CLEAR ALL CHAT</button></div></div>
-  <div class="panel osec admonly" data-tier="3"><h3>EVENTS (admin)</h3><div class="orow"><button class="btn sm gold" id="ae_mult">COIN EVENT · 10 MIN</button><button class="btn sm gold" id="ae_luck" data-tier="4">LUCK HOUR · 10 MIN</button><button class="btn sm gold" id="ae_rain" data-tier="4">GOLDEN RAIN · 5 MIN</button></div><div class="small">Each one has a long cooldown.</div></div>
+  <div class="panel osec admonly"><h3>EVENTS (admin)</h3><div class="orow"><button class="btn sm gold" id="ae_mult" data-cap="mult">COIN EVENT · 10 MIN</button><button class="btn sm gold" id="ae_luck" data-cap="luck">LUCK HOUR · 10 MIN</button><button class="btn sm gold" id="ae_rain" data-cap="goldrain">GOLDEN RAIN · 5 MIN</button></div><div class="small">Each one has a long cooldown.</div></div>
   <div class="panel osec own"><h3>EVENTS</h3><div class="orow"><span>Everyone earns</span><input id="o_gx" type="number" value="2" min="1" style="width:80px"><span>x coins for</span><input id="o_gm" type="number" value="30" min="1" style="width:90px"><span>minutes</span><button class="btn sm gold" id="o_gstart">START</button><button class="btn sm alt" id="o_gstop">STOP</button></div></div>
   <div class="panel osec own"><h3>EVERYONE (affects all players)</h3>
   <div class="orow"><span>Luck hour: chroma and above x</span><input id="e_lx" type="number" value="3" style="width:70px"><span>for</span><input id="e_lm" type="number" value="15" style="width:70px"><span>min</span><button class="btn sm gold" id="e_luck">START</button><button class="btn sm alt" id="e_luckoff">STOP</button></div>
@@ -4844,9 +4857,9 @@ function renderOwner() {
   <div class="panel osec own"><h3>SPECIAL SUBS</h3><div id="o_spec"></div><div class="orow"><button class="btn sm green" id="o_newspec">+ NEW SPECIAL</button><button class="btn sm alt" id="o_expspec">EXPORT specials.json</button></div><div class="small">Upload an image, crop it, and everyone online gets it. Players who join later get it while you are online, or permanently if you upload the exported specials.json next to index.html.</div></div>
   <div class="panel osec own"><h3>PACKS</h3><div class="opacks">${PACKS.map(p => `<div class="opk"><i style="background:${p.color}"></i><span>${esc(p.name)} (${fmt(p.cost)})</span><button class="btn sm" data-ep="${p.id}">EDIT</button>${p.custom ? `<button class="btn sm red" data-dp="${p.id}">DELETE</button>` : ''}</div>`).join('')}</div><div class="orow"><button class="btn sm green" id="o_newpack">+ MAKE A NEW PACK</button></div><div class="small">Name it, set the price, pick a colour, add monsters with a rarity, a chance and a picture. Everyone online gets it right away; export specials.json afterwards to keep it forever.</div></div>
   <div class="panel osec own"><h3>SHOP SPECIALS</h3><div id="o_offers"></div><div class="orow"><button class="btn sm green" id="o_newoffer">+ ADD SHOP SPECIAL</button></div><div class="small">A one-time buy for each player that appears first in the shop. Choose when it shows: always, between two dates, or on the same days every year. Old ones go to the Vault. Export specials.json to keep them forever.</div></div>
-  <div class="panel osec own" style="border:3px solid #ff9f1c"><h3>MORE EVENTS</h3>
+  <div class="panel osec" style="border:3px solid #ff9f1c"><h3>MORE EVENTS</h3>
   <div class="orow"><input id="ev_min" type="number" placeholder="minutes" style="width:100px"><input id="ev_x" type="number" placeholder="multiplier" style="width:110px"><input id="ev_n" type="number" placeholder="amount / count" style="width:130px"></div>
-  <div class="orow" style="flex-wrap:wrap"><button class="btn sm gold" id="ev_fz">FRENZY FOR ALL</button><button class="btn sm gold" id="ev_clk">CLICK POWER EVENT</button><button class="btn sm gold" id="ev_free">FREE PACK OPENS</button><button class="btn sm gold" id="ev_mg">MYSTERY GIFT</button><button class="btn sm gold" id="ev_tw">TIME WARP</button><button class="btn sm gold" id="ev_vh">VAULT HINT</button><button class="btn sm red" id="ev_boss">BOSS FIGHT</button></div>
+  <div class="orow" style="flex-wrap:wrap"><button class="btn sm gold" id="ev_fz" data-cap="frenzyall">FRENZY FOR ALL</button><button class="btn sm gold" id="ev_clk" data-cap="clickx">CLICK POWER EVENT</button><button class="btn sm gold" id="ev_free" data-cap="freepack">FREE PACK OPENS</button><button class="btn sm gold" id="ev_mg" data-cap="mgift">MYSTERY GIFT</button><button class="btn sm gold" id="ev_tw" data-cap="timewarp">TIME WARP</button><button class="btn sm gold" id="ev_vh" data-cap="vaulthint">VAULT HINT</button><button class="btn sm red" id="ev_boss" data-cap="boss">BOSS FIGHT</button></div>
   <div class="small">Minutes: how long (default 5). Multiplier: click power (default 10). Amount: free opens, gift max coins, boss HP or time-warp minutes (defaults 5 / 1,000,000 / 50 / 30).</div></div>
   <div class="panel osec own" style="border:3px solid #35c75a"><h3>SOUND BOARD</h3><div class="small">Upload a sound and play it for everyone online. It is trimmed to 5 seconds and compressed so it can be sent.</div><div class="orow"><input type="file" id="snd_file" accept="audio/*"><button class="btn sm" id="snd_prep">PREPARE</button><button class="btn sm alt" id="snd_play">PLAY HERE</button><button class="btn sm green" id="snd_send">PLAY FOR EVERYONE</button></div><div id="snd_out" class="small"></div></div>
   <div class="panel osec own" style="border:3px solid #9b4dff"><h3>OWNER EXTRAS</h3>
@@ -4859,10 +4872,10 @@ function renderOwner() {
   <div class="orow" style="flex-wrap:wrap"><button class="btn sm" id="x_daily">RESET EVERYONE'S DAILY MISSIONS</button><button class="btn sm red" id="x_unbanAll">CLEAR ALL BANS</button><button class="btn sm" id="x_on">WHO'S ONLINE</button><button class="btn sm" id="x_rep">PENDING REPORTS</button></div>
   <div class="orow"><button class="btn sm alt" id="x_exp">EXPORT MY SAVE</button><button class="btn sm alt" id="x_imp">IMPORT SAVE</button></div><div id="x_out" class="small" style="word-break:break-word"></div></div>
   <div class="panel osec own"><h3>ADMIN ACTIVITY</h3><div id="o_alog"></div><div class="small">Everything admins send to everyone. REVERT undoes it for all online players.</div></div>
-  <div class="panel osec own"><h3>ADMINS</h3><div class="orow"><input id="ad_u" list="plist" placeholder="player username" style="flex:1"><select id="ad_t">${[1, 2, 3, 4, 5].map(i => `<option value="${i}">TIER ${i}: ${TIERS[i].n}</option>`).join('')}</select><button class="btn sm green" id="ad_give">SET ADMIN TIER</button><button class="btn sm red" id="ad_rev">REMOVE ADMIN</button></div><div class="small" id="ad_list"></div><div class="small">Admins get an ADMIN PANEL button where yours is. They can send messages, run events and set the next pull rarity (up to Supreme, every 2 minutes). Nothing they do to everyone is hidden from you: see ADMIN ACTIVITY. They can only change their OWN coins, rank and cheats - never other people's - and cannot ban, or edit packs, specials or images. The player must have opened the updated game once while you were online.</div></div>
+  <div class="panel osec own"><h3>ADMINS</h3><div class="orow"><input id="ad_u" list="plist" placeholder="player username" style="flex:1"><select id="ad_t">${[1, 2, 3, 4, 5, 6, 7, 8].map(i => `<option value="${i}">TIER ${i}: ${TIERS[i].n}</option>`).join('')}</select><button class="btn sm alt" id="ad_load">LOAD THEIR SETUP</button><button class="btn sm green" id="ad_give">SAVE ADMIN</button><button class="btn sm red" id="ad_rev">REMOVE ADMIN</button></div><div class="small"><b>BUTTONS / ABILITIES</b> (pick a tier to fill in its defaults, then tick or untick anything. Press LOAD THEIR SETUP to edit an existing admin.)</div><div class="capgrid" id="ad_caps">${ALLCAPS.map(([k, l]) => `<label><input type="checkbox" data-ac="${k}"> ${l}</label>`).join('')}</div><div class="small" id="ad_list"></div><div class="small">Admins get an ADMIN PANEL button where yours is. They can send messages, run events and set the next pull rarity (up to Supreme, every 2 minutes). Nothing they do to everyone is hidden from you: see ADMIN ACTIVITY. They can only change their OWN coins, rank and cheats - never other people's - and cannot ban, or edit packs, specials or images. The player must have opened the updated game once while you were online.</div></div>
   <div class="panel osec"><h3>PLAYER DATABASE</h3><div class="orow"><input id="o_q" placeholder="search..." style="flex:1"><button class="btn sm alt own" id="o_csv">EXPORT CSV</button></div><div class="tblwrap" id="o_tbl"></div></div>
   <datalist id="plist">${L.map(p => `<option value="${esc(p.u)}">`).join('')}</datalist></div>`;
-  $$('[data-tier]').forEach(el => { if (!own && myTier() < +el.dataset.tier) el.style.display = 'none' }); { const tb = !own && ADMINCRED ? ' <span class="rtag" style="background:#8a2be2">TIER ' + myTier() + ' · ' + TIERS[myTier()].n + '</span>' : ''; const h = $('#page .phead h2'); if (h && tb) h.insertAdjacentHTML('afterend', tb) }
+  $$('[data-cap]').forEach(el => { if (!own && !hasCap(el.dataset.cap)) el.style.display = 'none' }); $$('.osec').forEach(p => { const b = $$('[data-cap]', p); if (b.length && b.every(x => x.style.display === 'none')) p.style.display = 'none' }); $$('[data-tier]').forEach(el => { if (!own && myTier() < +el.dataset.tier) el.style.display = 'none' }); { const tb = !own && ADMINCRED ? ' <span class="rtag" style="background:#8a2be2">TIER ' + myTier() + ' · ' + TIERS[myTier()].n + '</span>' : ''; const h = $('#page .phead h2'); if (h && tb) h.insertAdjacentHTML('afterend', tb) }
   { const ae = (t, x, mins, cdm) => { const k = 'sc_ae_' + t, left = (+lsGet(k, 0) || 0) + cdm * 60000 - Date.now(); if (left > 0) return toast('Cooldown: ' + Math.ceil(left / 60000) + ' min left', 'bad'); lsSet(k, Date.now()); const u = Date.now() + mins * 60000; adminSend('*', t, t === 'goldrain' ? { until: u } : { x, until: u }, true); toast('Started', 'good') }; if ($('#ae_mult')) $('#ae_mult').onclick = () => ae('mult', myTier() >= 4 ? 3 : 2, myTier() >= 5 ? 20 : 10, 30); if ($('#ae_luck')) $('#ae_luck').onclick = () => ae('luck', myTier() >= 5 ? 3 : 2, myTier() >= 5 ? 15 : 10, 45); if ($('#ae_rain')) $('#ae_rain').onclick = () => ae('goldrain', 0, 5, 45) }
   { const secs = $$('#page .osec').filter(e => e.style.display !== 'none' && e.querySelector('h3')); if (secs.length > 4) { const nav = document.createElement('div'); nav.className = 'onav'; nav.innerHTML = secs.map((e, i) => `<button class="btn sm alt" data-sc="${i}">${esc(e.querySelector('h3').textContent.slice(0, 22))}</button>`).join(''); const ph = $('#page .phead'); if (ph) ph.insertAdjacentElement('afterend', nav); $$('[data-sc]', nav).forEach(b => b.onclick = () => secs[+b.dataset.sc].scrollIntoView({ behavior: 'smooth', block: 'start' })) } }
   wirePicker('g'); wirePicker('im'); renderOwnerTable(); renderSpecPanel(); $('#o_newspec').onclick = newSpecialDialog; $('#o_expspec').onclick = exportSpecials;
@@ -4951,7 +4964,7 @@ function renderOwner() {
   $('#o_ban').onclick = () => { if (!need()) return; if (tgt().toLowerCase() === ME.username.toLowerCase()) return toast("You can't ban yourself.", 'bad'); const u = tgt().toLowerCase(); if (!BANS.includes(u)) { BANS.push(u); lsSet('sc_bans', BANS) } BANV = Date.now(); lsSet('sc_banv', BANV); adminSend('*', 'banlist', { list: BANS, v: BANV }, true); adminSend('*', 'ban', { u }, true); toast('Banned ' + tgt(), 'good'); renderOwnerTable() };
   $('#o_unban').onclick = () => { if (!need()) return; BANS = BANS.filter(x => x !== tgt().toLowerCase()); lsSet('sc_bans', BANS); BANV = Date.now(); lsSet('sc_banv', BANV); adminSend('*', 'banlist', { list: BANS, v: BANV }, true); adminSend('*', 'unban', { u: tgt(), v: BANV }, true); toast('Unbanned', 'good'); renderOwnerTable() };
   $('#o_clrchat').onclick = () => { adminSend('*', 'clearchat', { ts: Date.now() }, true); toast('Chat cleared for everyone', 'good') };
-  $('#o_send').onclick = () => { const text = $('#o_msg').value.trim(); if (!text) return toast('Write a message first.', 'bad'); const t = $('#o_mt').value.trim() || '*'; if (!own && t === '*' && myTier() < 3) return toast('Your tier can only message one player.', 'bad'); rep(adminSend(t, 'msg', { text, mode: $('#o_mm').value }, t === '*'), 'Message'); $('#o_msg').value = '' };
+  $('#o_send').onclick = () => { const text = $('#o_msg').value.trim(); if (!text) return toast('Write a message first.', 'bad'); const t = $('#o_mt').value.trim() || '*'; if (!own && t === '*' && !hasCap('msgall')) return toast('Your tier can only message one player.', 'bad'); rep(adminSend(t, 'msg', { text, mode: $('#o_mm').value }, t === '*'), 'Message'); $('#o_msg').value = '' };
   $('#o_gstart').onclick = () => { const x = Math.max(1, num('o_gx') || 2), mins = Math.max(1, num('o_gm') || 30); adminSend('*', 'mult', { x, until: Date.now() + mins * 60000 }, true); adminSend('*', 'msg', { text: `COIN EVENT! Everyone earns x${x} coins for ${mins} minutes!`, mode: 'top' }, true); toast('Event started', 'good') };
   $('#o_gstop').onclick = () => { adminSend('*', 'mult', { x: 1, until: 0 }, true); toast('Event stopped', 'good') };
   $$('[data-ep]').forEach(b => b.onclick = () => editPack(b.dataset.ep));
@@ -4963,13 +4976,14 @@ function renderOwner() {
   };
   paintOffers(); $('#o_newoffer').onclick = () => offerDialog('');
   $$('[data-dp]').forEach(b => b.onclick = () => { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'SURE?'; return } saveSpecial({ id: 'cp:' + b.dataset.dp, cpack: { id: b.dataset.dp }, del: true }); toast('Pack deleted', 'good'); renderOwner() });
-  const paintAd = () => { $('#ad_list').textContent = 'Admins: ' + (Object.values(ADMINS).filter(a => !a.revoked).map(a => a.u + ' (T' + (a.tier || 1) + ')').join(', ') || 'none') };
+  { const setCaps = l => $$('[data-ac]').forEach(c => { c.checked = l.includes(c.dataset.ac) }); setCaps(tierCaps(1)); $('#ad_t').onchange = () => setCaps(tierCaps(+$('#ad_t').value)); $('#ad_load').onclick = () => { const a = ADMINS[$('#ad_u').value.trim().toLowerCase()]; if (!a || a.revoked) return toast('That player is not an admin.', 'bad'); $('#ad_t').value = a.tier || 1; setCaps(a.caps || tierCaps(a.tier)); toast('Loaded. Change anything and press SAVE ADMIN.') } }
+  const paintAd = () => { $('#ad_list').textContent = 'Admins: ' + (Object.values(ADMINS).filter(a => !a.revoked).map(a => a.u + ' (T' + (a.tier || 1) + (a.caps ? ', ' + a.caps.length + ' abilities' : '') + ')').join(', ') || 'none') };
   paintAd();
   $('#ad_give').onclick = async () => {
     const u = $('#ad_u').value.trim(), pl = Object.values(PLAYERS).find(x => x.u && x.u.toLowerCase() === u.toLowerCase());
     if (!u) return toast('Enter a player username.', 'bad'); if (u.toLowerCase() === ME.username.toLowerCase()) return toast('You are the owner already.', 'bad');
     if (!OWNER_KEYS) return promptUnlock(); if (!pl || !pl.ek) return toast(u + ' must open the updated game once while you are online first.', 'bad');
-    try { const tier = +$('#ad_t').value || 1, ex = ADMINS[pl.u.toLowerCase()]; if (ex && !ex.revoked) { const at = Date.now() - 5; ex.revoked = at; adminSend('*', 'revokeadmin', { u: pl.u, at }, true) } const g = await grantAdmin(pl.u, pl.ek, tier); ADMINS[pl.u.toLowerCase()] = { u: pl.u, ts: Date.now(), tier }; lsSet('sc_admins', ADMINS); adminSend(pl.u, 'grant', g); toast(pl.u + ' is now tier ' + tier + ' (' + TIERS[tier].n + ')', 'good'); paintAd() } catch (e) { toast('Could not make admin.', 'bad') }
+    try { const tier = +$('#ad_t').value || 1, caps = $$('[data-ac]').filter(c => c.checked).map(c => c.dataset.ac), ex = ADMINS[pl.u.toLowerCase()]; if (ex && !ex.revoked) { const at = Date.now() - 5; ex.revoked = at; adminSend('*', 'revokeadmin', { u: pl.u, at }, true) } const g = await grantAdmin(pl.u, pl.ek, tier, caps); ADMINS[pl.u.toLowerCase()] = { u: pl.u, ts: Date.now(), tier, caps }; lsSet('sc_admins', ADMINS); adminSend(pl.u, 'grant', g); toast(pl.u + ' saved: tier ' + tier + ' (' + TIERS[tier].n + ') with ' + caps.length + ' abilities', 'good'); paintAd() } catch (e) { toast('Could not make admin.', 'bad') }
   };
   $('#ad_rev').onclick = () => { const u = $('#ad_u').value.trim(), a = ADMINS[u.toLowerCase()]; if (!a) return toast('That player is not an admin.', 'bad'); a.revoked = Date.now(); lsSet('sc_admins', ADMINS); adminSend('*', 'revokeadmin', { u: a.u, at: a.revoked }, true); toast(a.u + ' is no longer an admin', 'good'); paintAd() };
   $('#o_q').oninput = renderOwnerTable; $('#o_csv').onclick = exportCSV;
@@ -5236,32 +5250,49 @@ const RBPERKS = [
   ['luck', 'Lucky Soul', '+5% luck per level (Epic and better)', 10, l => 3 + l * 2],
   ['click', 'Strong Fingers', '+10% coins per click per level', 15, l => 1 + l],
   ['pass', 'Steady Flow', '+10% passive coins per level', 15, l => 1 + l],
-  ['auto', 'Auto Spark', 'Start every rebirth with an Auto Clicker level', 5, l => 4 + l * 2]
+  ['auto', 'Auto Spark', 'Start every rebirth with an Auto Clicker level', 5, l => 4 + l * 2],
+  ['mega', 'Mega Multiplier', '+5% to ALL coins per level', 20, l => 3 + l],
+  ['combo', 'Combo Master', '+6% combo strength per level', 10, l => 2 + l],
+  ['idle', 'Night Owl', 'Passive coins lose less when you stop clicking (+8% per level)', 5, l => 3 + l * 2],
+  ['gift', 'Gift Giver', 'Free gifts and gift drops give +15% per level', 10, l => 2 + l],
+  ['boss', 'Boss Bounty', 'Bosses pay +20% per level', 10, l => 2 + l],
+  ['vaultp', 'Vault Key', 'The Vault pays +10% per level', 10, l => 3 + l],
+  ['echo', 'Rebirth Echo', '+4% rebirth points per level', 10, l => 4 + l * 2],
+  ['starter', 'Starter Pack', 'Start every rebirth with 2 free pack opens per level', 5, l => 3 + l * 2]
 ];
-const RBMILES = [[1, 'Unlocks the Reborn Relics pack in the shop'], [3, 'Packs cost 3% less forever'], [5, 'Packs cost another 3% less'], [10, '+15% luck forever'], [25, 'A golden crown next to your name (soon)']];
-const rbSpent = () => RBPERKS.reduce((a, p) => { let c = 0; for (let l = 0; l < ((S.rpk || {})[p[0]] || 0); l++) c += p[4](l); return a + c }, 0), rbAvail = () => (S.rbp || 0) - rbSpent();
-const rbDiscount = () => Math.min(.6, .015 * ((S.up || {}).ediscount || 0) + .015 * ((S.rpk || {}).cheap || 0) + (S.rb >= 3 ? .03 : 0) + (S.rb >= 5 ? .03 : 0));
+const RBSHOP = [
+  ['relic', 'Reborn Relics pack', 'Open one Reborn Relics pack right now', 3, () => { const p = PACKS.find(x => x.id === 'rb_relics'); go('shop'); setTimeout(() => openPack(p), 50) }],
+  ['free5', '5 free pack opens', 'Your next 5 pack opens cost no coins', 2, () => { S.freeOpens = (S.freeOpens || 0) + 5 }],
+  ['coin', 'Coin Surge', 'All coins x2 for 10 minutes', 2, () => { GM = { x: Math.max(2, Date.now() < GM.until ? GM.x : 1), until: Math.max(Date.now(), GM.until) + 600000 }; lsSet('sc_gmult', GM) }],
+  ['luckb', 'Lucky Hour', 'x2 luck for 10 minutes', 1, () => { LUCK = { x: 2, until: Math.max(Date.now(), LUCK.until) + 600000 }; lsSet('sc_luck', LUCK) }],
+  ['vh', 'Vault Peek', 'Reveals one letter of the Vault code', 2, () => { const v = vaultInit(), left = VT.map((_, i) => i).filter(i => !v.hint.includes(i)); if (left.length) v.hint.push(left[Math.floor(Math.random() * left.length)]) }]
+];
+const RBMILES = [[15, '+10% coins forever'], [40, 'Packs cost another 4% less'], [1, 'Unlocks the Reborn Relics pack in the shop'], [3, 'Packs cost 3% less forever'], [5, 'Packs cost another 3% less'], [10, '+15% luck forever'], [25, 'A golden crown next to your name (soon)']];
+const rbSpent = () => (S.rbx || 0) + RBPERKS.reduce((a, p) => { let c = 0; for (let l = 0; l < ((S.rpk || {})[p[0]] || 0); l++) c += p[4](l); return a + c }, 0), rbAvail = () => (S.rbp || 0) - rbSpent();
+const rbDiscount = () => Math.min(.6, .015 * ((S.up || {}).ediscount || 0) + .015 * ((S.rpk || {}).cheap || 0) + (S.rb >= 3 ? .03 : 0) + (S.rb >= 5 ? .03 : 0) + (S.rb >= 40 ? .04 : 0));
 const rbLuck = () => .05 * ((S.rpk || {}).luck || 0) + (S.rb >= 10 ? .15 : 0);
 function rbUpdate() {
   const b = $('#rebirthBtn'); if (!b || !S) return; S.runPeak = Math.max(S.runPeak || 0, S.coins); S.runCps = Math.max(S.runCps || 0, CPS * gm()); b.classList.toggle('ready', rbReady());
   if (cur === 'rebirth') { const f1 = $('#rbF1'), f2 = $('#rbF2'); if (f1) { const a = Math.min(100, (S.runPeak || 0) / rbNeed() * 100), c = Math.min(100, (S.runCps || 0) / rbNeedCps() * 100); f1.style.width = a + '%'; f2.style.width = c + '%'; $('#rbT1').textContent = fmt(S.runPeak || 0) + ' / ' + fmt(rbNeed()); $('#rbT2').textContent = fmt(S.runCps || 0) + ' / ' + fmt(rbNeedCps()); const go_ = $('#rbGo'); if (go_) go_.disabled = !rbReady() } }
 }
 function renderRebirth() {
-  S.runPeak = Math.max(S.runPeak || 0, S.coins); S.runCps = Math.max(S.runCps || 0, CPS * gm()); const ok = rbReady(), pts = rbPoints(), cur_ = 1 + .04 * (S.rbp || 0), nxt = 1 + .04 * ((S.rbp || 0) + pts);
+  S.runPeak = Math.max(S.runPeak || 0, S.coins); S.runCps = Math.max(S.runCps || 0, CPS * gm()); const ok = rbReady(), pts = Math.floor(rbPoints() * (1 + .04 * ((S.rpk || {}).echo || 0))), cur_ = 1 + .04 * (S.rbp || 0), nxt = 1 + .04 * ((S.rbp || 0) + pts);
   $('#page').innerHTML = `<div class="rbtitle">REBIRTH</div>
   <div class="panel rbpanel"><div class="rbgoal"><div class="rbl"><span>1. COINS (best this run)</span><b id="rbT1"></b></div><div class="rbbar"><i id="rbF1"></i></div></div>
   <div class="rbgoal"><div class="rbl"><span>2. COINS PER SECOND (best this run)</span><b id="rbT2"></b></div><div class="rbbar"><i id="rbF2"></i></div><div class="small">The second goal is always half of the first one (measured per 1,000 seconds).</div></div>
   <div class="rbsum"><div><span>REBIRTHS</span><b>${S.rb || 0}</b></div><div><span>POINTS TO GAIN</span><b>${ok ? '+' + pts : '-'}</b></div><div><span>COIN BONUS</span><b>x${cur_.toFixed(2)}${ok ? ' → x' + nxt.toFixed(2) : ''}</b></div><div><span>POINTS TO SPEND</span><b>${rbAvail()}</b></div></div>
   <button class="btn rbgo" id="rbGo"${ok ? '' : ' disabled'}>REBIRTH NOW</button><div class="small" style="text-align:center;margin-top:8px">You lose: coins, subs, upgrades. You keep: points, perks, hidden and shop-special subs, achievements, scores, rank and streaks.</div></div>
   <div class="panel" style="margin-top:16px"><h3>PERKS (permanent)</h3><div class="perkgrid">${RBPERKS.map(p => { const l = (S.rpk || {})[p[0]] || 0, max = l >= p[3], c = p[4](l); return `<div class="perk"><b>${p[1]}</b><div class="small">${p[2]}</div><div class="plv">LEVEL ${l} / ${p[3]}</div><button class="btn sm ${rbAvail() >= c && !max ? 'gold' : 'alt'}" data-pk="${p[0]}"${max || rbAvail() < c ? ' disabled' : ''}>${max ? 'MAXED' : 'BUY · ' + c + ' PT'}</button></div>` }).join('')}</div></div>
+  <div class="panel" style="margin-top:16px"><h3>POINT SHOP (spend points on one-time goodies)</h3><div class="perkgrid">${RBSHOP.map(p => `<div class="perk"><b>${p[1]}</b><div class="small">${p[2]}</div><button class="btn sm ${rbAvail() >= p[3] ? 'gold' : 'alt'}" data-rs="${p[0]}"${rbAvail() < p[3] ? ' disabled' : ''}>BUY · ${p[3]} PT</button></div>`).join('')}</div></div>
   <div class="panel" style="margin-top:16px"><h3>MILESTONES</h3>${RBMILES.map(m => `<div class="ach${(S.rb || 0) >= m[0] ? ' done' : ''}"><span class="ck">${(S.rb || 0) >= m[0] ? '✔' : '•'}</span><div style="flex:1"><b>${m[0]} rebirth${m[0] > 1 ? 's' : ''}</b><div class="small">${m[1]}</div></div></div>`).join('')}</div>`;
   rbUpdate(); $('#rbGo').onclick = () => { if (!rbReady()) return; const m = modal(`<div class="idetail"><h3>ARE YOU SURE?</h3><p style="margin:10px 0">You will lose all coins, subs and upgrades and gain <b>+${rbPoints()} point${rbPoints() > 1 ? 's' : ''}</b> (coins x${nxt.toFixed(2)} forever).</p><div class="mbtns"><button class="btn red" id="rbYes">REBIRTH</button><button class="btn alt" id="rbNo">CANCEL</button></div></div>`); $('#rbNo', m).onclick = closeModal; $('#rbYes', m).onclick = () => { closeModal(); doRebirth() } };
+  $$('[data-rs]').forEach(b => b.onclick = () => { const p = RBSHOP.find(x => x[0] === b.dataset.rs); if (rbAvail() < p[3]) return; S.rbx = (S.rbx || 0) + p[3]; sfx('ach'); p[4](); updateStats(); save(true); if (p[0] !== 'relic') renderRebirth() });
   $$('[data-pk]').forEach(b => b.onclick = () => { const p = RBPERKS.find(x => x[0] === b.dataset.pk); S.rpk = S.rpk || {}; const l = S.rpk[p[0]] || 0, c = p[4](l); if (l >= p[3] || rbAvail() < c) return; S.rpk[p[0]] = l + 1; sfx('ach'); recalc(); updateStats(); save(true); renderRebirth() });
 }
 function doRebirth() {
-  if (!rbReady()) return; const pts = rbPoints(), keep = {}; for (const ik in S.inv) { const it = ITEMS[splitInv(ik)[0]]; if (it && (it.hid || it.shopsp)) keep[ik] = S.inv[ik] }
+  if (!rbReady()) return; const pts = Math.floor(rbPoints() * (1 + .04 * ((S.rpk || {}).echo || 0))), keep = {}; for (const ik in S.inv) { const it = ITEMS[splitInv(ik)[0]]; if (it && (it.hid || it.shopsp)) keep[ik] = S.inv[ik] }
   const first = !S.rb; S.inv = keep; S.up = {}; S.setKey = null; S.team = []; S.packOpens = {}; S.pity = 0; S.nextRar = null; S.nextOpen = null; S.runPeak = 0; S.runCps = 0; S.pk = 0; S.rb = (S.rb || 0) + 1; S.rbp = (S.rbp || 0) + pts;
-  const rp = S.rpk || {}; S.coins = 100000 * (rp.head || 0); if (rp.auto) S.up.aclick = rp.auto;
+  const rp = S.rpk || {}; S.coins = 100000 * (rp.head || 0); S.freeOpens = (S.freeOpens || 0) + 2 * (rp.starter || 0); if (rp.auto) S.up.aclick = rp.auto;
   recalc(); updateStats(); updateCoin(); save(true); sfx('ach'); confetti(['#ffd23a', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8', '#9b4dff'], 240); toast('REBIRTH! Coins now x' + (1 + .04 * S.rbp).toFixed(2) + ' forever.' + (first ? ' The Reborn Relics pack is now in the shop!' : ''), 'good'); go('rebirth');
 }
 $('#rebirthBtn').onclick = () => go('rebirth'); setInterval(rbUpdate, 1000);
