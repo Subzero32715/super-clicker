@@ -3206,7 +3206,7 @@ const CONFIG = {
   // Owner account is created automatically (password stored only as a salted hash).
   OWNER_ACCOUNT: { username: 'subzero32715', fullName: 'Owner', from: 'Game HQ', salt: 'sc-owner-a7151feb8088', hash: '3afaf9ac433ca6828891c17e4566dbe62dee04cc966b54c2bcfa1e75b4ffcba2', hashF: 'f21185421111213422037' }
 };
-const REWIND = { chat: '20', admin: '24h', profiles: '30s', social: '2m' };
+const REWIND = { chat: '20', admin: '24h', lotto: '24h', profiles: '30s', social: '2m' };
 
 /* ===== utils ===== */
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -3645,7 +3645,7 @@ function showNetInfo() {
 $('#net').onclick = showNetInfo;
 function startNet() {
   Net.init(ME.username); if (subtleOK()) ecdhPair().then(s => { MYEK = s.pub }).catch(() => {});
-  Net.sub('profiles', onProfile); Net.sub('chat', onChat); Net.sub('admin', onAdmin); Net.sub('mm', onMM); Net.sub('social', onSocial); clearInterval(socT); socT = setInterval(socTick, 10000);
+  Net.sub('profiles', onProfile); Net.sub('chat', onChat); Net.sub('admin', onAdmin); Net.sub('mm', onMM); Net.sub('social', onSocial); Net.sub('lotto', onLotto); clearInterval(socT); socT = setInterval(socTick, 10000);
   if (isOwner()) Net.sub('ownerdb', onOwnerDb);
   heartbeat(); hbTimer = setInterval(heartbeat, 8000);
 }
@@ -4275,10 +4275,10 @@ function renderLottery(sec) {
 }
 
 /* ---- POWERBALL ---- */
-const PB_TERMS = 'No purchase necessary, except the purchase. Must be present to win, or at least have a browser. Prize is coins, a sub or a Tickle Me Pits Aarav and is picked before the draw. Exactly 5 matching numbers in the exact order wins. Only one winning ticket per person. Sales close at 4:30 PM. ALL TICKETS ARE SHREDDED AT MIDNIGHT, so claim your prize before then. Void if lost, wrinkled, folded, eaten or sold to a goblin. One winner takes the whole prize. The host is not responsible for sadness. All decisions are final and probably correct.';
+const PB_TERMS = 'No purchase necessary, except the purchase. Must be present to win, or at least have a browser. Prize is coins, a sub or a Tickle Me Pits Aarav and is picked before the draw. Exactly 5 matching numbers in the exact order wins. Only one winning ticket per person and only one winner per night: first to redeem wins. Sales close at 4:30 PM. ALL TICKETS ARE SHREDDED AT MIDNIGHT, so claim your prize before then. Void if lost, wrinkled, folded, eaten or sold to a goblin. One winner takes the whole prize. The host is not responsible for sadness. All decisions are final and probably correct.';
 const pbWinning = t => { if (!pbDone(t.d)) return false; const w = pbWin(t.d).join(''); return t.n === w && S.pb.tk.find(x => x.d === t.d && x.n === w) === t };
 function pbTicketHTML(t) {
-  const done = pbDone(t.d), won = pbWinning(t), cl = pbData().cl[t.id];
+  const done = pbDone(t.d), won = pbWinning(t) && !pbTaken(t.d), cl = pbData().cl[t.id];
   return `<div class="pbt${won && !cl ? ' win' : ''}" data-t="${t.id}"><div class="pbt-h">POWERBALL</div><div class="pbt-n">${t.n.split('').map(d => `<span>${d}</span>`).join('')}</div><div class="pbt-d">DRAW ${pbTimeTxt(t.d)} · #${t.id}</div><div class="pbt-tc">${PB_TERMS}</div>${done ? `<div class="pbt-s ${won ? 'w' : ''}">${won ? (cl ? 'PRIZE CLAIMED' : 'WINNER! CLICK ME') : 'NO WIN'}</div>` : ''}</div>`;
 }
 const PB_ADS = [['🧇', 'SUPER SUB-WAFFLES: now with 40% more subs!', 'linear-gradient(120deg,#ff9f1c,#ff5a5f)'], ['🛡️', 'GOBLIN INSURANCE: we cover lost tickets*  (*we do not)', 'linear-gradient(120deg,#2d3b55,#6c5ce7)'], ['🍕', 'PIXEL PIZZA: free delivery straight to your inventory!', 'linear-gradient(120deg,#e17055,#fdcb6e)'], ['🚀', 'ROCKET CLICKER 3000: click faster than your friends!', 'linear-gradient(120deg,#0984e3,#00cec9)'], ['🧴', 'DUSTY PENNY POLISH: shine it up for a shiny quarter!', 'linear-gradient(120deg,#b2bec3,#dfe6e9)'], ['🎟️', 'POWERBALL: tickets on sale until 4:30 PM. Draw at 5 PM!', 'linear-gradient(120deg,#e84393,#fd79a8)'], ['🦆', 'DUCK TAX SERVICES: your coins, but quacking.', 'linear-gradient(120deg,#00b894,#55efc4)'], ['🍔', 'BURGER BARON: buy one sub, get one sub*', 'linear-gradient(120deg,#d63031,#fab1a0)']];
@@ -4290,7 +4290,7 @@ function pbTV(t, now) {
     return { chan: 'POWERBALL LIVE', live: 1, host: '🎙️', line, balls: w.map((n, i) => tt >= PB_REVEAL[i] ? n : null), spin: tt < PB_DONE, sub: 'LIVE · ' + pbTimeTxt(today), bg: 'linear-gradient(160deg,#1b2340,#3b0f5a)', anim: 'host' };
   }
   const nl = (pbTimeOf(nk) - now) / 1000, ai = Math.floor(now / 7000) % PB_ADS.length, ad = PB_ADS[ai];
-  return { chan: 'LOTTERY CHANNEL', live: 0, host: ad[0], line: 'AD · ' + ad[1], balls: pbDone(lk) ? pbWin(lk) : [null, null, null, null, null], spin: 0, sub: 'NEXT DRAW IN ' + clk(nl) + (pbDone(lk) ? ' · LAST NUMBERS SHOWN' : ''), bg: ad[2], anim: 'ad' + (ai % 4), key: ai };
+  return { chan: 'LOTTERY CHANNEL', live: 0, host: ad[0], line: 'AD · ' + ad[1], balls: pbDone(today) ? pbWin(today) : [null, null, null, null, null], spin: 0, sub: 'NEXT DRAW IN ' + clk(nl) + (pbDone(today) ? ' · TODAY\'S NUMBERS SHOWN' : ''), bg: ad[2], anim: 'ad' + (ai % 4), key: ai };
 }
 const pbOpen = () => { const now = pbNow(); return now < pbTimeOf(pbKeyOf(now)) - 30 * 60000 };
 function renderPB() {
@@ -4332,13 +4332,21 @@ function pbRedeem(id) {
   const m = modal(`<h3>WINNING TICKET!</h3><div style="margin:10px 0">${pbTicketHTML(t).replace('pbt win', 'pbt')}</div><p class="small">Prize: <b>${pbPrizeTxt(pbPrize(t.d))}</b></p><div class="mbtns"><button class="btn green" id="pbRc">REDEEM CODE</button></div>`);
   $('#pbRc', m).onclick = () => {
     if (!pbWinning(t)) { sfx('err'); return toast('That code is not correct.', 'bad') } if (d.cl[t.id]) return toast('Already claimed.', 'bad');
+    if (pbTaken(t.d)) { sfx('err'); closeModal(); return toast(pbTaken(t.d) + ' already claimed tonight\'s Powerball first.', 'bad') }
+    const go2 = () => { if (pbTaken(t.d)) { sfx('err'); return toast(pbTaken(t.d) + ' claimed tonight\'s Powerball first. Only one winner per night!', 'bad') } if (d.cl[t.id]) return; pay() };
+    if (Net.mode === 'ably') { $('#pbRc', m).disabled = true; $('#pbRc', m).textContent = 'CHECKING...'; try { Net.pub('lotto', 'claim', { d: t.d, u: ME.username, ts: Date.now() }) } catch (e) {} onLotto({ name: 'claim', data: { d: t.d, u: ME.username, ts: Date.now() } }); setTimeout(() => { closeModal(); go2() }, 2500) } else go2();
+    function pay() {
     d.cl[t.id] = 1; const p = pbPrize(t.d); closeModal(); sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8'], 300);
     if (p.t === 'coins') { lotPay(p.amt); toast('YOU WON ' + fmt(p.amt) + ' COINS!', 'good') }
     else { const key = p.t === 'aarav' ? 'hidden/aarav' : p.key; addItem(key, 'n', 1); updateStats(); save(true); showReveal({ key, v: 'n' }, null, 'POWERBALL WINNER!') }
     save(true); try { Net.pub('chat', 'm', { id: uid(), u: 'SUB_BOT', t: ME.username + ' just won the POWERBALL: ' + pbPrizeTxt(p) + '!', ts: Date.now() }) } catch (e) {} pbPaintList();
+    }
   };
 }
 /* popups + coin tier timer */
+const PBCL = {};
+function onLotto(m) { const d = m.data; if (!d || m.name !== 'claim' || typeof d.d !== 'string' || typeof d.u !== 'string') return; const a = PBCL[d.d] = PBCL[d.d] || []; if (!a.some(x => lc(x.u) === lc(d.u))) a.push({ u: d.u, ts: +d.ts || 0 }); a.sort((x, y) => x.ts - y.ts || (x.u < y.u ? -1 : 1)); if ($('#pbList')) pbPaintList() }
+const pbFirst = k => (PBCL[k] || [])[0], pbTaken = k => { const f = pbFirst(k); return f && lc(f.u) !== lc(ME.username) ? f.u : null };
 const pbFlags = {};
 function pbPop(html, cls, ms) { let p = $('#pbpop'); if (!p) { p = document.createElement('div'); p.id = 'pbpop'; document.body.appendChild(p) } p.className = cls || ''; p.innerHTML = '<button class="px" aria-label="close">✕</button>' + html; p.querySelector('.px').onclick = () => p.remove(); clearTimeout(p._t); if (ms) p._t = setTimeout(() => p.remove(), ms); const w = p.querySelector('[data-w]'); if (w) w.onclick = () => { p.remove(); go('lottery'); renderLottery('pb') }; return p }
 function lotGlobal() {
