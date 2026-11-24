@@ -368,6 +368,7 @@ body.calm *{animation-duration:0s!important;animation-iteration-count:1!importan
 .lmach{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.lm-dome{display:flex;gap:8px;padding:14px;border-radius:50px 50px 14px 14px;background:radial-gradient(#e8f4ff,#9ec8f0);border:3px solid #333}.lm-dome.spin{animation:pbshake2 .15s infinite}@keyframes pbshake2{50%{transform:translateY(-3px)}}.lm-ball{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,#ffd34d);display:flex;align-items:center;justify-content:center;font-weight:900;border:2px solid #333}.lm-ball.hit{background:radial-gradient(circle at 30% 30%,#fff,#35c75a)}
 .scr{max-width:380px;margin:auto;text-align:center}.scgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.sccell{position:relative;height:64px;background:#fff8d6;border:2px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;cursor:pointer;overflow:hidden}.sccell i{position:absolute;inset:0;background:repeating-linear-gradient(45deg,#b9c2cc 0 6px,#d7dde3 6px 12px);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;color:#555;transition:transform .4s,opacity .4s}.sccell.open i{opacity:0;transform:scale(1.4);pointer-events:none}
 .whsvg{width:100%;max-width:520px;margin:10px auto;display:block}.whsvg path,.whsvg circle{transition:filter .1s}.whsvg .hl{filter:brightness(2.2);stroke:#fff;stroke-width:3}.whsvg .win{filter:brightness(2.6);stroke:#fff;stroke-width:4}
+.slotbig{position:relative;display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:560px;margin:12px auto;background:#222;padding:6px;border:4px solid #e8b923;border-radius:12px}.sbc{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(8px,2vw,13px);border-radius:4px;color:#fff}.sbc.z{background:#2d3b55;color:#8a97b5}.sbc.b{background:#3b82c4}.sbc.g{background:#2fb36b}.sbc.y{background:#e8b923;color:#3a2a00}.sbc.spin{filter:blur(1px);background:#555}.sbc.hit,.sbj.hit{outline:3px solid #fff;filter:brightness(1.8);z-index:2}.sbj{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22%;aspect-ratio:1;border-radius:50%;background:radial-gradient(#fff3a8,#e8b923);border:4px solid #8a6a00;color:#5a3a00;font-weight:900;font-size:clamp(14px,4vw,24px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1}.sbj small{font-size:8px}
 </style>
 </head>
 <body>
@@ -3565,6 +3566,7 @@ let ADMVIEW = false;
 function updPanelBtn() { const a = $('#adminBtn'); if (a) a.hidden = !isOwner(); const b = $('#ownerBtn'); if (!b) return; b.hidden = !canPanel(); b.textContent = isOwner() ? 'OWNER PANEL' : 'ADMIN PANEL' }
 function promptUnlock() {
   if (!isOwner() || OWNER_KEYS || !subtleOK() || $('#ul_pw')) return;
+  { const sp = lsGet('sc_ownpw', null); if (sp && !promptUnlock.t) { promptUnlock.t = 1; unlockOwner(sp).then(() => { promptUnlock.t = 0; if (OWNER_KEYS) { toast('Owner tools unlocked', 'good'); if (cur === 'owner') renderOwner() } else promptUnlock() }).catch(() => { promptUnlock.t = 0; localStorage.removeItem('sc_ownpw'); promptUnlock() }); return } }
   const m = modal(`<h3>UNLOCK OWNER TOOLS</h3><p class="small" style="margin:8px 0">Type your password to turn on owner powers (sending to players, specials, packs, admins).</p><div class="orow"><input id="ul_pw" type="password" placeholder="password" style="flex:1"></div><div class="small" id="ul_err" style="color:#c00"></div><div class="mbtns"><button class="btn green" id="ul_go">UNLOCK</button><button class="btn alt" id="ul_skip">LATER</button></div>`);
   const go2 = async () => { try { await unlockOwner($('#ul_pw', m).value); closeModal(); toast('Owner tools unlocked', 'good'); if (cur === 'owner') renderOwner() } catch (e) { $('#ul_err', m).textContent = 'Wrong password.' } };
   $('#ul_go', m).onclick = go2; $('#ul_pw', m).onkeydown = e => { if (e.key === 'Enter') go2() }; $('#ul_skip', m).onclick = closeModal; setTimeout(() => $('#ul_pw', m).focus(), 50);
@@ -4088,9 +4090,9 @@ function logout() { document.body.classList.remove('elite');
 $('#logout').onclick = logout;
 
 /* ===== navigation ===== */
-const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], profile: ['PROFILE', '#00a8ff'], quests: ['QUESTS', '#00b894'], rebirth: ['REBIRTH', '#9b4dff'], games: ['MINIGAMES', '#e17055'], vault: ['THE VAULT', '#f1c40f'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
+const PAGES = { shop: ['SHOP', '#ff9f1c'], index: ['INDEX', '#9b4dff'], chat: ['CHAT', '#35c75a'], board: ['LEADERBOARD', '#ffc800'], battles: ['BATTLES', '#ff5a5f'], upgrades: ['UPGRADES', '#ff7a00'], profile: ['PROFILE', '#00a8ff'], quests: ['QUESTS', '#00b894'], rebirth: ['REBIRTH', '#9b4dff'], games: ['MINIGAMES', '#e17055'], vault: ['THE VAULT', '#f1c40f'], lottery: ['LOTTERY', '#e84393'], settings: ['SETTINGS', '#6c7a89'], owner: ['OWNER PANEL', '#1a5fb4'] };
 function buildDD() {
-  const G = [['YOU', ['profile', 'quests', 'rebirth']], ['PLAY', ['shop', 'upgrades', 'index', 'games', 'vault']], ['SOCIAL', ['chat', 'board', 'battles']], ['', ['settings']]];
+  const G = [['YOU', ['profile', 'quests', 'rebirth']], ['PLAY', ['shop', 'upgrades', 'index', 'games', 'lottery', 'vault']], ['SOCIAL', ['chat', 'board', 'battles']], ['', ['settings']]];
   $('#ddList').innerHTML = G.map(([h, ks]) => (h ? `<div class="ddh">${h}</div>` : '') + ks.map(k => `<div class="ddi" data-p="${k}"><i style="background:${PAGES[k][1]}"></i>${PAGES[k][0]}</div>`).join('')).join('');
   $$('.ddi').forEach(el => el.onclick = () => { $('#dd').classList.remove('open'); go(el.dataset.p) });
 }
@@ -4101,7 +4103,7 @@ $('#resetCoin').onclick = () => { S.setKey = null; recalc(); updateStats(); upda
 function go(p) {
   stopGames(); if (p === 'owner' && !canPanel()) p = 'shop'; cur = p; $('#ddLabel').textContent = p === 'owner' && !isOwner() ? 'ADMIN PANEL' : PAGES[p][0];
   $$('.ddi').forEach(el => el.classList.toggle('on', el.dataset.p === p)); { const pg = $('#page'); pg.classList.remove('pgin'); void pg.offsetWidth; if (p !== 'shop') pg.classList.add('pgin'); setTimeout(() => pg.classList.remove('pgin'), 900) }
-  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, games: renderGames, vault: renderVault, settings: renderSettings, owner: renderOwner, rebirth: renderRebirth, profile: renderProfile })[p](); sfx('ui');
+  ({ shop: renderShop, index: renderIndex, chat: renderChat, board: renderBoard, battles: renderBattles, upgrades: renderUpgrades, quests: renderQuests, games: renderGames, vault: renderVault, lottery: () => renderLottery(), settings: renderSettings, owner: renderOwner, rebirth: renderRebirth, profile: renderProfile })[p](); sfx('ui');
 }
 
 /* ===== clicker ===== */
@@ -4236,7 +4238,7 @@ const LOT_TAB = [[0, .55], [.5, .25], [1, .10], [2, .06], [5, .03], [20, .009], 
 function lotSub(rars) { const rar = rars[Math.floor(Math.random() * rars.length)], pl = Object.keys(ITEMS).filter(q => { const it = ITEMS[q]; return it.rarity === rar && !it.hid && !it.shopsp && !(it.pack && it.pack.ew) }); return pl[Math.floor(Math.random() * pl.length)] }
 
 function lotHead(title, back) {
-  return `<div class="phead"><button class="btn alt sm" id="lBack" style="margin-right:10px">&lsaquo; ${back ? 'LOTTERY' : 'GAMES'}</button><h2>${title}</h2><span class="rtag" style="background:#e84393">🎟 <b id="lcBal">${fmt(S.lc || 0)}</b> LOTTERY COINS</span></div>`;
+  return `<div class="phead">${back ? '<button class="btn alt sm" id="lBack" style="margin-right:10px">&lsaquo; BACK</button>' : ''}<h2>${title}</h2><span class="rtag" style="background:#e84393">🎟 <b id="lcBal">${fmt(S.lc || 0)}</b> LOTTERY COINS</span></div>`;
 }
 function lotTrade() {
   const m = modal(`<h3>TRADE COINS</h3><p class="small" style="margin:6px 0">10 coins = 2 lottery coins. Lottery coins are used for everything in the Lottery.</p><div class="orow"><input id="ltIn" type="number" min="10" step="10" value="1000" style="flex:1"><span id="ltOut" style="font-weight:800"></span></div><div class="orow" style="flex-wrap:wrap"><button class="btn sm alt" data-q="1000">1K</button><button class="btn sm alt" data-q="100000">100K</button><button class="btn sm alt" data-q="10000000">10M</button><button class="btn sm alt" data-q="max">MAX</button></div><div class="mbtns"><button class="btn green" id="ltGo">TRADE</button></div>`);
@@ -4248,10 +4250,10 @@ let lotSec = null;
 function lotRefresh() { const b = $('#lcBal'); if (b) b.textContent = fmt(S.lc || 0) }
 function renderLottery(sec) {
   stopGames(); lotSec = sec || null; if (!S.pb) S.pb = { tk: [], cl: {} };
-  if (sec === 'pb') return renderPB(); if (sec === 'mach') return renderMach(); if (sec === 'scr') return renderScratch(); if (sec === 'wheel') return renderWheel();
-  const cards = [['pb', 'POWERBALL', 'Nightly draw at 5 PM. Match all 5 numbers to win coins, a sub or Aarav!', '#e84393', 'chance/Jackpot'], ['mach', 'LOTTERY MACHINES', 'Pull the lever and draw your prize.', '#6c5ce7', 'mineral/Diamond'], ['scr', 'SCRATCH TICKETS', 'Scratch 6 spots. Match 3 to win.', '#00b894', 'school/Crayons'], ['wheel', 'BIG SPIN WHEEL', '10 rings, 100 spots and a jackpot in the middle: 50x!', '#f1c40f', 'chance/Jackpot']];
+  if (sec === 'pb') return renderPB(); if (sec === 'wheel') return renderWheel(); if (sec && sec.startsWith('mach')) return renderMach(sec.includes(':') ? +sec.split(':')[1] : undefined); if (sec && sec.startsWith('scr')) return renderScratch(sec.includes(':') ? +sec.split(':')[1] : undefined);
+  const cards = [['pb', 'POWERBALL', 'Nightly draw at 5 PM. Match all 5 numbers to win coins, a sub or Aarav!', '#e84393', 'chance/Jackpot'], ['mach', 'LOTTERY MACHINES', 'Pull the lever and draw your prize.', '#6c5ce7', 'mineral/Diamond'], ['scr', 'SCRATCH TICKETS', 'Scratch 6 spots. Match 3 to win.', '#00b894', 'school/Crayons'], ['wheel', 'BIG SPIN SLOT', '10 reels, 100 slots and a jackpot in the middle: 50x!', '#f1c40f', 'chance/Jackpot']];
   $('#page').innerHTML = lotHead('LOTTERY') + `<div class="panel" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn gold" id="lTrade">TRADE COINS</button><span class="small">10 coins = 2 lottery coins. Everything here costs lottery coins.</span></div><div class="gcards">${cards.map(c => `<div class="gcard" data-s="${c[0]}" style="--c:${c[3]}"><img class="pix" src="${spriteURL(c[4])}"><b>${c[1]}</b><span>${c[2]}</span></div>`).join('')}</div>`;
-  $('#lBack').onclick = () => go('games'); $('#lTrade').onclick = lotTrade; $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); renderLottery(el.dataset.s) });
+  $('#lTrade').onclick = lotTrade; $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); renderLottery(el.dataset.s) });
 }
 
 /* ---- POWERBALL ---- */
@@ -4261,30 +4263,34 @@ function pbTicketHTML(t) {
   return `<div class="pbt${won && !cl && !exp ? ' win' : ''}" data-t="${t.id}"><div class="pbt-h">POWERBALL</div><div class="pbt-n">${t.n.split('').map(d => `<span>${d}</span>`).join('')}</div><div class="pbt-d">DRAW ${pbTimeTxt(t.d)} · #${t.id}</div><div class="pbt-tc">${PB_TERMS}</div>${done ? `<div class="pbt-s ${won ? 'w' : ''}">${won ? (cl ? 'PRIZE CLAIMED' : exp ? 'EXPIRED' : 'WINNER! CLICK ME') : 'NO WIN'}</div>` : ''}</div>`;
 }
 function pbTV(t, now) {
-  const nk = pbNext(), lk = pbLastKey(), today = pbKeyOf(now), tt = (now - pbTimeOf(today)) / 1000;
+  const nk = pbNext(), lk = pbLastKey(), today = pbKeyOf(now), tt = (now - pbTimeOf(today)) / 1000, nl = (pbTimeOf(nk) - now) / 1000;
   const pr = pbPrizeTxt(pbPrize(today === nk ? nk : tt >= 0 && tt < PB_LEN ? today : nk));
   if (tt >= 0 && tt < PB_LEN) {
     const L = [[0, 'Good evening, and welcome to the nightly POWERBALL draw!'], [7, 'I am your host, Randy Rollsworth, and we have a big night!'], [14, "Tonight's prize: " + pbPrizeTxt(pbPrize(today))], [22, 'Grab your tickets everyone. Each one has 5 numbers.'], [30, 'The machine is warmed up and the balls are bouncing. Here we go!'], [38, 'Here comes the first number...'], [46, 'Next ball, please...'], [54, 'Third ball coming up...'], [62, 'Two more to go. Hold your tickets tight...'], [70, 'And now the final number...'], [PB_DONE + 2, 'That is the draw! Check your tickets on the Powerball page.'], [92, 'Thanks for watching, and see you tomorrow at 5 PM!']];
     let line = L[0][1]; L.forEach(l => { if (tt >= l[0]) line = l[1] }); const w = pbWin(today);
-    return { chan: 'POWERBALL LIVE', live: 1, line, balls: w.map((n, i) => tt >= PB_REVEAL[i] ? n : null), spin: tt < PB_DONE, sub: 'LIVE · ' + pbTimeTxt(today) };
+    return { chan: 'POWERBALL LIVE', live: 1, host: '🎙️', line, balls: w.map((n, i) => tt >= PB_REVEAL[i] ? n : null), spin: tt < PB_DONE, sub: 'LIVE · ' + pbTimeTxt(today) };
+  }
+  if (nl > 1800 || pbDone(lk) && tt > PB_LEN) {
+    const ADS = [['🧇', 'SUPER SUB-WAFFLES: now with 40% more subs!'], ['🛡️', 'GOBLIN INSURANCE: we cover lost tickets*  (*we do not)'], ['🍕', 'PIXEL PIZZA: free delivery to your inventory!'], ['🚀', 'ROCKET CLICKER 3000: click faster than your friends!'], ['🧴', 'DUSTY PENNY POLISH: shine it up for a shiny quarter!'], ['🎟', 'POWERBALL: tickets on sale now. Draw at 5 PM!'], ['🦆', 'DUCK TAX SERVICES: your coins, but quacking.']], ad = ADS[Math.floor(now / 6000) % ADS.length];
+    return { chan: 'LOTTERY CHANNEL', live: 0, host: ad[0], line: 'AD · ' + ad[1], balls: pbDone(lk) ? pbWin(lk) : [null, null, null, null, null], spin: 0, sub: 'NEXT DRAW IN ' + clk(nl) + (pbDone(lk) ? ' · LAST NUMBERS BELOW' : ''), bottom: 1 }
   }
   const lines = ['Welcome to the Lottery Channel! Powerball tickets are on sale now.', "Tonight's prize: " + pr, 'Scratch tickets and lottery machines are open all day.', 'Trade your coins for lottery coins at the top of the Lottery page.', 'The Powerball draw is at 5:00 PM sharp. Do not miss it!', 'Tip: every ticket has a 1 in 100,000 chance. Buy a lot!'];
   const line = lines[Math.floor(now / 6000) % lines.length], left = (pbTimeOf(nk) - now) / 1000;
-  return { chan: 'LOTTERY CHANNEL', live: 0, line, balls: pbDone(lk) ? pbWin(lk) : [null, null, null, null, null], spin: 0, sub: 'POWERBALL DRAW IN ' + clk(left) + (pbDone(lk) ? ' · LAST DRAW SHOWN' : '') };
+  return { chan: 'LOTTERY CHANNEL', live: 0, host: '📺', line, balls: pbDone(lk) ? pbWin(lk) : [null, null, null, null, null], spin: 0, sub: 'POWERBALL DRAW IN ' + clk(left) + (pbDone(lk) ? ' · LAST DRAW SHOWN' : '') };
 }
 function renderPB() {
   const d = pbData(); lotSec = 'pb';
-  $('#page').innerHTML = lotHead('POWERBALL', 1) + `<div class="panel pbtv" id="pbTV"><div class="tvtop"><b id="tvChan"></b><span id="tvSub"></span><i class="tvlive" id="tvLive">● LIVE</i></div><div class="tvscreen" id="tvScr"><div class="tvhost" id="tvHost">🎙️</div><div class="tvmach" id="tvMach"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="tvballs" id="tvBalls">${'<span class="tvb">?</span>'.repeat(5)}</div><div class="tvsay" id="tvSay"></div></div></div>
-  <div class="panel" style="margin-top:12px"><div class="orow" style="align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>NEXT DRAW: <span id="pbNext"></span></b><div class="small">Prize: <b id="pbPz"></b> · Ticket: ${fmt(PB_PRICE)} lottery coins</div></div><button class="btn gold" data-b="1">BUY 1</button><button class="btn gold" data-b="10">BUY 10</button><button class="btn gold" data-b="100">BUY 100</button></div></div>
-  <div class="panel" style="margin-top:12px"><h3>YOUR TICKETS</h3><div id="pbList"></div></div>`;
-  $('#lBack').onclick = () => renderLottery(); $$('[data-b]').forEach(b => b.onclick = () => pbBuy(+b.dataset.b));
+  $('#page').innerHTML = lotHead('POWERBALL', 1) + `<div id="pbWrap" style="display:flex;flex-direction:column;gap:12px"><div class="panel pbtv" id="pbTV"><div class="tvtop"><b id="tvChan"></b><span id="tvSub"></span><i class="tvlive" id="tvLive">● LIVE</i></div><div class="tvscreen" id="tvScr"><div class="tvhost" id="tvHost">🎙️</div><div class="tvmach" id="tvMach"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="tvballs" id="tvBalls">${'<span class="tvb">?</span>'.repeat(5)}</div><div class="tvsay" id="tvSay"></div></div></div>
+  <div class="panel" style="order:1"><div class="orow" style="align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>NEXT DRAW: <span id="pbNext"></span></b><div class="small">Prize: <b id="pbPz"></b> · Ticket: ${fmt(PB_PRICE)} lottery coins</div></div><button class="btn gold" data-b="1">BUY 1</button><button class="btn gold" data-b="10">BUY 10</button><button class="btn gold" data-b="100">BUY 100</button></div></div>
+  <div class="panel" style="order:2"><h3>YOUR TICKETS</h3><div id="pbList"></div></div></div>`;
+  lotBackBtn(); $$('[data-b]').forEach(b => b.onclick = () => pbBuy(+b.dataset.b));
   pbPaintList(); pbTick(); I_(pbTick, 250);
 }
 let pbLastState = '';
 function pbTick() {
   if (!$('#pbTV')) return; const now = pbNow(), st = pbTV(0, now), nk = pbNext();
   if ($('#tvChan').textContent !== st.chan) { if ($('#tvChan').textContent) { $('#tvScr').classList.add('static'); setTimeout(() => $('#tvScr') && $('#tvScr').classList.remove('static'), 700) } $('#tvChan').textContent = st.chan }
-  $('#tvSub').textContent = st.sub; $('#tvLive').style.display = st.live ? '' : 'none'; $('#tvSay').textContent = st.line; $('#tvMach').classList.toggle('spin', !!st.spin);
+  $('#tvSub').textContent = st.sub; $('#tvHost').textContent = st.host; $('#pbTV').style.order = st.bottom ? 3 : 0; $('#tvLive').style.display = st.live ? '' : 'none'; $('#tvSay').textContent = st.line; $('#tvMach').classList.toggle('spin', !!st.spin);
   const bs = $$('#tvBalls .tvb'); st.balls.forEach((n, i) => { const t = n === null ? '?' : String(n); if (bs[i].textContent !== t) { bs[i].textContent = t; bs[i].classList.toggle('on', n !== null); if (n !== null) { bs[i].classList.remove('pop'); void bs[i].offsetWidth; bs[i].classList.add('pop'); sfx('ui') } } });
   $('#pbNext').textContent = pbTimeTxt(nk); $('#pbPz').textContent = pbPrizeTxt(pbPrize(nk));
   const sig = pbLastKey() + (pbDone(pbLastKey()) ? 1 : 0) + pbData().tk.length; if (sig !== pbLastState) { pbLastState = sig; pbPaintList() }
@@ -4314,7 +4320,7 @@ function pbRedeem(id) {
 }
 /* popups + coin tier timer */
 const pbFlags = {};
-function pbPop(html, cls, ms) { let p = $('#pbpop'); if (!p) { p = document.createElement('div'); p.id = 'pbpop'; document.body.appendChild(p) } p.className = cls || ''; p.innerHTML = '<button class="px" aria-label="close">✕</button>' + html; p.querySelector('.px').onclick = () => p.remove(); clearTimeout(p._t); if (ms) p._t = setTimeout(() => p.remove(), ms); const w = p.querySelector('[data-w]'); if (w) w.onclick = () => { p.remove(); go('games'); renderLottery('pb') }; return p }
+function pbPop(html, cls, ms) { let p = $('#pbpop'); if (!p) { p = document.createElement('div'); p.id = 'pbpop'; document.body.appendChild(p) } p.className = cls || ''; p.innerHTML = '<button class="px" aria-label="close">✕</button>' + html; p.querySelector('.px').onclick = () => p.remove(); clearTimeout(p._t); if (ms) p._t = setTimeout(() => p.remove(), ms); const w = p.querySelector('[data-w]'); if (w) w.onclick = () => { p.remove(); go('lottery'); renderLottery('pb') }; return p }
 function lotGlobal() {
   if (!ME || !S) return; const now = pbNow(), nk = pbNext(), left = (pbTimeOf(nk) - now) / 1000, tk = pbKeyOf(now), tt = (now - pbTimeOf(tk)) / 1000;
   for (const thr of [600, 300, 60]) { const f = nk + thr; if (left <= thr && left > thr - 30 && !pbFlags[f]) { pbFlags[f] = 1; const sp = thr === 60; pbPop(`<div class="pbp-t">🎟 POWERBALL IS DRAWN IN <span class="pbc" data-g="${pbTimeOf(nk)}">${clk(left)}</span></div><div class="pbp-s">${sp ? 'LAST CALL! ' : ''}Draw at 5:00 PM · Prize: ${esc(pbPrizeTxt(pbPrize(nk)))}</div><button class="btn sm gold" data-w>${sp ? 'WATCH LIVE' : 'OPEN POWERBALL'}</button>`, sp ? 'big' : '', sp ? 0 : 15000); sfx(sp ? 'ach' : 'ui') } }
@@ -4324,61 +4330,61 @@ function lotGlobal() {
 }
 setInterval(lotGlobal, 1000);
 
-/* ---- LOTTERY MACHINES ---- */
+/* ---- LOTTERY MACHINES (one screen each) ---- */
 const MACHS = [{ n: 'LUCKY DRAW', cost: 50, c: '#e17055', jack: null }, { n: 'MEGA DRAW', cost: 500, c: '#6c5ce7', jack: ['legendary', 'chroma'] }, { n: 'ULTRA DRAW', cost: 5000, c: '#f1c40f', jack: ['mystical'] }];
-function renderMach() {
-  stopGames(); $('#page').innerHTML = lotHead('LOTTERY MACHINES', 1) + `<div class="small" style="margin-bottom:10px">Pull the lever! Prizes are paid in coins (1 lottery coin = ${LC_VAL} coins of value). The top prize is a sub on the bigger machines.</div><div class="gcards">${MACHS.map((m, i) => `<div class="panel lmach" style="border-color:${m.c}"><b style="color:${m.c}">${m.n}</b><div class="lm-dome" id="ld${i}"><span class="lm-ball">?</span><span class="lm-ball">?</span><span class="lm-ball">?</span></div><div class="lm-res small" id="lr${i}">Cost ${fmt(m.cost)} LC</div><button class="btn gold" data-m="${i}">PULL · ${fmt(m.cost)} LC</button><div class="small">Top prize: ${m.jack ? m.jack.map(r => RAR[r].name).join(' / ') + ' sub' : fmt(m.cost * LC_VAL * 100) + ' coins'}</div></div>`).join('')}</div>`;
-  $('#lBack').onclick = () => renderLottery(); let busy = false;
-  $$('[data-m]').forEach(b => b.onclick = () => {
-    if (busy) return; const i = +b.dataset.m, m = MACHS[i]; if ((S.lc || 0) < m.cost) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
-    busy = true; lcAdd(-m.cost); save(true); lotRefresh(); const out = lotRoll(LOT_TAB), balls = $$('#ld' + i + ' .lm-ball'); $('#ld' + i).classList.add('spin'); $('#lr' + i).textContent = 'Drawing...'; sfx('ui');
+const lotBackBtn = to => { const b = $('#lBack'); if (b) b.onclick = () => renderLottery(to) };
+const lotList = (title, sec, items) => { $('#page').innerHTML = lotHead(title, 1) + `<div class="gcards">${items.map((m, i) => `<div class="gcard" data-i="${i}" style="--c:${m.c}"><img class="pix" src="${spriteURL('chance/Jackpot')}"><b>${m.n}</b><span>${fmt(m.cost)} lottery coins</span></div>`).join('')}</div>`; lotBackBtn(); $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); renderLottery(sec + ':' + el.dataset.i) }) };
+function renderMach(i) {
+  stopGames(); if (i === undefined) return lotList('LOTTERY MACHINES', 'mach', MACHS); const m = MACHS[i];
+  $('#page').innerHTML = lotHead(m.n, 1) + `<div class="panel lmach" style="border-color:${m.c};max-width:420px;margin:auto"><b style="color:${m.c}">${m.n}</b><div class="small">Prizes are paid in coins (1 lottery coin = ${LC_VAL} coins of value).</div><div class="lm-dome" id="ld"><span class="lm-ball">?</span><span class="lm-ball">?</span><span class="lm-ball">?</span></div><div class="lm-res" id="lr" style="font-weight:800;min-height:22px">Cost ${fmt(m.cost)} LC</div><button class="btn gold" id="lGo">PULL · ${fmt(m.cost)} LC</button><div class="small">Top prize: ${m.jack ? m.jack.map(r => RAR[r].name).join(' / ') + ' sub' : fmt(m.cost * LC_VAL * 100) + ' coins'}</div></div>`;
+  lotBackBtn('mach'); let busy = false;
+  $('#lGo').onclick = () => {
+    if (busy) return; if ((S.lc || 0) < m.cost) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
+    busy = true; lcAdd(-m.cost); save(true); lotRefresh(); const out = lotRoll(LOT_TAB), balls = $$('#ld .lm-ball'); $('#ld').classList.add('spin'); $('#lr').textContent = 'Drawing...'; sfx('ui');
     const sym = () => Math.floor(Math.random() * 9) + 1, iv = I_(() => balls.forEach(x => x.textContent = sym()), 90);
     T_(() => {
-      clearInterval(iv); $('#ld' + i).classList.remove('spin'); const win = out !== 0, v = win ? sym() : 0, set = win ? [v, v, v] : (() => { let a; do { a = [sym(), sym(), sym()] } while (a[0] === a[1] && a[1] === a[2]); return a })(); balls.forEach((x, j) => { x.textContent = set[j]; x.classList.toggle('hit', win) });
+      clearInterval(iv); $('#ld').classList.remove('spin'); const win = out !== 0, v = sym(), set = win ? [v, v, v] : (() => { let a; do { a = [sym(), sym(), sym()] } while (a[0] === a[1] && a[1] === a[2]); return a })(); balls.forEach((x, j) => { x.textContent = set[j]; x.classList.toggle('hit', win) });
       let msg = 'No luck. Try again!';
       if (out === 'J' && m.jack) { const k = lotSub(m.jack); addItem(k, 'n', 1); updateStats(); save(true); sfx('ach'); confetti(['#ffd34d', '#fff'], 300); showReveal({ key: k, v: 'n' }, null, 'JACKPOT FROM THE ' + m.n + '!'); msg = 'JACKPOT! ' + ITEMS[k].name }
       else if (out !== 0) { const mult = out === 'J' ? 100 : out, c = Math.round(mult * m.cost * LC_VAL); lotPay(c); sfx('ach'); if (mult >= 5) confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 120); msg = 'YOU WON ' + fmt(c) + ' COINS! (' + mult + 'x)' }
-      else sfx('err'); $('#lr' + i).textContent = msg; busy = false;
+      else sfx('err'); $('#lr').textContent = msg; busy = false;
     }, 1500);
-  });
+  };
 }
 
-/* ---- SCRATCH TICKETS ---- */
+/* ---- SCRATCH TICKETS (one screen each) ---- */
 const SCRS = [{ n: 'PENNY SCRATCH', cost: 20, c: '#b87333' }, { n: 'SILVER SCRATCH', cost: 200, c: '#8e9aa8' }, { n: 'GOLD SCRATCH', cost: 2000, c: '#e8b923' }], SC_V = [.5, 1, 2, 5, 20, 100];
-function renderScratch() {
-  stopGames(); $('#page').innerHTML = lotHead('SCRATCH TICKETS', 1) + `<div class="small" style="margin-bottom:10px">Buy a ticket, scratch all 6 spots. Find 3 matching prizes to win that many coins. Winnings are paid as soon as you buy.</div><div class="orow" style="flex-wrap:wrap">${SCRS.map((s, i) => `<button class="btn gold" data-s="${i}" style="background:${s.c}">${s.n} · ${fmt(s.cost)} LC</button>`).join('')}</div><div id="scArea" style="margin-top:14px"></div>`;
-  $('#lBack').onclick = () => renderLottery();
-  $$('[data-s]').forEach(b => b.onclick = () => {
-    const s = SCRS[+b.dataset.s]; if ((S.lc || 0) < s.cost) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
+function renderScratch(i) {
+  stopGames(); if (i === undefined) return lotList('SCRATCH TICKETS', 'scr', SCRS); const s = SCRS[i];
+  $('#page').innerHTML = lotHead(s.n, 1) + `<div class="small" style="margin-bottom:10px">Buy a ticket, scratch all 6 spots. Find 3 matching prizes to win that many coins. Winnings are paid as soon as you buy.</div><button class="btn gold" id="scBuy" style="background:${s.c}">BUY TICKET · ${fmt(s.cost)} LC</button><div id="scArea" style="margin-top:14px"></div>`; lotBackBtn('scr');
+  $('#scBuy').onclick = () => {
+    if ((S.lc || 0) < s.cost) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
     lcAdd(-s.cost); lotRefresh(); const out = lotRoll(LOT_TAB), val = x => Math.round(x * s.cost * LC_VAL); let cells;
     if (out !== 0) { const w = out === 'J' ? 100 : out, others = shuf(SC_V.filter(x => x !== w)).slice(0, 3); cells = shuf([w, w, w, ...others]) }
-    else { let a; do { a = []; const cnt = {}; while (a.length < 6) { const x = SC_V[Math.floor(Math.random() * 6)]; if ((cnt[x] || 0) < 2) { cnt[x] = (cnt[x] || 0) + 1; a.push(x) } } } while (0); cells = a }
+    else { cells = []; const cnt = {}; while (cells.length < 6) { const x = SC_V[Math.floor(Math.random() * 6)]; if ((cnt[x] || 0) < 2) { cnt[x] = (cnt[x] || 0) + 1; cells.push(x) } } }
     const prize = out === 0 ? 0 : val(out === 'J' ? 100 : out); if (prize) lotPay(prize); else save(true); let left = 6;
     $('#scArea').innerHTML = `<div class="panel scr" style="border-color:${s.c}"><b>${s.n}</b><div class="scgrid">${cells.map((v, j) => `<div class="sccell" data-j="${j}"><span>${fmt(val(v))}</span><i>SCRATCH</i></div>`).join('')}</div><div class="orow" style="justify-content:center"><button class="btn sm alt" id="scAll">SCRATCH ALL</button></div><div id="scRes" style="font-weight:800;margin-top:8px;min-height:22px"></div></div>`;
     const done = () => { if (--left > 0) return; if (prize) { sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 140); $('#scRes').textContent = 'WINNER! +' + fmt(prize) + ' COINS' } else { sfx('err'); $('#scRes').textContent = 'No match. Better luck next time!' } };
     const rev = c => { if (c.classList.contains('open')) return; c.classList.add('open'); sfx('ui'); done() };
     $$('.sccell').forEach(c => c.onclick = () => rev(c)); $('#scAll').onclick = () => $$('.sccell').forEach((c, j) => setTimeout(() => rev(c), j * 120));
-  });
+  };
 }
 
-/* ---- BIG SPIN WHEEL ---- */
+/* ---- BIG SPIN (slot machine: 10 reels x 10 rows + center jackpot) ---- */
 const WH_RINGS = [[0, 0, 0, 0, 0, 0, 0, 0, .2, .3], [0, 0, 0, 0, 0, 0, 0, 0, .5, .5], [0, 0, 0, 0, 0, 0, 0, .5, .5, .5], [0, 0, 0, 0, 0, 0, 0, .5, .5, 1], [0, 0, 0, 0, 0, 0, .5, .5, .5, 1], [0, 0, 0, 0, 0, 0, .5, 1, 1, 1], [0, 0, 0, 0, 0, .5, 1, 1, 1, 1], [0, 0, 0, 0, 0, 1, 1, 1, 1, 2], [0, 0, 0, 0, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1, 1, 2]];
 const WH = WH_RINGS.map((r, i) => { const rr = mulberry(i * 77 + 3), a = r.slice(); for (let j = a.length - 1; j > 0; j--) { const k = Math.floor(rr() * (j + 1)); [a[j], a[k]] = [a[k], a[j]] } return a });
-const whCol = m => m === 'C' ? '#ffd34d' : m === 0 ? '#2d3b55' : m < 1 ? '#3b82c4' : m === 1 ? '#2fb36b' : '#e8b923';
+const whTxt = m => m === 0 ? '—' : m === .2 ? '⅕x' : m === .3 ? '⅓x' : m === .5 ? '½x' : m + 'x', whCls = m => m === 0 ? 'z' : m < 1 ? 'b' : m === 1 ? 'g' : 'y';
 function renderWheel() {
-  stopGames(); const R0 = 250, W = 21, ar = (r, a) => [(260 + r * Math.sin(a)).toFixed(1), (260 - r * Math.cos(a)).toFixed(1)];
-  let svg = ''; for (let i = 0; i < 10; i++) for (let k = 0; k < 10; k++) { const ro = R0 - W * i, ri = ro - W, a0 = k * Math.PI / 5 + .01, a1 = (k + 1) * Math.PI / 5 - .01, p1 = ar(ro, a0), p2 = ar(ro, a1), p3 = ar(ri, a1), p4 = ar(ri, a0), m = WH[i][k]; svg += `<path id="wc${i}_${k}" d="M${p1} A${ro} ${ro} 0 0 1 ${p2} L${p3} A${ri} ${ri} 0 0 0 ${p4}Z" fill="${whCol(m)}"><title>${m ? m + 'x' : 'nothing'}</title></path>` }
-  $('#page').innerHTML = lotHead('BIG SPIN WHEEL', 1) + `<div class="panel gpanel"><div class="small">10 rings with 10 spots each, plus the golden center. Land the center for <b>50x</b> your bet! Grey = nothing, blue = under 1x, green = 1x, gold = 2x. Winnings are paid in coins (1 LC = ${LC_VAL} coins).</div><svg viewBox="0 0 520 520" class="whsvg">${svg}<circle id="wcC" cx="260" cy="260" r="38" fill="#ffd34d" stroke="#8a6a00" stroke-width="4"/><text x="260" y="268" text-anchor="middle" font-size="22" font-weight="900" fill="#5a3a00">50x</text></svg><div id="whRes" style="font-weight:800;min-height:24px;margin:8px 0"></div><div class="orow" style="justify-content:center;flex-wrap:wrap">${[1000, 10000, 100000].map(b => `<button class="btn gold" data-b="${b}">SPIN · ${fmt(b)} LC</button>`).join('')}</div></div>`;
-  $('#lBack').onclick = () => renderLottery(); let busy = false;
+  stopGames(); $('#page').innerHTML = lotHead('BIG SPIN SLOT', 1) + `<div class="panel gpanel"><div class="small">10 reels, 10 rows, and a golden jackpot slot in the middle worth <b>50x</b> your bet! Winnings are paid in coins (1 LC = ${LC_VAL} coins).</div><div class="slotbig" id="sb">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => WH[i].map((m, k) => `<div class="sbc ${whCls(m)}" id="sc${i}_${k}" data-t="${whTxt(m)}">${whTxt(m)}</div>`).join('')).join('')}<div class="sbj" id="sbJ">50x<br><small>JACKPOT</small></div></div><div id="whRes" style="font-weight:800;min-height:24px;margin:8px 0"></div><div class="orow" style="justify-content:center;flex-wrap:wrap">${[1000, 10000, 100000].map(b => `<button class="btn gold" data-b="${b}">SPIN · ${fmt(b)} LC</button>`).join('')}</div></div>`;
+  lotBackBtn(); let busy = false;
   $$('[data-b]').forEach(b => b.onclick = () => {
     if (busy) return; const bet = +b.dataset.b; if ((S.lc || 0) < bet) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
-    busy = true; lcAdd(-bet); lotRefresh(); save(true); $('#whRes').textContent = 'Spinning...'; const pick = Math.floor(Math.random() * 101), res = pick === 100 ? 'C' : [Math.floor(pick / 10), pick % 10], cells = []; for (let j = 0; j < 30; j++) cells.push(Math.random() < .01 ? 'C' : [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)]); cells.push(res);
-    const el = c => c === 'C' ? $('#wcC') : $('#wc' + c[0] + '_' + c[1]); let prev = null, t = 0;
-    cells.forEach((c, j) => { t += 40 + j * j * 0.45; T_(() => { if (prev) prev.classList.remove('hl'); prev = el(c); prev.classList.add('hl'); sfx('ui'); if (j === cells.length - 1) fin(c) }, t) });
-    const fin = c => { const mult = c === 'C' ? 50 : WH[c[0]][c[1]], prize = Math.round(mult * bet * LC_VAL); prev.classList.add('win'); if (prize) { lotPay(prize); sfx('ach'); if (mult >= 2) confetti(['#ffd34d', '#ff5a5f', '#35c75a', '#4da6ff'], mult >= 50 ? 400 : 120) } else { save(true); sfx('err') } $('#whRes').textContent = (c === 'C' ? 'JACKPOT! ' : '') + (prize ? mult + 'x → +' + fmt(prize) + ' COINS' : 'Nothing this time.'); T_(() => { prev.classList.remove('hl', 'win'); busy = false }, 1500) };
+    busy = true; lcAdd(-bet); lotRefresh(); save(true); $('#whRes').textContent = 'Spinning...'; const pick = Math.floor(Math.random() * 101), jack = pick === 100, ri = jack ? -1 : Math.floor(pick / 10), rk = jack ? -1 : pick % 10;
+    $$('.sbc').forEach(e => e.classList.remove('hit')); const all = $$('.sbc'); let n = 0;
+    const iv = I_(() => { n++; all.forEach(e => { const col = +e.id.split('_')[1]; if (col * 6 + 14 > n) { e.textContent = whTxt([0, .5, 1, 2][Math.floor(Math.random() * 4)]); e.classList.add('spin') } else { e.textContent = e.dataset.t; e.classList.remove('spin') } }); if (n % 2) sfx('ui') }, 90);
+    T_(() => { clearInterval(iv); all.forEach(e => { e.textContent = e.dataset.t; e.classList.remove('spin') }); const mult = jack ? 50 : WH[ri][rk], prize = Math.round(mult * bet * LC_VAL), el = jack ? $('#sbJ') : $('#sc' + ri + '_' + rk); el.classList.add('hit'); if (prize) { lotPay(prize); sfx('ach'); if (mult >= 2) confetti(['#ffd34d', '#ff5a5f', '#35c75a', '#4da6ff'], mult >= 50 ? 400 : 120) } else { save(true); sfx('err') } $('#whRes').textContent = (jack ? 'JACKPOT! ' : '') + (prize ? mult + 'x → +' + fmt(prize) + ' COINS' : 'Nothing this time.'); busy = false }, 6 * 9 * 90 + 1400);
   });
 }
-GAMES.unshift({ id: 'lottery', t: 'LOTTERY', d: 'Powerball, lottery machines, scratch tickets and the big spin wheel!', c: '#e84393', ic: 'chance/Jackpot', r: () => renderLottery(), b: () => '', nb: 1, free: 1 });
 
 /* ---- TYPE RACE ---- */
 function renderType() {
@@ -5646,6 +5652,13 @@ function renameUser(nn) {
   lsSet('sc_session', nl); delete PLAYERS[old]; ME.username = nn; lsSet('sc_players', PLAYERS); $('#who').innerHTML = nm(nn); heartbeat(); return true;
 }
 function renderSettings() {
+  renderSettings0(); if (!isOwner() || !subtleOK()) return; const on = !!lsGet('sc_ownpw', null);
+  $('#page').insertAdjacentHTML('beforeend', `<div class="panel osec"><h3>OWNER PASSWORD</h3><div class="setrow"><label>Skip the password prompt on this device</label><span class="sw"><input type="checkbox" id="sSkipPw" ${on ? 'checked' : ''}><i></i></span></div><div class="small">When on, your password is kept in this browser so owner tools unlock by themselves. Only use it on a device you trust.</div></div>`);
+  $('#sSkipPw').onchange = e => { if (!e.target.checked) { localStorage.removeItem('sc_ownpw'); return toast('Password prompt is back on.', 'good') } e.target.checked = false;
+    const m = modal(`<h3>SKIP PASSWORD</h3><p class="small" style="margin:8px 0">Type your password once to save it on this device.</p><div class="orow"><input id="sp_pw" type="password" placeholder="password" style="flex:1"></div><div class="small" id="sp_err" style="color:#c00"></div><div class="mbtns"><button class="btn green" id="sp_go">SAVE</button></div>`);
+    $('#sp_go', m).onclick = async () => { const pw = $('#sp_pw', m).value; try { await unlockOwner(pw); lsSet('sc_ownpw', pw); closeModal(); toast('Owner tools will unlock automatically.', 'good'); renderSettings() } catch (er) { $('#sp_err', m).textContent = 'Wrong password.' } } };
+}
+function renderSettings0() {
   const row = (k, type, label, a, b, c) => {
     let ctl;
     if (type === 'tog') ctl = `<span class="sw"><input type="checkbox" data-s="${k}" ${ST[k] ? 'checked' : ''}><i></i></span>`;
