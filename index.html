@@ -384,6 +384,9 @@ body.calm *{animation-duration:0s!important;animation-iteration-count:1!importan
 .slot5{position:relative;display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:600px;margin:12px auto;background:#222;padding:6px;border:4px solid #e8b923;border-radius:12px}.s5c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,3.6vw,26px);background:#fff8e0;border-radius:6px;overflow:hidden}.s5c.spin{filter:blur(1.5px);background:#ddd}.s5c.land{animation:ldrop .35s}.s5c.hit{background:#ffd34d;box-shadow:0 0 12px #fff;animation:pbglow .4s infinite alternate}.s5line{position:absolute;left:0;right:0;top:50%;height:0;border-top:3px dashed #ff5a5f;pointer-events:none}
 .slot3{display:flex;gap:10px;justify-content:center;margin:14px 0}.s3r{width:90px;height:90px;font-size:50px;background:#fff8e0;border:4px solid #333;border-radius:12px;display:flex;align-items:center;justify-content:center}.s3r.spin{filter:blur(2px);background:#ddd}.s3r.land{animation:ldrop .4s}.s3r.hit{background:#ffd34d;animation:pbglow .4s infinite alternate}
 .boxrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}.bx{width:70px;height:70px;font-size:40px;background:#fff8e0;border:3px solid #333;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer}.bx.shake{animation:pbshake2 .2s infinite}.bx.open{opacity:.6;cursor:default}.bx.pick{opacity:1;background:#ffd34d;transform:scale(1.15)}
+.sccell{height:84px}.sccell canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;transition:opacity .4s}.sccell.open canvas{opacity:0;pointer-events:none}
+.kgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;max-width:420px;margin:12px auto}.kc{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:900;background:#fff8e0;border:2px solid #333;border-radius:8px;cursor:pointer;font-size:13px}.kc.sel{background:#4da6ff;color:#fff}.kc.drawn{background:#ffd34d}.kc.hit{background:#35c75a;color:#fff;transform:scale(1.15)}
+.lwrap{position:relative;width:260px;height:270px;margin:10px auto}.lwptr{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:28px;color:#c0392b;z-index:2}.lwheel{position:absolute;top:18px;left:0;width:260px;height:260px;border-radius:50%;border:6px solid #333;transition:transform 4.2s cubic-bezier(.12,.7,.1,1)}.lwheel span{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;font-size:24px;text-align:center;line-height:30px}
 </style>
 </head>
 <body>
@@ -3759,7 +3762,7 @@ function applyAdmin(d) {
     case 'vaulthint': { const v = vaultInit(), left = VT.map((_, i) => i).filter(i => !v.hint.includes(i)); if (left.length) { v.hint.push(left[Math.floor(Math.random() * left.length)]); toast('A vault code letter was revealed! Check THE VAULT.', 'good') } break }
     case 'timewarp': { const n = Math.round(CPS * gm() * Math.max(1, Math.min(600, +p.min || 1)) * 60); S.coins += n; toast('TIME WARP! +' + fmt(n) + ' coins', 'good'); break }
     case 'boss': bossStart(Math.max(10, Math.min(500, +p.hp || 50)), Math.max(10, Math.min(120, +p.sec || 30)) * 1000); break;
-    case 'sound': if (ST.ownerSound && typeof p.b === 'string' && p.id && p.n > 0 && p.n <= 20 && p.b.length <= 32000) { const M = (window.SNDB = window.SNDB || {}), e = M[p.id] || (M[p.id] = { parts: [], got: 0, name: p.name }); if (!e.parts[p.i]) { e.parts[p.i] = p.b; e.got++ } if (e.got === p.n) { delete M[p.id]; try { const a = new Audio('data:audio/wav;base64,' + e.parts.join('')); a.volume = Math.min(1, (ST.vol || 70) / 100); a.play().catch(() => {}); toast('The owner played a sound: ' + String(e.name || '').slice(0, 30)) } catch (e2) {} } } break;
+    case 'sound': if (ST.ownerSound && typeof p.b === 'string' && p.id && p.n > 0 && p.n <= 20 && p.b.length <= 32000) { const M = (window.SNDB = window.SNDB || {}), e = M[p.id] || (M[p.id] = { parts: [], got: 0, name: p.name }); if (!e.parts[p.i]) { e.parts[p.i] = p.b; e.got++ } if (e.got === p.n) { delete M[p.id]; try { const a = new Audio('data:audio/wav;base64,' + e.parts.join('')); a.volume = Math.min(1, (ST.vol || 70) / 100); a.play().catch(() => { window.SNDPEND = a; toast('The owner played a sound. Tap anywhere to hear it!', 'good'); document.addEventListener('click', () => { if (window.SNDPEND) { window.SNDPEND.play().catch(() => {}); window.SNDPEND = null } }, { once: true }) }); toast('The owner played a sound: ' + String(e.name || '').slice(0, 30)) } catch (e2) {} } } break;
     case 'reload': save(true); setTimeout(() => location.reload(), 700); break;
     case 'party': confetti(['#ffd23a', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8'], 180); sfx('ach'); break;
     case 'special': if (setSpecial(p) && !uiBusy()) { if (cur === 'index') renderIndex(); else if (cur === 'shop') renderShop() } break;
@@ -4268,10 +4271,10 @@ let lotSec = null;
 function lotRefresh() { const b = $('#lcBal'); if (b) b.textContent = fmt(S.lc || 0) }
 function renderLottery(sec) {
   stopGames(); lotSec = sec || null; if (!S.pb) S.pb = { tk: [], cl: {} };
-  if (sec === 'pb') return renderPB(); if (sec === 'wheel') return renderWheel(); if (sec === 'slots') return renderSlots3(); if (sec && sec.startsWith('box')) return renderBox(sec.includes(':') ? +sec.split(':')[1] : undefined); if (sec && sec.startsWith('mach')) return renderMach(sec.includes(':') ? +sec.split(':')[1] : undefined); if (sec && sec.startsWith('scr')) return renderScratch(sec.includes(':') ? +sec.split(':')[1] : undefined);
-  const cards = [['pb', 'POWERBALL', 'Nightly draw at 5 PM. Match all 5 numbers to win coins, a sub or Aarav!', '#e84393', 'chance/Jackpot'], ['mach', 'LOTTERY MACHINES', 'Pull the lever and draw your prize.', '#6c5ce7', 'mineral/Diamond'], ['scr', 'SCRATCH TICKETS', 'Scratch 6 spots. Match 3 to win.', '#00b894', 'school/Crayons'], ['wheel', 'BIG SPIN SLOT', '10 reels. Match the whole middle line for 50x!', '#f1c40f', 'chance/Jackpot'], ['slots', 'LUCKY SLOTS', 'Three reels, three matching emojis.', '#e84393', 'chance/Jackpot'], ['box', 'MYSTERY BOXES', 'Pick 1 of 5 boxes. Most are empty!', '#b87333', 'school/Crayons']];
-  $('#page').innerHTML = lotHead('LOTTERY') + `<div class="panel" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn gold" id="lTrade">TRADE COINS</button><span class="small">10 coins = 2 lottery coins. Everything here costs lottery coins.</span></div><div class="gcards">${cards.map(c => `<div class="gcard" data-s="${c[0]}" style="--c:${c[3]}"><div style="font-size:44px">${({pb:"🎟️",mach:"🎱",scr:"🪙",wheel:"🎰",slots:"🍒",box:"📦"})[c[0]]}</div><b>${c[1]}</b><span>${c[2]}</span></div>`).join('')}</div>`;
-  $('#lTrade').onclick = lotTrade; $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); renderLottery(el.dataset.s) });
+  if (sec === 'pb') return renderPB(); if (sec === 'wheel') return renderWheel(); if (sec === 'slots') return renderSlots3(); if (sec === 'keno') return renderKeno(); if (sec === 'dice') return renderDice(); if (sec === 'coin') return renderCoinFlip(); if (sec === 'lwheel') return renderLWheel(); if (sec && sec.startsWith('box')) return renderBox(sec.includes(':') ? +sec.split(':')[1] : undefined); if (sec && sec.startsWith('mach')) return renderMach(sec.includes(':') ? +sec.split(':')[1] : undefined); if (sec && sec.startsWith('scr')) return renderScratch(sec.includes(':') ? +sec.split(':')[1] : undefined);
+  const cards = [['pb', 'POWERBALL', 'Nightly draw at 5 PM. Match all 5 numbers to win coins, a sub or Aarav!', '#e84393', 'chance/Jackpot'], ['mach', 'LOTTERY MACHINES', 'Pull the lever and draw your prize.', '#6c5ce7', 'mineral/Diamond'], ['scr', 'SCRATCH TICKETS', 'Scratch 6 spots. Match 3 to win.', '#00b894', 'school/Crayons'], ['wheel', 'BIG SPIN SLOT', '10 reels. Match the whole middle line for 50x!', '#f1c40f', 'chance/Jackpot'], ['slots', 'LUCKY SLOTS', 'Three reels, three matching emojis.', '#e84393', 'chance/Jackpot'], ['box', 'MYSTERY BOXES', 'Pick 1 of 5 boxes. Most are empty!', '#b87333', 'school/Crayons'], ['keno', 'KENO', 'Pick 4 numbers. Match 3 or 4!', '#0984e3', ''], ['dice', 'LUCKY DICE', 'Roll 5 dice. Match 4 or 5!', '#d63031', ''], ['coin', 'COIN STREAK', 'Flip 8 heads in a row for 150x.', '#e8b923', ''], ['lwheel', 'LUCKY WHEEL', 'A classic wheel. Land the crown!', '#00b894', '']];
+  $('#page').innerHTML = lotHead('LOTTERY') + `<div class="panel" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn gold" id="lTrade">TRADE COINS</button><button class="btn green" id="lDaily" ${S.lcDay === pbKeyOf(Date.now()) ? "disabled" : ""}>FREE DAILY +100 LC</button><span class="small">10 coins = 2 lottery coins. Everything here costs lottery coins.</span></div><div class="gcards">${cards.map(c => `<div class="gcard" data-s="${c[0]}" style="--c:${c[3]}"><div style="font-size:44px">${({pb:"🎟️",mach:"🎱",scr:"🪙",wheel:"🎰",slots:"🍒",box:"📦",keno:"🔢",dice:"🎲",coin:"🪙",lwheel:"🎡"})[c[0]]}</div><b>${c[1]}</b><span>${c[2]}</span></div>`).join('')}</div>`;
+  $('#lTrade').onclick = lotTrade; $('#lDaily').onclick = lotDaily; $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); renderLottery(el.dataset.s) });
 }
 
 /* ---- POWERBALL ---- */
@@ -4360,10 +4363,10 @@ setInterval(lotGlobal, 1000);
 
 /* ---- LOTTERY MACHINES (one screen each) ---- */
 const LSYM = ['🍒', '🍋', '🔔', '⭐', '💎', '🍀', '7️⃣', '🍉', '🎰'], lsym = () => LSYM[Math.floor(Math.random() * LSYM.length)];
-const MACHS = [{ n: 'LUCKY DRAW', cost: 50, c: '#e17055', jack: null }, { n: 'MEGA DRAW', cost: 500, c: '#6c5ce7', jack: ['legendary', 'chroma'] }, { n: 'ULTRA DRAW', cost: 5000, c: '#f1c40f', jack: ['mystical'] }];
+const MACHS = [{ n: 'LUCKY DRAW', cost: 50, c: '#e17055', jack: null }, { n: 'MEGA DRAW', cost: 500, c: '#6c5ce7', jack: ['legendary', 'chroma'] }, { n: 'ULTRA DRAW', cost: 5000, c: '#f1c40f', jack: ['mystical'] }, { n: 'GALAXY DRAW', cost: 25000, c: '#00cec9', jack: ['mystical'] }];
 const lotBackBtn = to => { const b = $('#lBack'); if (b) b.onclick = () => renderLottery(to) };
 const lotList = (title, sec, items) => { $('#page').innerHTML = lotHead(title, 1) + `<div class="gcards">${items.map((m, i) => `<div class="gcard" data-i="${i}" style="--c:${m.c}"><div style="font-size:44px">${m.e || '🎰'}</div><b>${m.n}</b><span>${fmt(m.cost)} lottery coins</span></div>`).join('')}</div>`; lotBackBtn(); $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); renderLottery(sec + ':' + el.dataset.i) }) };
-MACHS[0].e = '🎱'; MACHS[1].e = '🔮'; MACHS[2].e = '👑';
+MACHS[0].e = '🎱'; MACHS[1].e = '🔮'; MACHS[2].e = '👑'; MACHS[3].e = '🌌';
 function renderMach(i) {
   stopGames(); if (i === undefined) return lotList('LOTTERY MACHINES', 'mach', MACHS); const m = MACHS[i];
   $('#page').innerHTML = lotHead(m.n, 1) + `<div class="panel lmach" style="border-color:${m.c};max-width:440px;margin:auto"><b style="color:${m.c}">${m.n}</b><div class="small">Winning is very rare. Prizes are paid in coins (1 lottery coin = ${LC_VAL} coins of value).</div><div class="lmbody"><div class="lm-lights"><i></i><i></i><i></i><i></i><i></i></div><div class="lm-cage" id="lmCage">${Array.from({ length: 9 }, (_, j) => `<span class="cb" style="--d:${(j * .13).toFixed(2)}s;--x:${(j % 3) * 30 + 8}px;--y:${Math.floor(j / 3) * 26 + 6}px">${LSYM[j]}</span>`).join('')}</div><div class="lm-lever" id="lmLev"><i></i></div></div><div class="lm-dome" id="ld"><span class="lm-ball">❔</span><span class="lm-ball">❔</span><span class="lm-ball">❔</span></div><div class="lm-res" id="lr" style="font-weight:800;min-height:22px">Cost ${fmt(m.cost)} LC</div><button class="btn gold" id="lGo">PULL · ${fmt(m.cost)} LC</button><div class="small">Top prize: ${m.jack ? m.jack.map(r => RAR[r].name).join(' / ') + ' sub' : fmt(m.cost * LC_VAL * 100) + ' coins'}</div></div>`;
@@ -4386,7 +4389,7 @@ function renderMach(i) {
 }
 
 /* ---- SCRATCH TICKETS (one screen each) ---- */
-const SCRS = [{ n: 'PENNY SCRATCH', cost: 20, c: '#b87333', e: '🪙' }, { n: 'SILVER SCRATCH', cost: 200, c: '#8e9aa8', e: '🥈' }, { n: 'GOLD SCRATCH', cost: 2000, c: '#e8b923', e: '🥇' }], SC_V = [.5, 1, 2, 5, 20, 100], SC_E = { .5: '🍒', 1: '🍋', 2: '🔔', 5: '⭐', 20: '💎', 100: '👑' };
+const SCRS = [{ n: 'PENNY SCRATCH', cost: 20, c: '#b87333', e: '🪙' }, { n: 'SILVER SCRATCH', cost: 200, c: '#8e9aa8', e: '🥈' }, { n: 'GOLD SCRATCH', cost: 2000, c: '#e8b923', e: '🥇' }, { n: 'DIAMOND SCRATCH', cost: 20000, c: '#5fe3ff', e: '💎' }], SC_V = [.5, 1, 2, 5, 20, 100], SC_E = { .5: '🍒', 1: '🍋', 2: '🔔', 5: '⭐', 20: '💎', 100: '👑' };
 function renderScratch(i) {
   stopGames(); if (i === undefined) return lotList('SCRATCH TICKETS', 'scr', SCRS); const s = SCRS[i];
   $('#page').innerHTML = lotHead(s.n, 1) + `<div class="small" style="margin-bottom:10px">Buy a ticket, scratch all 6 spots. Find 3 matching symbols to win. Winning is very rare. Winnings are paid as soon as you buy.</div><button class="btn gold" id="scBuy" style="background:${s.c}">BUY TICKET · ${fmt(s.cost)} LC</button><div id="scArea" style="margin-top:14px"></div>`; lotBackBtn('scr');
@@ -4396,10 +4399,14 @@ function renderScratch(i) {
     if (out !== 0) { const w = out === 'J' ? 100 : out, others = shuf(SC_V.filter(x => x !== w)).slice(0, 3); cells = shuf([w, w, w, ...others]) }
     else { cells = []; const cnt = {}; while (cells.length < 6) { const x = SC_V[Math.floor(Math.random() * 6)]; if ((cnt[x] || 0) < 2) { cnt[x] = (cnt[x] || 0) + 1; cells.push(x) } } }
     const prize = out === 0 ? 0 : val(out === 'J' ? 100 : out); if (prize) lotPay(prize); else save(true); let left = 6;
-    $('#scArea').innerHTML = `<div class="panel scr" style="border-color:${s.c}"><b>${s.n}</b><div class="scgrid">${cells.map((v, j) => `<div class="sccell" data-j="${j}"><span style="font-size:26px">${SC_E[v]}</span><i>SCRATCH</i></div>`).join('')}</div><div class="orow" style="justify-content:center"><button class="btn sm alt" id="scAll">SCRATCH ALL</button></div><div id="scRes" style="font-weight:800;margin-top:8px;min-height:22px"></div></div>`;
+    $('#scArea').innerHTML = `<div class="panel scr" style="border-color:${s.c}"><b>${s.n}</b><div class="small">Scratch each spot with your finger or mouse!</div><div class="scgrid">${cells.map((v, j) => `<div class="sccell" data-j="${j}"><span style="font-size:30px">${SC_E[v]}</span><canvas></canvas></div>`).join('')}</div><div id="scRes" style="font-weight:800;margin-top:8px;min-height:22px"></div></div>`;
     const done = () => { if (--left > 0) return; if (prize) { sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 140); $('#scRes').textContent = 'WINNER! +' + fmt(prize) + ' COINS' } else { sfx('err'); $('#scRes').textContent = 'No match. Better luck next time!' } };
-    const rev = c => { if (c.classList.contains('open')) return; c.classList.add('open'); sfx('ui'); done() };
-    $$('.sccell').forEach(c => c.onclick = () => rev(c)); $('#scAll').onclick = () => $$('.sccell').forEach((c, j) => setTimeout(() => rev(c), j * 120));
+    $$('.sccell').forEach(c => {
+      const cv = c.querySelector('canvas'), w = cv.width = c.clientWidth, h = cv.height = c.clientHeight, x = cv.getContext('2d'), g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#c9d2dc'); g.addColorStop(.5, '#e8edf2'); g.addColorStop(1, '#a9b4c0'); x.fillStyle = g; x.fillRect(0, 0, w, h); x.fillStyle = '#7b8794'; for (let q = 0; q < 140; q++) x.fillRect(Math.random() * w, Math.random() * h, 2, 2); x.font = 'bold 11px monospace'; x.textAlign = 'center'; x.fillText('SCRATCH', w / 2, h / 2 + 4);
+      let down = false, fin = false, mv = 0; const erase = e => { const r = cv.getBoundingClientRect(), px = (e.clientX - r.left) * w / r.width, py = (e.clientY - r.top) * h / r.height; x.globalCompositeOperation = 'destination-out'; x.beginPath(); x.arc(px, py, 18, 0, 7); x.fill(); if (++mv % 4 === 0) check() };
+      const check = () => { if (fin) return; const d = x.getImageData(0, 0, w, h).data; let clr = 0, tot = 0; for (let i = 3; i < d.length; i += 64) { tot++; if (d[i] < 40) clr++ } if (clr / tot > .45) { fin = true; c.classList.add('open'); sfx('ui'); done() } };
+      cv.style.touchAction = 'none'; cv.onpointerdown = e => { down = true; cv.setPointerCapture(e.pointerId); erase(e) }; cv.onpointermove = e => { if (down && !fin) { erase(e); if (mv % 3 === 0) sfx('ui') } }; cv.onpointerup = cv.onpointercancel = () => { down = false; check() };
+    });
   };
 }
 
@@ -4444,6 +4451,56 @@ function renderBox(i) {
     $$('.bx').forEach(y => { y.classList.add('open'); y.textContent = '💨' }); x.textContent = win ? '💰' : '💨'; x.classList.add('pick');
     if (win) { lotPay(c); sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 160); $('#bxRes').textContent = 'YOU FOUND ' + mult + 'x → +' + fmt(c) + ' COINS!' } else { save(true); sfx('err'); $('#bxRes').textContent = 'Empty! Better luck next time.' }
   });
+}
+
+/* ---- KENO ---- */
+function renderKeno() {
+  stopGames(); const COST = 80, pick = new Set(); let busy = false;
+  $('#page').innerHTML = lotHead('KENO', 1) + `<div class="panel gpanel"><div class="small">Pick 4 numbers from 40. 8 balls are drawn. <b>3 hits = 4x</b>, <b>all 4 = 600x</b>. Very rare! (1 LC = ${LC_VAL} coins)</div><div class="kgrid" id="kG">${Array.from({ length: 40 }, (_, i) => `<div class="kc" data-n="${i + 1}">${i + 1}</div>`).join('')}</div><div id="kRes" style="font-weight:800;min-height:24px;margin:8px 0">Pick 4 numbers</div><button class="btn gold" id="kGo" disabled>PLAY · ${fmt(COST)} LC</button></div>`; lotBackBtn();
+  $$('.kc').forEach(c => c.onclick = () => { if (busy) return; const n = +c.dataset.n; if (pick.has(n)) { pick.delete(n); c.classList.remove('sel') } else if (pick.size < 4) { pick.add(n); c.classList.add('sel') } $('#kGo').disabled = pick.size !== 4; sfx('ui') });
+  $('#kGo').onclick = () => {
+    if (busy || pick.size !== 4) return; if ((S.lc || 0) < COST) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
+    busy = true; lcAdd(-COST); lotRefresh(); save(true); $$('.kc').forEach(c => c.classList.remove('hit', 'drawn')); const drawn = shuf(Array.from({ length: 40 }, (_, i) => i + 1)).slice(0, 8); let hits = 0, j = 0; $('#kRes').textContent = 'Drawing...';
+    const iv = I_(() => { const n = drawn[j++], el = $('.kc[data-n="' + n + '"]'); el.classList.add(pick.has(n) ? 'hit' : 'drawn'); if (pick.has(n)) hits++; sfx('ui'); if (j >= 8) { clearInterval(iv); const mult = hits === 4 ? 600 : hits === 3 ? 4 : 0, c = mult * COST * LC_VAL; if (c) { lotPay(c); sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], mult > 10 ? 300 : 100) } else { save(true); sfx('err') } $('#kRes').textContent = c ? hits + ' hits! ' + mult + 'x → +' + fmt(c) + ' COINS' : hits + ' hit' + (hits === 1 ? '' : 's') + '. Nothing this time.'; busy = false } }, 380);
+  };
+}
+/* ---- DICE ---- */
+function renderDice() {
+  stopGames(); const COST = 60, F = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']; let busy = false;
+  $('#page').innerHTML = lotHead('LUCKY DICE', 1) + `<div class="panel gpanel"><div class="small">Roll 5 dice. <b>4 the same = 5x</b>, <b>all 5 the same = 600x</b>. Very rare!</div><div class="slot3" id="dRow">${[0, 1, 2, 3, 4].map(i => `<div class="s3r" style="width:62px;height:62px;font-size:44px">${F[i]}</div>`).join('')}</div><div id="dRes" style="font-weight:800;min-height:24px;margin:8px 0"></div><button class="btn gold" id="dGo">ROLL · ${fmt(COST)} LC</button></div>`; lotBackBtn();
+  $('#dGo').onclick = () => {
+    if (busy) return; if ((S.lc || 0) < COST) { sfx('err'); return toast('Not enough lottery coins.', 'bad') } busy = true; lcAdd(-COST); lotRefresh(); save(true);
+    const rs = $$('#dRow .s3r'), res = rs.map(() => Math.floor(Math.random() * 6)); rs.forEach(r => { r.classList.add('spin'); r.classList.remove('hit') }); $('#dRes').textContent = 'Rolling...';
+    const iv = I_(() => { rs.forEach(r => { if (r.classList.contains('spin')) r.textContent = F[Math.floor(Math.random() * 6)] }); sfx('ui') }, 70);
+    rs.forEach((r, i) => T_(() => { r.classList.remove('spin'); r.textContent = F[res[i]]; r.classList.remove('land'); void r.offsetWidth; r.classList.add('land') }, 900 + i * 400));
+    T_(() => { clearInterval(iv); const cnt = {}; res.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const mx = Math.max(...Object.values(cnt)), mult = mx === 5 ? 600 : mx === 4 ? 5 : 0, c = mult * COST * LC_VAL; if (c) { rs.forEach(r => r.classList.add('hit')); lotPay(c); sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 200); $('#dRes').textContent = mx + ' the same! ' + mult + 'x → +' + fmt(c) + ' COINS' } else { save(true); sfx('err'); $('#dRes').textContent = 'No luck. Try again!' } busy = false }, 900 + 5 * 400 + 200);
+  };
+}
+/* ---- COIN STREAK ---- */
+function renderCoinFlip() {
+  stopGames(); const COST = 40; let busy = false;
+  $('#page').innerHTML = lotHead('COIN STREAK', 1) + `<div class="panel gpanel"><div class="small">Flip 8 coins. <b>All 8 must land heads</b> to win <b>150x</b>. Very rare!</div><div class="slot3" id="cRow" style="flex-wrap:wrap">${Array.from({ length: 8 }, () => `<div class="s3r" style="width:54px;height:54px;font-size:30px">🪙</div>`).join('')}</div><div id="cRes" style="font-weight:800;min-height:24px;margin:8px 0"></div><button class="btn gold" id="cGo">FLIP · ${fmt(COST)} LC</button></div>`; lotBackBtn();
+  $('#cGo').onclick = () => {
+    if (busy) return; if ((S.lc || 0) < COST) { sfx('err'); return toast('Not enough lottery coins.', 'bad') } busy = true; lcAdd(-COST); lotRefresh(); save(true);
+    const rs = $$('#cRow .s3r'), res = rs.map(() => Math.random() < .5); rs.forEach(r => { r.textContent = '🪙'; r.className = 's3r spin' }); $('#cRes').textContent = 'Flipping...';
+    rs.forEach((r, i) => T_(() => { r.classList.remove('spin'); r.textContent = res[i] ? '👑' : '💀'; r.classList.add('land'); sfx('ui') }, 500 + i * 350));
+    T_(() => { const win = res.every(x => x), c = win ? 150 * COST * LC_VAL : 0; if (win) { rs.forEach(r => r.classList.add('hit')); lotPay(c); sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 300); $('#cRes').textContent = 'ALL HEADS! 150x → +' + fmt(c) + ' COINS' } else { save(true); sfx('err'); $('#cRes').textContent = res.filter(x => x).length + ' of 8 heads. Nothing this time.' } busy = false }, 500 + 8 * 350 + 200);
+  };
+}
+/* ---- LUCKY WHEEL ---- */
+function renderLWheel() {
+  stopGames(); const COST = 100, SEG = ['💨', '🍒', '💨', '🍋', '💨', '🔔', '💨', '⭐', '💨', '💎', '💨', '👑', '💨', '💨'], MUL = { 1: .5, 3: 1, 5: 2, 7: 5, 9: 20, 11: 100 }, N = SEG.length, A = 360 / N; let busy = false, rot = 0;
+  const bg = 'conic-gradient(' + SEG.map((s, i) => (i % 2 ? '#e8b923' : '#e84393') + ' ' + i * A + 'deg ' + (i + 1) * A + 'deg').join(',') + ')';
+  $('#page').innerHTML = lotHead('LUCKY WHEEL', 1) + `<div class="panel gpanel"><div class="small">Spin the wheel! Most slots are empty. Land 👑 for 100x. Very rare!</div><div class="lwrap"><div class="lwptr">▼</div><div class="lwheel" id="lw" style="background:${bg}">${SEG.map((s, i) => `<span style="transform:rotate(${(i + .5) * A}deg) translateY(-92px)">${s}</span>`).join('')}</div></div><div id="lwRes" style="font-weight:800;min-height:24px;margin:8px 0"></div><button class="btn gold" id="lwGo">SPIN · ${fmt(COST)} LC</button></div>`; lotBackBtn();
+  $('#lwGo').onclick = () => {
+    if (busy) return; if ((S.lc || 0) < COST) { sfx('err'); return toast('Not enough lottery coins.', 'bad') } busy = true; lcAdd(-COST); lotRefresh(); save(true);
+    const out = lotRoll(LOT_TAB), idx = out === 0 ? [0, 2, 4, 6, 8, 10, 12, 13][Math.floor(Math.random() * 8)] : { .5: 1, 1: 3, 2: 5, 5: 7, 20: 9, J: 11 }[out], mult = out === 0 ? 0 : MUL[idx]; rot += 360 * 6 + ((360 - (idx + .5) * A - (rot % 360)) + 360) % 360; $('#lw').style.transform = 'rotate(' + rot + 'deg)'; $('#lwRes').textContent = 'Spinning...';
+    const iv = I_(() => sfx('ui'), 220);
+    T_(() => { clearInterval(iv); const c = Math.round(mult * COST * LC_VAL); if (c) { lotPay(c); sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], mult >= 20 ? 300 : 100); $('#lwRes').textContent = SEG[idx] + ' ' + mult + 'x → +' + fmt(c) + ' COINS' } else { save(true); sfx('err'); $('#lwRes').textContent = 'Empty slot. Try again!' } busy = false }, 4300);
+  };
+}
+function lotDaily() {
+  const k = pbKeyOf(Date.now()); if (S.lcDay === k) { sfx('err'); return toast('You already took today\'s free lottery coins.', 'bad') } S.lcDay = k; lcAdd(100); save(true); sfx('ach'); toast('+100 free lottery coins! Come back tomorrow.', 'good'); lotRefresh(); const b = $('#lDaily'); if (b) b.disabled = true;
 }
 
 /* ---- TYPE RACE ---- */
@@ -5260,7 +5317,7 @@ function askPw(cb) {
   $('#ap_go', m).onclick = go2; $('#ap_pw', m).onkeydown = e => { if (e.key === 'Enter') go2() }; $('#ap_no', m).onclick = closeModal; setTimeout(() => $('#ap_pw', m).focus(), 50);
 }
 document.addEventListener('click', e => {
-  if (cur !== 'owner' || (isOwner() && !ADMVIEW) || !ME) return; const pg = $('#page'), b = e.target.closest && e.target.closest('button'); if (!b || !pg || !pg.contains(b) || b.dataset.pwok) return;
+  if (cur !== 'owner' || (isOwner() && !ADMVIEW) || !ME || lsGet('sc_adminskip', false)) return; const pg = $('#page'), b = e.target.closest && e.target.closest('button'); if (!b || !pg || !pg.contains(b) || b.dataset.pwok) return;
   e.stopPropagation(); e.preventDefault(); askPw(() => { b.dataset.pwok = 1; b.click(); delete b.dataset.pwok });
 }, true);
 function renderOwnerTable() {
@@ -5723,7 +5780,9 @@ function renameUser(nn) {
   lsSet('sc_session', nl); delete PLAYERS[old]; ME.username = nn; lsSet('sc_players', PLAYERS); $('#who').innerHTML = nm(nn); heartbeat(); return true;
 }
 function renderSettings() {
-  renderSettings0(); if (!isOwner() || !subtleOK()) return; const on = !!lsGet('sc_ownpw', null);
+  renderSettings0();
+  if (isAdmin()) { const on = !!lsGet('sc_adminskip', false); $('#page').insertAdjacentHTML('beforeend', `<div class="panel osec"><h3>ADMIN PASSWORD</h3><div class="setrow"><label>Do not ask for my password before admin actions</label><span class="sw"><input type="checkbox" id="sAdmSkip" ${on ? 'checked' : ''}><i></i></span></div></div>`); $('#sAdmSkip').onchange = e => { lsSet('sc_adminskip', e.target.checked); toast(e.target.checked ? 'Admin actions will not ask for your password.' : 'Admin actions ask for your password again.', 'good') } }
+  if (!isOwner() || !subtleOK()) return; const on = !!lsGet('sc_ownpw', null);
   $('#page').insertAdjacentHTML('beforeend', `<div class="panel osec"><h3>OWNER PASSWORD</h3><div class="setrow"><label>Skip the password prompt on this device</label><span class="sw"><input type="checkbox" id="sSkipPw" ${on ? 'checked' : ''}><i></i></span></div><div class="small">When on, your password is kept in this browser so owner tools unlock by themselves. Only use it on a device you trust.</div></div>`);
   $('#sSkipPw').onchange = e => { if (!e.target.checked) { localStorage.removeItem('sc_ownpw'); return toast('Password prompt is back on.', 'good') } e.target.checked = false;
     const m = modal(`<h3>SKIP PASSWORD</h3><p class="small" style="margin:8px 0">Type your password once to save it on this device.</p><div class="orow"><input id="sp_pw" type="password" placeholder="password" style="flex:1"></div><div class="small" id="sp_err" style="color:#c00"></div><div class="mbtns"><button class="btn green" id="sp_go">SAVE</button></div>`);
