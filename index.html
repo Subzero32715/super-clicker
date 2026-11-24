@@ -3960,6 +3960,7 @@ const VT = [
   ['BATTLES', m => 'Win ' + fmt(8 * m) + ' battles', m => 8 * m, s => s.wins || 0, 'wins'],
   ['GOLDEN', m => 'Catch ' + fmt(6 * m) + ' golden subs', m => 6 * m, s => s.goldens || 0, 'goldens']
 ];
+let vaultBusy = false;
 function vaultInit(force) {
   const v = S.vault; if (!force && v && v.code) return v; const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   S.vault = { n: v ? v.n : 0, code: Array.from({ length: 4 }, () => L[Math.floor(Math.random() * L.length)]).join(''), base: { clicks: S.clicks || 0, opens: S.opens || 0, wins: S.wins || 0, goldens: S.goldens || 0 }, hint: [] }; return S.vault;
@@ -3973,13 +3974,13 @@ function paintVault() {
 function renderVault() {
   stopGames(); const v = vaultInit();
   $('#page').innerHTML = `<div class="phead"><h2>THE VAULT</h2><span class="rtag" style="background:#f1c40f;color:#3a2a00">ROUND ${(v.n || 0) + 1}</span></div><div class="panel gpanel vlt"><div class="vwrap"><div class="vdoor" id="vDoor"><div class="vglow">💰</div><svg class="vface" viewBox="0 0 200 200"><defs><radialGradient id="vg"><stop offset="0" stop-color="#e3e8f0"/><stop offset="1" stop-color="#58627a"/></radialGradient></defs><rect x="4" y="4" width="192" height="192" rx="20" fill="#2b3340"/><circle cx="100" cy="100" r="86" fill="url(#vg)" stroke="#1b212b" stroke-width="6"/>${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<circle cx="${100 + 72 * Math.cos(a * Math.PI / 180)}" cy="${100 + 72 * Math.sin(a * Math.PI / 180)}" r="5" fill="#8b95a8" stroke="#1b212b" stroke-width="2"/>`).join('')}<g class="vwheel"><circle cx="100" cy="100" r="40" fill="#3a4357" stroke="#1b212b" stroke-width="4"/>${[0, 60, 120].map(a => `<rect x="94" y="52" width="12" height="96" rx="6" fill="#ffd34d" stroke="#8a6a00" stroke-width="3" transform="rotate(${a} 100 100)"/>`).join('')}<circle cx="100" cy="100" r="14" fill="#ffd34d" stroke="#8a6a00" stroke-width="3"/></g></svg></div>
-  <div class="vside"><h3>CODE</h3><div class="vslots" id="vSlots"></div><h3 style="margin-top:12px">CHECKLIST</h3><div id="vList"></div><div class="orow" style="margin-top:10px"><input id="vIn" maxlength="4" placeholder="4 LETTERS" style="text-transform:uppercase;letter-spacing:6px;font-weight:900;text-align:center;width:150px"><button class="btn gold" id="vGo">OPEN VAULT</button></div><div class="small" style="margin-top:6px">Reward: a humongous pile of coins and a guaranteed Omega sub. Each round gets harder and pays more.</div></div></div></div>`;
+  <div class="vside"><h3>CODE</h3><div class="vslots" id="vSlots"></div><h3 style="margin-top:12px">CHECKLIST</h3><div id="vList"></div><div class="orow" style="margin-top:10px"><input id="vIn" maxlength="4" placeholder="4 LETTERS" style="text-transform:uppercase;letter-spacing:6px;font-weight:900;text-align:center;width:150px"><button class="btn gold" id="vGo">OPEN VAULT</button></div><div class="small" style="margin-top:6px">Reward: 100,000 coins and a guaranteed Legendary or Chroma sub. Each round gets harder.</div></div></div></div>`;
   addBack(); paintVault(); I_(paintVault, 1000);
   const go_ = () => { const g = $('#vIn').value.toUpperCase().trim(), v2 = vaultInit(); if (g.length < 4) return toast('Enter all 4 letters.', 'bad');
     if (g !== v2.code) { sfx('err'); $('#vDoor').classList.add('shake'); setTimeout(() => $('#vDoor') && $('#vDoor').classList.remove('shake'), 500); return toast('Wrong code. The vault stays shut.', 'bad') }
-    const reward = Math.round(Math.max(1e9, S.peak * .4 + CPS * gm() * 43200) * (1 + .25 * (v2.n || 0)) * (1 + .1 * ((S.rpk || {}).vaultp || 0))), om = Object.keys(ITEMS).filter(k => ITEMS[k].rarity === 'omega' && !(ITEMS[k].pack && ITEMS[k].pack.ew)), k = om[Math.floor(Math.random() * om.length)];
-    S.coins += reward; if (k) addItem(k, 'n', 1); S.vaultN = (S.vaultN || 0) + 1; v2.n = (v2.n || 0) + 1; sfx('ach'); $('#vDoor').classList.add('open'); confetti(['#ffd34d', '#fff0a8', '#ffffff', '#ffb700'], 260); updateStats(); save(true); tickChecks();
-    setTimeout(() => { vaultInit(true); if (k) showReveal({ key: k, v: 'n' }, null, 'VAULT REWARD: +' + fmt(reward) + ' COINS!'); save(true); if (cur === 'games' || cur === 'vault') renderVault() }, 2400) };
+    if (vaultBusy) return; vaultBusy = true; $('#vGo').disabled = true; const reward = Math.round(100000 * (1 + .1 * ((S.rpk || {}).vaultp || 0))), pool = Object.keys(ITEMS).filter(q => { const it = ITEMS[q]; return (it.rarity === 'legendary' || it.rarity === 'chroma') && !it.hid && !it.shopsp && !(it.pack && it.pack.ew) }), k = pool[Math.floor(Math.random() * pool.length)];
+    S.coins += reward; if (k) addItem(k, 'n', 1); S.vaultN = (S.vaultN || 0) + 1; v2.n = (v2.n || 0) + 1; vaultInit(true); sfx('ach'); $('#vDoor').classList.add('open'); confetti(['#ffd34d', '#fff0a8', '#ffffff', '#ffb700'], 260); updateStats(); save(true); tickChecks();
+    setTimeout(() => { vaultBusy = false; if (k) showReveal({ key: k, v: 'n' }, null, 'VAULT REWARD: +' + fmt(reward) + ' COINS!'); save(true); if (cur === 'games' || cur === 'vault') renderVault() }, 2400) };
   $('#vGo').onclick = go_; $('#vIn').onkeydown = e => { if (e.key === 'Enter') go_() };
 }
 /* ===== SNAKE ===== */
@@ -4182,7 +4183,7 @@ const GAMES = [
   { id: 'fnaf', t: 'FNAF', d: 'A fan-made Five Nights game. Starts right away.', c: '#2d3436', ic: 'fnaf/Golden Freddy', r: () => renderFnaf(), b: () => '', nb: 1 },
   { id: 'guess', t: "WHO'S THAT SUB?", d: 'Name the sub from its shadow.', c: '#00a8a8', ic: 'shadow/Shadow', r: () => renderGuess(), b: () => bestOf('guess', 0) + '/10' }
 ];
-GAMES.unshift({ id: 'vault', t: 'THE VAULT', d: 'Finish hard tasks to find the 4-letter code. Inside is a humongous reward!', c: '#f1c40f', ic: 'chance/Jackpot', r: () => renderVault(), b: () => '', nb: 1, free: 1 });
+GAMES.unshift({ id: 'vault', t: 'THE VAULT', d: 'Finish hard tasks to find the 4-letter code. Inside: 100,000 coins and a Legendary or Chroma sub!', c: '#f1c40f', ic: 'chance/Jackpot', r: () => renderVault(), b: () => '', nb: 1, free: 1 });
 GAMES.push({ id: 'snake', t: 'SNAKE', d: 'Eat subs, grow longer and do not crash!', c: '#27ae60', ic: 'fruit/Apple', r: () => renderSnake(), b: () => bestOf('snake', 0) }, { id: 'pop', t: 'BALLOON POP', d: 'Pop balloons for points. Gold is worth 5, grey ones cost you!', c: '#e84393', ic: 'chance/Jackpot', r: () => renderPop(), b: () => bestOf('pop', 0) }, { id: 'recall', t: 'DIGIT RECALL', d: 'Memorise the number, then type it back. It gets longer every round.', c: '#0984e3', ic: 'school/Crayons', r: () => renderRecall(), b: () => bestOf('recall', 0) });
 const gameCost = g => g.free ? 0 : Math.max(100, Math.round(CPS * 15 + S.coins * .001)) * (g.nb ? 3 : 1);
 function renderGames() {
@@ -5264,8 +5265,7 @@ const RBSHOP = [
   ['relic', 'Reborn Relics pack', 'Open one Reborn Relics pack right now', 3, () => { const p = PACKS.find(x => x.id === 'rb_relics'); go('shop'); setTimeout(() => openPack(p), 50) }],
   ['free5', '5 free pack opens', 'Your next 5 pack opens cost no coins', 2, () => { S.freeOpens = (S.freeOpens || 0) + 5 }],
   ['coin', 'Coin Surge', 'All coins x2 for 10 minutes', 2, () => { GM = { x: Math.max(2, Date.now() < GM.until ? GM.x : 1), until: Math.max(Date.now(), GM.until) + 600000 }; lsSet('sc_gmult', GM) }],
-  ['luckb', 'Lucky Hour', 'x2 luck for 10 minutes', 1, () => { LUCK = { x: 2, until: Math.max(Date.now(), LUCK.until) + 600000 }; lsSet('sc_luck', LUCK) }],
-  ['vh', 'Vault Peek', 'Reveals one letter of the Vault code', 2, () => { const v = vaultInit(), left = VT.map((_, i) => i).filter(i => !v.hint.includes(i)); if (left.length) v.hint.push(left[Math.floor(Math.random() * left.length)]) }]
+  ['luckb', 'Lucky Hour', 'x2 luck for 10 minutes', 1, () => { LUCK = { x: 2, until: Math.max(Date.now(), LUCK.until) + 600000 }; lsSet('sc_luck', LUCK) }]
 ];
 const RBMILES = [[15, '+10% coins forever'], [40, 'Packs cost another 4% less'], [1, 'Unlocks the Reborn Relics pack in the shop'], [3, 'Packs cost 3% less forever'], [5, 'Packs cost another 3% less'], [10, '+15% luck forever'], [25, 'A golden crown next to your name (soon)']];
 const rbSpent = () => (S.rbx || 0) + RBPERKS.reduce((a, p) => { let c = 0; for (let l = 0; l < ((S.rpk || {})[p[0]] || 0); l++) c += p[4](l); return a + c }, 0), rbAvail = () => (S.rbp || 0) - rbSpent();
