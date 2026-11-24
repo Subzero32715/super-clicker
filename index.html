@@ -358,6 +358,16 @@ body.elite .phead h2,body.elite .offers-h{color:#e9d8ff;text-shadow:0 2px 0 #3b0
 body.compact .panel{padding:8px}body.compact .pack{transform:scale(.92)}body.compact .setrow{padding:3px 0}
 body.calm *{animation-duration:0s!important;animation-iteration-count:1!important}body.calm #reveal.omegabg,body.calm #reveal.rainbow{animation:none!important}
 .capgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px 10px;margin:8px 0;font-size:12px;font-weight:700}.capgrid input{margin-right:6px}
+
+.pbtv{background:#10131c;color:#fff;border-color:#e84393}.tvtop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;flex-wrap:wrap}.tvtop b{font-family:'Press Start 2P',monospace;font-size:11px;color:#ff7ab8}.tvlive{color:#ff4d4d;font-style:normal;font-weight:900;animation:pbb 1s infinite}
+.tvscreen{position:relative;background:linear-gradient(#1b2340,#0d1226);border:4px solid #333c5a;border-radius:12px;min-height:230px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;overflow:hidden}.tvscreen.static::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,#fff 0 2px,#222 2px 4px);opacity:.7;animation:pbs .7s forwards}@keyframes pbs{to{opacity:0}}@keyframes pbb{50%{opacity:.3}}
+.tvhost{font-size:44px}.tvmach{position:relative;width:90px;height:90px;border-radius:50%;border:4px solid #8fb4ff;background:#0b1020;overflow:hidden}.tvmach i{position:absolute;width:18px;height:18px;border-radius:50%;background:#ffd34d;top:36px;left:36px;transition:all .3s}.tvmach i:nth-child(2n){background:#ff5a5f}.tvmach i:nth-child(3n){background:#4da6ff}.tvmach.spin i:nth-child(1){animation:pbm1 .7s infinite alternate}.tvmach.spin i:nth-child(2){animation:pbm2 .6s infinite alternate}.tvmach.spin i:nth-child(3){animation:pbm3 .8s infinite alternate}.tvmach.spin i:nth-child(4){animation:pbm2 .5s infinite alternate-reverse}.tvmach.spin i:nth-child(5){animation:pbm1 .55s infinite alternate-reverse}.tvmach.spin i:nth-child(6){animation:pbm3 .65s infinite alternate-reverse}@keyframes pbm1{from{transform:translate(-26px,-22px)}to{transform:translate(26px,22px)}}@keyframes pbm2{from{transform:translate(26px,-26px)}to{transform:translate(-24px,24px)}}@keyframes pbm3{from{transform:translate(0,-30px)}to{transform:translate(2px,28px)}}
+.tvballs{display:flex;gap:10px}.tvb{width:44px;height:44px;border-radius:50%;background:#333c5a;color:#8a93b5;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;border:3px solid #55608a}.tvb.on{background:radial-gradient(circle at 30% 30%,#fff,#ffd34d);color:#3a2a00;border-color:#fff}.tvb.pop{animation:pbpop .6s}@keyframes pbpop{0%{transform:scale(0)}60%{transform:scale(1.4)}100%{transform:scale(1)}}.tvsay{background:#000a;border-radius:8px;padding:8px 12px;font-weight:700;text-align:center;min-height:40px;width:100%}
+.pbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.pbt{background:#fffdf0;color:#222;border:2px dashed #c0392b;border-radius:6px;padding:10px;text-align:center;box-shadow:0 3px 0 rgba(0,0,0,.2);position:relative}.pbt-h{font-family:'Press Start 2P',monospace;color:#c0392b;font-size:14px;letter-spacing:2px}.pbt-n{display:flex;justify-content:center;gap:6px;margin:8px 0}.pbt-n span{background:#c0392b;color:#fff;font-weight:900;font-size:20px;width:30px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px}.pbt-d{font-size:11px;font-weight:700}.pbt-tc{font-size:6px;line-height:1.2;color:#666;margin-top:6px;text-align:justify}.pbt-s{margin-top:6px;font-weight:900;font-size:12px;color:#888}.pbt-s.w{color:#27ae60}.pbt.win{cursor:pointer;animation:pbglow 1s infinite alternate;border-color:#27ae60}@keyframes pbglow{to{box-shadow:0 0 18px #ffd34d}}
+#pbpop{position:fixed;right:16px;bottom:16px;z-index:950;background:#fffdf0;color:#222;border:3px solid #c0392b;border-radius:14px;padding:12px 34px 12px 14px;max-width:290px;box-shadow:0 6px 0 rgba(0,0,0,.35);animation:pbin .3s;display:flex;flex-direction:column;gap:6px}#pbpop .px{position:absolute;top:4px;right:6px;border:0;background:none;font-size:16px;cursor:pointer}#pbpop .pbp-t{font-weight:900;font-size:14px;color:#c0392b}#pbpop .pbp-s{font-size:12px}#pbpop.big{background:#c0392b;color:#fff;border-color:#ffd34d;max-width:340px;animation:pbin .3s,pbshake 1s infinite}#pbpop.big .pbp-t{color:#fff;font-size:18px}#pbpop.big .px{color:#fff}@keyframes pbin{from{transform:translateY(40px);opacity:0}}@keyframes pbshake{50%{box-shadow:0 0 22px #ffd34d}}
+.lmach{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.lm-dome{display:flex;gap:8px;padding:14px;border-radius:50px 50px 14px 14px;background:radial-gradient(#e8f4ff,#9ec8f0);border:3px solid #333}.lm-dome.spin{animation:pbshake2 .15s infinite}@keyframes pbshake2{50%{transform:translateY(-3px)}}.lm-ball{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,#ffd34d);display:flex;align-items:center;justify-content:center;font-weight:900;border:2px solid #333}.lm-ball.hit{background:radial-gradient(circle at 30% 30%,#fff,#35c75a)}
+.scr{max-width:380px;margin:auto;text-align:center}.scgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.sccell{position:relative;height:64px;background:#fff8d6;border:2px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;cursor:pointer;overflow:hidden}.sccell i{position:absolute;inset:0;background:repeating-linear-gradient(45deg,#b9c2cc 0 6px,#d7dde3 6px 12px);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;color:#555;transition:transform .4s,opacity .4s}.sccell.open i{opacity:0;transform:scale(1.4);pointer-events:none}
+.whsvg{width:100%;max-width:520px;margin:10px auto;display:block}.whsvg path,.whsvg circle{transition:filter .1s}.whsvg .hl{filter:brightness(2.2);stroke:#fff;stroke-width:3}.whsvg .win{filter:brightness(2.6);stroke:#fff;stroke-width:4}
 </style>
 </head>
 <body>
@@ -3180,7 +3190,7 @@ const CONFIG = {
   // Owner account is created automatically (password stored only as a salted hash).
   OWNER_ACCOUNT: { username: 'subzero32715', fullName: 'Owner', from: 'Game HQ', salt: 'sc-owner-a7151feb8088', hash: '3afaf9ac433ca6828891c17e4566dbe62dee04cc966b54c2bcfa1e75b4ffcba2', hashF: 'f21185421111213422037' }
 };
-const REWIND = { chat: '20', admin: '2m', profiles: '30s', social: '2m' };
+const REWIND = { chat: '20', admin: '24h', profiles: '30s', social: '2m' };
 
 /* ===== utils ===== */
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -3280,7 +3290,7 @@ PACKS.forEach(p => {
 RAR.hidden = { name: 'Secrets', color: '#14e0c8', sell: 0, cpc: 400, cps: 200, base: 420, fancy: true }; RAR_ORDER.push('hidden'); RAR.elite = { name: 'Elite', color: '#b14dff', sell: 1e9, cpc: 1e6, cps: 5e5, base: 900, fancy: true }; RAR_ORDER.push('elite');
 const HPACK = { id: 'hidden', name: 'Hidden Subs', color: '#14b8a6', cost: 0, items: [], motif: 'stars' };
 const HIDDEN = [
-  { id: 'aarav', name: 'Tickle Me Pits Aarav', how: 'Reach 100,000,000 coins.' },
+  { id: 'aarav', name: 'Tickle Me Pits Aarav', how: 'Win it in the nightly Powerball (Lottery, under Minigames).' },
   { id: 'charlie', name: 'Hot Ears Charlie', how: 'Found by opening any pack - a 0.00001% chance every single time.', pct: 0.00001 },
   { id: 'holden', name: 'Scawy Holden', how: 'Open the Shadow Pack 1,000 times.' },
   { id: 'subzero', name: 'Surprise Mogged Subzero', how: 'Win 100 battles.' }
@@ -3393,24 +3403,28 @@ function spriteURL(key) {
   const hint = hueHint(it.name), ph = hash(it.pack.id) % 360;
   return SPR[key] = makeSprite(key, hint !== null ? hint : (ph + (hash(it.name) % 80) - 40 + 360) % 360);
 }
-let PENNY = null;
+const COIN_TIERS = [[0, 'Dusty Penny', ['#5e3218', '#a8602c', '#c4803a', '#b9752f', '#dd9a52', '#8f4f22', 0]], [1e4, 'Shiny Penny', ['#7a4220', '#d98a3e', '#f0a85a', '#e89a48', '#ffd08a', '#a8602c', 1]], [1e6, 'Nickel', ['#4a5560', '#8e9aa6', '#aab6c2', '#9ba7b3', '#d4dde6', '#74808c', 0]], [1e7, 'Dime', ['#505c68', '#aeb9c4', '#cdd7e1', '#c0cbd6', '#f2f6fa', '#8995a1', 1]], [1e8, 'Shiny Quarter', ['#5a6672', '#c9d4de', '#eef3f8', '#dde6ee', '#ffffff', '#9aa6b2', 2]], [1e10, 'Silver Dollar', ['#3f4a58', '#d6dee8', '#f6f9fc', '#e6edf4', '#ffffff', '#8996a4', 2]], [1e13, 'Gold Coin', ['#7a5a00', '#e8b923', '#ffd84d', '#f5c93a', '#fff3a8', '#b88a00', 2]], [1e17, 'Platinum Coin', ['#3a3f6a', '#b9c3ff', '#dfe5ff', '#cdd5ff', '#ffffff', '#8a95e0', 2]], [1e22, 'Diamond Coin', ['#0a6a8a', '#5fe3ff', '#b8f4ff', '#8ef0ff', '#ffffff', '#2db8dc', 3]]];
+const coinTier = () => { const v = S ? Math.max(S.peak || 0, S.coins || 0) : 0; let t = 0; COIN_TIERS.forEach((x, i) => { if (v >= x[0]) t = i }); return t };
+const coinName = () => COIN_TIERS[coinTier()][1];
+const PENNYC = {};
 function pennyURL() {
-  if (PENNY) return PENNY;
+  const ti = coinTier(); if (PENNYC[ti]) return PENNYC[ti]; const pal = COIN_TIERS[ti][2];
   const N = 20, c = cv(N, N), x = c.getContext('2d'), rng = mulberry(7);
   for (let y = 0; y < N; y++) for (let i = 0; i < N; i++) {
     const dx = i - 9.5, dy = y - 9.5, d = Math.hypot(dx, dy); if (d > 9.6) continue;
     let col;
-    if (d > 8.4) col = '#5e3218'; else if (d > 7.3) col = '#a8602c';
+    if (d > 8.4) col = pal[0]; else if (d > 7.3) col = pal[1];
     else {
-      col = rng() < 0.2 ? '#b9752f' : '#c4803a';
-      if (dx + dy < -5) col = '#dd9a52';
+      col = rng() < 0.2 ? pal[3] : pal[2];
+      if (dx + dy < -5) col = pal[4];
       const hd = Math.hypot(dx, dy + 1.5);
-      if (hd < 3.1 || (dy > 2.5 && Math.abs(dx) < 5.2 && dy < 6.5 + (Math.abs(dx) > 3 ? -1 : 0))) col = '#8f4f22';
-      if (rng() < 0.12) col = rng() < 0.5 ? '#b8a98c' : '#8c8573';
+      if (hd < 3.1 || (dy > 2.5 && Math.abs(dx) < 5.2 && dy < 6.5 + (Math.abs(dx) > 3 ? -1 : 0))) col = pal[5];
+      if (ti === 0 && rng() < 0.12) col = rng() < 0.5 ? '#b8a98c' : '#8c8573'; else if (ti > 0) rng();
     }
     x.fillStyle = col; x.fillRect(i, y, 1, 1);
   }
-  return PENNY = c.toDataURL();
+  if (pal[6]) { x.fillStyle = '#fff'; [[4, 4], [5, 5], [15, 6], [7, 14], [13, 13]].slice(0, pal[6] + 2).forEach(q => x.fillRect(q[0], q[1], 1, 1)); if (pal[6] > 1) { x.fillRect(3, 4, 3, 1); x.fillRect(4, 3, 1, 3) } }
+  return PENNYC[ti] = c.toDataURL();
 }
 function packBG(p) {
   if (BGC[p.id]) return BGC[p.id];
@@ -3478,7 +3492,7 @@ function updateStats() {
   const left = GM.until - Date.now(); $('#st-ev').textContent = left > 0 ? `EVENT x${GM.x} COINS - ${Math.ceil(left / 60000)}m left` : '';
 }
 function updateCoin() {
-  const img = $('#coinImg'); let name = 'Dusty Penny';
+  const img = $('#coinImg'); let name = coinName();
   if (S.setKey && S.inv[S.setKey] > 0) { const [k, v] = splitInv(S.setKey); img.src = spriteURL(k); img.className = 'sub' + vcls(v); name = (v === 'n' ? '' : VAR[v].name + ' ') + ITEMS[k].name } else { img.src = pennyURL(); img.className = '' }
   $('#coinName').textContent = name; $('#resetCoin').hidden = !S.setKey;
 }
@@ -3670,6 +3684,7 @@ function onAdmin(m) {
   verifyMsg(d).then(ok => {
     if (!ok || !S) return; if (d.type === 'banlist' && d.p && (+d.p.v || 0) >= ((lsGet('sc_banraw', null) || { p: {} }).p.v || 0)) lsSet('sc_banraw', d);
     if (d.by && ME && d.by.toLowerCase() === ME.username.toLowerCase() && ['coins', 'setcoins', 'sub', 'rank'].includes(d.type)) return;
+    if (d.to === '*' && !['banlist', 'revokeadmin'].includes(d.type) && Date.now() - (d.ts || 0) > 150000) return;
     if (S.seen.includes(d.id)) { if (d.to !== '*') Net.pub('admin', 'ack', { id: d.id }); return }
     if (isOwner() && d.by && d.to === '*' && !ADMLOG.some(x => x.id === d.id)) { ADMLOG.unshift({ id: d.id, by: d.by, type: d.type, p: d.p, ts: d.ts }); ADMLOG.length = Math.min(ADMLOG.length, 40); lsSet('sc_admlog', ADMLOG); if (cur === 'owner' && $('#o_alog')) paintLog() }
     if (d.by) { const tr = certTier(d), cdk = k => { const m_ = lsGet('sc_admcd', {}); if (d.ts - (m_[d.by + k] || 0) < 600000) return true; m_[d.by + k] = d.ts; lsSet('sc_admcd', m_); return false };
@@ -4192,6 +4207,178 @@ function renderGames() {
 }
 const heads = (t, k, v) => '<div class="phead"><h2>' + t + '</h2><span class="rtag" style="background:var(--deep)">BEST ' + v + '</span></div>';
 
+
+/* ===== LOTTERY (Powerball, machines, scratch tickets, big wheel) ===== */
+const PB_SALT = 'sc-powerball-v1', PB_PRICE = 1000, PB_LEN = 100, PB_DONE = 78, PB_REVEAL = [42, 50, 58, 66, 76], LC_VAL = 5, PB_EXPIRE = 7 * 86400000;
+const pad2 = n => String(n).padStart(2, '0'), pbNow = () => Date.now() + (window.PB_OFF || 0);
+const pbKeyOf = t => { const d = new Date(t); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) };
+const pbTimeOf = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 17, 0, 0).getTime() };
+const pbNext = () => { const now = pbNow(); let k = pbKeyOf(now); if (pbTimeOf(k) <= now) { const t = new Date(now); t.setDate(t.getDate() + 1); k = pbKeyOf(t.getTime()) } return k };
+const pbLastKey = () => { const now = pbNow(); let k = pbKeyOf(now); if (now < pbTimeOf(k) + PB_DONE * 1000) { const t = new Date(now); t.setDate(t.getDate() - 1); k = pbKeyOf(t.getTime()) } return k };
+const pbDone = k => pbNow() >= pbTimeOf(k) + PB_DONE * 1000;
+const pbWin = k => { const r = mulberry(hash('pb-num|' + PB_SALT + '|' + k)); return Array.from({ length: 5 }, () => Math.floor(r() * 10)) };
+function pbPrize(k) {
+  const r = mulberry(hash('pb-prize|' + PB_SALT + '|' + k)), x = r();
+  if (x < .08) return { t: 'aarav' };
+  if (x < .5) { const a = Math.min(1e8, Math.max(1e6, Math.round(Math.pow(10, 6 + r() * 2) / 1e5) * 1e5)); return { t: 'coins', amt: a } }
+  const y = r(), rar = y < .4 ? 'legendary' : y < .7 ? 'supreme' : y < .9 ? 'chroma' : 'mystical';
+  const pl = Object.keys(ITEMS).filter(q => { const it = ITEMS[q]; return it.rarity === rar && !it.hid && !it.shopsp && !(it.pack && it.pack.ew) }).sort();
+  if (!pl.length) return { t: 'coins', amt: 5e6 }; return { t: 'sub', key: pl[Math.floor(r() * pl.length)] };
+}
+const pbPrizeTxt = p => p.t === 'coins' ? fmt(p.amt) + ' COINS' : p.t === 'aarav' ? 'TICKLE ME PITS AARAV' : (ITEMS[p.key] ? ITEMS[p.key].name.toUpperCase() + ' (' + RAR[ITEMS[p.key].rarity].name.toUpperCase() + ')' : 'A MYSTERY SUB');
+const pbTimeTxt = k => new Date(pbTimeOf(k)).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' 5:00 PM';
+const clk = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (h ? h + ':' + pad2(m) : m) + ':' + pad2(s % 60) };
+function pbData() { S.pb = S.pb || { tk: [], cl: {} }; const now = pbNow(); S.pb.tk = S.pb.tk.filter(t => pbTimeOf(t.d) + 8 * 86400000 > now); return S.pb }
+function lcAdd(n) { S.lc = Math.max(0, (S.lc || 0) + n) }
+function lotPay(coins) { S.coins += coins; updateStats(); save(true) }
+function lotRoll(tab) { let x = Math.random(); for (const o of tab) { if ((x -= o[1]) < 0) return o[0] } return tab[0][0] }
+const LOT_TAB = [[0, .55], [.5, .25], [1, .10], [2, .06], [5, .03], [20, .009], ['J', .001]];
+function lotSub(rars) { const rar = rars[Math.floor(Math.random() * rars.length)], pl = Object.keys(ITEMS).filter(q => { const it = ITEMS[q]; return it.rarity === rar && !it.hid && !it.shopsp && !(it.pack && it.pack.ew) }); return pl[Math.floor(Math.random() * pl.length)] }
+
+function lotHead(title, back) {
+  return `<div class="phead"><button class="btn alt sm" id="lBack" style="margin-right:10px">&lsaquo; ${back ? 'LOTTERY' : 'GAMES'}</button><h2>${title}</h2><span class="rtag" style="background:#e84393">🎟 <b id="lcBal">${fmt(S.lc || 0)}</b> LOTTERY COINS</span></div>`;
+}
+function lotTrade() {
+  const m = modal(`<h3>TRADE COINS</h3><p class="small" style="margin:6px 0">10 coins = 2 lottery coins. Lottery coins are used for everything in the Lottery.</p><div class="orow"><input id="ltIn" type="number" min="10" step="10" value="1000" style="flex:1"><span id="ltOut" style="font-weight:800"></span></div><div class="orow" style="flex-wrap:wrap"><button class="btn sm alt" data-q="1000">1K</button><button class="btn sm alt" data-q="100000">100K</button><button class="btn sm alt" data-q="10000000">10M</button><button class="btn sm alt" data-q="max">MAX</button></div><div class="mbtns"><button class="btn green" id="ltGo">TRADE</button></div>`);
+  const inp = $('#ltIn', m), val = () => Math.min(Math.floor(S.coins / 10) * 10, Math.max(0, Math.floor((+inp.value || 0) / 10) * 10)), up = () => { $('#ltOut', m).textContent = '→ ' + fmt(val() / 10 * 2) + ' LC' };
+  inp.oninput = up; $$('[data-q]', m).forEach(b => b.onclick = () => { inp.value = b.dataset.q === 'max' ? Math.floor(S.coins / 10) * 10 : b.dataset.q; up() }); up();
+  $('#ltGo', m).onclick = () => { const c = val(); if (c < 10) { sfx('err'); return toast('You need at least 10 coins.', 'bad') } S.coins -= c; lcAdd(c / 10 * 2); updateStats(); save(true); sfx('ach'); closeModal(); toast('Traded ' + fmt(c) + ' coins for ' + fmt(c / 10 * 2) + ' lottery coins!', 'good'); lotRefresh() };
+}
+let lotSec = null;
+function lotRefresh() { const b = $('#lcBal'); if (b) b.textContent = fmt(S.lc || 0) }
+function renderLottery(sec) {
+  stopGames(); lotSec = sec || null; if (!S.pb) S.pb = { tk: [], cl: {} };
+  if (sec === 'pb') return renderPB(); if (sec === 'mach') return renderMach(); if (sec === 'scr') return renderScratch(); if (sec === 'wheel') return renderWheel();
+  const cards = [['pb', 'POWERBALL', 'Nightly draw at 5 PM. Match all 5 numbers to win coins, a sub or Aarav!', '#e84393', 'chance/Jackpot'], ['mach', 'LOTTERY MACHINES', 'Pull the lever and draw your prize.', '#6c5ce7', 'mineral/Diamond'], ['scr', 'SCRATCH TICKETS', 'Scratch 6 spots. Match 3 to win.', '#00b894', 'school/Crayons'], ['wheel', 'BIG SPIN WHEEL', '10 rings, 100 spots and a jackpot in the middle: 50x!', '#f1c40f', 'chance/Jackpot']];
+  $('#page').innerHTML = lotHead('LOTTERY') + `<div class="panel" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn gold" id="lTrade">TRADE COINS</button><span class="small">10 coins = 2 lottery coins. Everything here costs lottery coins.</span></div><div class="gcards">${cards.map(c => `<div class="gcard" data-s="${c[0]}" style="--c:${c[3]}"><img class="pix" src="${spriteURL(c[4])}"><b>${c[1]}</b><span>${c[2]}</span></div>`).join('')}</div>`;
+  $('#lBack').onclick = () => go('games'); $('#lTrade').onclick = lotTrade; $$('.gcard').forEach(el => el.onclick = () => { sfx('ui'); renderLottery(el.dataset.s) });
+}
+
+/* ---- POWERBALL ---- */
+const PB_TERMS = 'No purchase necessary, except the purchase. Must be present to win, or at least have a browser. Prize is coins, a sub or a Tickle Me Pits Aarav and is picked before the draw. Exactly 5 matching numbers in the exact order wins. Redeem within 7 days of the draw. Void if lost, wrinkled, folded, eaten or sold to a goblin. One winner takes the whole prize. The host is not responsible for sadness. All decisions are final and probably correct.';
+function pbTicketHTML(t) {
+  const done = pbDone(t.d), win = pbWin(t.d), won = done && t.n === win.join(''), cl = pbData().cl[t.id], exp = done && pbNow() > pbTimeOf(t.d) + PB_EXPIRE;
+  return `<div class="pbt${won && !cl && !exp ? ' win' : ''}" data-t="${t.id}"><div class="pbt-h">POWERBALL</div><div class="pbt-n">${t.n.split('').map(d => `<span>${d}</span>`).join('')}</div><div class="pbt-d">DRAW ${pbTimeTxt(t.d)} · #${t.id}</div><div class="pbt-tc">${PB_TERMS}</div>${done ? `<div class="pbt-s ${won ? 'w' : ''}">${won ? (cl ? 'PRIZE CLAIMED' : exp ? 'EXPIRED' : 'WINNER! CLICK ME') : 'NO WIN'}</div>` : ''}</div>`;
+}
+function pbTV(t, now) {
+  const nk = pbNext(), lk = pbLastKey(), today = pbKeyOf(now), tt = (now - pbTimeOf(today)) / 1000;
+  const pr = pbPrizeTxt(pbPrize(today === nk ? nk : tt >= 0 && tt < PB_LEN ? today : nk));
+  if (tt >= 0 && tt < PB_LEN) {
+    const L = [[0, 'Good evening, and welcome to the nightly POWERBALL draw!'], [7, 'I am your host, Randy Rollsworth, and we have a big night!'], [14, "Tonight's prize: " + pbPrizeTxt(pbPrize(today))], [22, 'Grab your tickets everyone. Each one has 5 numbers.'], [30, 'The machine is warmed up and the balls are bouncing. Here we go!'], [38, 'Here comes the first number...'], [46, 'Next ball, please...'], [54, 'Third ball coming up...'], [62, 'Two more to go. Hold your tickets tight...'], [70, 'And now the final number...'], [PB_DONE + 2, 'That is the draw! Check your tickets on the Powerball page.'], [92, 'Thanks for watching, and see you tomorrow at 5 PM!']];
+    let line = L[0][1]; L.forEach(l => { if (tt >= l[0]) line = l[1] }); const w = pbWin(today);
+    return { chan: 'POWERBALL LIVE', live: 1, line, balls: w.map((n, i) => tt >= PB_REVEAL[i] ? n : null), spin: tt < PB_DONE, sub: 'LIVE · ' + pbTimeTxt(today) };
+  }
+  const lines = ['Welcome to the Lottery Channel! Powerball tickets are on sale now.', "Tonight's prize: " + pr, 'Scratch tickets and lottery machines are open all day.', 'Trade your coins for lottery coins at the top of the Lottery page.', 'The Powerball draw is at 5:00 PM sharp. Do not miss it!', 'Tip: every ticket has a 1 in 100,000 chance. Buy a lot!'];
+  const line = lines[Math.floor(now / 6000) % lines.length], left = (pbTimeOf(nk) - now) / 1000;
+  return { chan: 'LOTTERY CHANNEL', live: 0, line, balls: pbDone(lk) ? pbWin(lk) : [null, null, null, null, null], spin: 0, sub: 'POWERBALL DRAW IN ' + clk(left) + (pbDone(lk) ? ' · LAST DRAW SHOWN' : '') };
+}
+function renderPB() {
+  const d = pbData(); lotSec = 'pb';
+  $('#page').innerHTML = lotHead('POWERBALL', 1) + `<div class="panel pbtv" id="pbTV"><div class="tvtop"><b id="tvChan"></b><span id="tvSub"></span><i class="tvlive" id="tvLive">● LIVE</i></div><div class="tvscreen" id="tvScr"><div class="tvhost" id="tvHost">🎙️</div><div class="tvmach" id="tvMach"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="tvballs" id="tvBalls">${'<span class="tvb">?</span>'.repeat(5)}</div><div class="tvsay" id="tvSay"></div></div></div>
+  <div class="panel" style="margin-top:12px"><div class="orow" style="align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>NEXT DRAW: <span id="pbNext"></span></b><div class="small">Prize: <b id="pbPz"></b> · Ticket: ${fmt(PB_PRICE)} lottery coins</div></div><button class="btn gold" data-b="1">BUY 1</button><button class="btn gold" data-b="10">BUY 10</button><button class="btn gold" data-b="100">BUY 100</button></div></div>
+  <div class="panel" style="margin-top:12px"><h3>YOUR TICKETS</h3><div id="pbList"></div></div>`;
+  $('#lBack').onclick = () => renderLottery(); $$('[data-b]').forEach(b => b.onclick = () => pbBuy(+b.dataset.b));
+  pbPaintList(); pbTick(); I_(pbTick, 250);
+}
+let pbLastState = '';
+function pbTick() {
+  if (!$('#pbTV')) return; const now = pbNow(), st = pbTV(0, now), nk = pbNext();
+  if ($('#tvChan').textContent !== st.chan) { if ($('#tvChan').textContent) { $('#tvScr').classList.add('static'); setTimeout(() => $('#tvScr') && $('#tvScr').classList.remove('static'), 700) } $('#tvChan').textContent = st.chan }
+  $('#tvSub').textContent = st.sub; $('#tvLive').style.display = st.live ? '' : 'none'; $('#tvSay').textContent = st.line; $('#tvMach').classList.toggle('spin', !!st.spin);
+  const bs = $$('#tvBalls .tvb'); st.balls.forEach((n, i) => { const t = n === null ? '?' : String(n); if (bs[i].textContent !== t) { bs[i].textContent = t; bs[i].classList.toggle('on', n !== null); if (n !== null) { bs[i].classList.remove('pop'); void bs[i].offsetWidth; bs[i].classList.add('pop'); sfx('ui') } } });
+  $('#pbNext').textContent = pbTimeTxt(nk); $('#pbPz').textContent = pbPrizeTxt(pbPrize(nk));
+  const sig = pbLastKey() + (pbDone(pbLastKey()) ? 1 : 0) + pbData().tk.length; if (sig !== pbLastState) { pbLastState = sig; pbPaintList() }
+}
+function pbPaintList() {
+  const el = $('#pbList'); if (!el) return; const d = pbData(), nk = pbNext(), up = d.tk.filter(t => !pbDone(t.d)), past = d.tk.filter(t => pbDone(t.d)).sort((a, b) => b.d < a.d ? -1 : 1);
+  el.innerHTML = (up.length ? `<div class="small" style="margin:6px 0">UPCOMING DRAWS (${up.length} ticket${up.length > 1 ? 's' : ''})${up.length > 40 ? ' - showing the newest 40' : ''}</div><div class="pbgrid">${up.slice(-40).reverse().map(pbTicketHTML).join('')}</div>` : '<div class="small">No tickets for the next draw yet.</div>') + (past.length ? `<div class="small" style="margin:12px 0 6px">PAST TICKETS (winners first)</div><div class="pbgrid">${past.sort((a, b) => (b.n === pbWin(b.d).join('') ? 1 : 0) - (a.n === pbWin(a.d).join('') ? 1 : 0)).slice(0, 40).map(pbTicketHTML).join('')}</div>` : '');
+  $$('.pbt.win', el).forEach(e => e.onclick = () => pbRedeem(e.dataset.t));
+}
+function pbBuy(n) {
+  const cost = n * PB_PRICE; if ((S.lc || 0) < cost) { sfx('err'); return toast('You need ' + fmt(cost) + ' lottery coins. Trade coins at the top of the Lottery page.', 'bad') }
+  const d = pbData(); if (d.tk.length + n > 1500) return toast('That is too many tickets. Wait for the draw!', 'bad'); const k = pbNext();
+  lcAdd(-cost); for (let i = 0; i < n; i++) d.tk.push({ id: uid().replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase() + i, d: k, n: Array.from({ length: 5 }, () => Math.floor(Math.random() * 10)).join('') });
+  save(true); sfx('ach'); toast('Bought ' + n + ' ticket' + (n > 1 ? 's' : '') + ' for the ' + pbTimeTxt(k) + ' draw!', 'good'); lotRefresh(); pbPaintList();
+}
+function pbRedeem(id) {
+  const d = pbData(), t = d.tk.find(x => x.id === id); if (!t) return;
+  const m = modal(`<h3>WINNING TICKET!</h3><div style="margin:10px 0">${pbTicketHTML(t).replace('pbt win', 'pbt')}</div><p class="small">Prize: <b>${pbPrizeTxt(pbPrize(t.d))}</b></p><div class="mbtns"><button class="btn green" id="pbRc">REDEEM CODE</button></div>`);
+  $('#pbRc', m).onclick = () => {
+    const w = pbWin(t.d).join(''); if (!pbDone(t.d) || t.n !== w) { sfx('err'); return toast('That code is not correct.', 'bad') }
+    if (d.cl[t.id]) return toast('Already claimed.', 'bad'); if (pbNow() > pbTimeOf(t.d) + PB_EXPIRE) { sfx('err'); return toast('This ticket expired.', 'bad') }
+    d.cl[t.id] = 1; const p = pbPrize(t.d); closeModal(); sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a', '#4da6ff', '#ff7ab8'], 300);
+    if (p.t === 'coins') { lotPay(p.amt); toast('YOU WON ' + fmt(p.amt) + ' COINS!', 'good') }
+    else { const key = p.t === 'aarav' ? 'hidden/aarav' : p.key; addItem(key, 'n', 1); updateStats(); save(true); showReveal({ key, v: 'n' }, null, 'POWERBALL WINNER!') }
+    save(true); try { Net.pub('chat', 'm', { id: uid(), u: 'SUB_BOT', t: ME.username + ' just won the POWERBALL: ' + pbPrizeTxt(p) + '!', ts: Date.now() }) } catch (e) {} pbPaintList();
+  };
+}
+/* popups + coin tier timer */
+const pbFlags = {};
+function pbPop(html, cls, ms) { let p = $('#pbpop'); if (!p) { p = document.createElement('div'); p.id = 'pbpop'; document.body.appendChild(p) } p.className = cls || ''; p.innerHTML = '<button class="px" aria-label="close">✕</button>' + html; p.querySelector('.px').onclick = () => p.remove(); clearTimeout(p._t); if (ms) p._t = setTimeout(() => p.remove(), ms); const w = p.querySelector('[data-w]'); if (w) w.onclick = () => { p.remove(); go('games'); renderLottery('pb') }; return p }
+function lotGlobal() {
+  if (!ME || !S) return; const now = pbNow(), nk = pbNext(), left = (pbTimeOf(nk) - now) / 1000, tk = pbKeyOf(now), tt = (now - pbTimeOf(tk)) / 1000;
+  for (const thr of [600, 300, 60]) { const f = nk + thr; if (left <= thr && left > thr - 30 && !pbFlags[f]) { pbFlags[f] = 1; const sp = thr === 60; pbPop(`<div class="pbp-t">🎟 POWERBALL IS DRAWN IN <span class="pbc" data-g="${pbTimeOf(nk)}">${clk(left)}</span></div><div class="pbp-s">${sp ? 'LAST CALL! ' : ''}Draw at 5:00 PM · Prize: ${esc(pbPrizeTxt(pbPrize(nk)))}</div><button class="btn sm gold" data-w>${sp ? 'WATCH LIVE' : 'OPEN POWERBALL'}</button>`, sp ? 'big' : '', sp ? 0 : 15000); sfx(sp ? 'ach' : 'ui') } }
+  if (tt >= 0 && tt < 12 && !pbFlags['live' + tk]) { pbFlags['live' + tk] = 1; pbPop('<div class="pbp-t">🔴 POWERBALL IS LIVE NOW!</div><div class="pbp-s">The draw is on air.</div><button class="btn sm red" data-w>WATCH LIVE</button>', 'big', 20000); sfx('ach') }
+  const c = $('#pbpop .pbc'); if (c) { const l = (+c.dataset.g - now) / 1000; if (l <= 0) $('#pbpop').remove(); else c.textContent = clk(l) }
+  const tr = coinTier(); if (tr !== lotGlobal.t) { lotGlobal.t = tr; updateCoin() }
+}
+setInterval(lotGlobal, 1000);
+
+/* ---- LOTTERY MACHINES ---- */
+const MACHS = [{ n: 'LUCKY DRAW', cost: 50, c: '#e17055', jack: null }, { n: 'MEGA DRAW', cost: 500, c: '#6c5ce7', jack: ['legendary', 'chroma'] }, { n: 'ULTRA DRAW', cost: 5000, c: '#f1c40f', jack: ['mystical'] }];
+function renderMach() {
+  stopGames(); $('#page').innerHTML = lotHead('LOTTERY MACHINES', 1) + `<div class="small" style="margin-bottom:10px">Pull the lever! Prizes are paid in coins (1 lottery coin = ${LC_VAL} coins of value). The top prize is a sub on the bigger machines.</div><div class="gcards">${MACHS.map((m, i) => `<div class="panel lmach" style="border-color:${m.c}"><b style="color:${m.c}">${m.n}</b><div class="lm-dome" id="ld${i}"><span class="lm-ball">?</span><span class="lm-ball">?</span><span class="lm-ball">?</span></div><div class="lm-res small" id="lr${i}">Cost ${fmt(m.cost)} LC</div><button class="btn gold" data-m="${i}">PULL · ${fmt(m.cost)} LC</button><div class="small">Top prize: ${m.jack ? m.jack.map(r => RAR[r].name).join(' / ') + ' sub' : fmt(m.cost * LC_VAL * 100) + ' coins'}</div></div>`).join('')}</div>`;
+  $('#lBack').onclick = () => renderLottery(); let busy = false;
+  $$('[data-m]').forEach(b => b.onclick = () => {
+    if (busy) return; const i = +b.dataset.m, m = MACHS[i]; if ((S.lc || 0) < m.cost) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
+    busy = true; lcAdd(-m.cost); save(true); lotRefresh(); const out = lotRoll(LOT_TAB), balls = $$('#ld' + i + ' .lm-ball'); $('#ld' + i).classList.add('spin'); $('#lr' + i).textContent = 'Drawing...'; sfx('ui');
+    const sym = () => Math.floor(Math.random() * 9) + 1, iv = I_(() => balls.forEach(x => x.textContent = sym()), 90);
+    T_(() => {
+      clearInterval(iv); $('#ld' + i).classList.remove('spin'); const win = out !== 0, v = win ? sym() : 0, set = win ? [v, v, v] : (() => { let a; do { a = [sym(), sym(), sym()] } while (a[0] === a[1] && a[1] === a[2]); return a })(); balls.forEach((x, j) => { x.textContent = set[j]; x.classList.toggle('hit', win) });
+      let msg = 'No luck. Try again!';
+      if (out === 'J' && m.jack) { const k = lotSub(m.jack); addItem(k, 'n', 1); updateStats(); save(true); sfx('ach'); confetti(['#ffd34d', '#fff'], 300); showReveal({ key: k, v: 'n' }, null, 'JACKPOT FROM THE ' + m.n + '!'); msg = 'JACKPOT! ' + ITEMS[k].name }
+      else if (out !== 0) { const mult = out === 'J' ? 100 : out, c = Math.round(mult * m.cost * LC_VAL); lotPay(c); sfx('ach'); if (mult >= 5) confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 120); msg = 'YOU WON ' + fmt(c) + ' COINS! (' + mult + 'x)' }
+      else sfx('err'); $('#lr' + i).textContent = msg; busy = false;
+    }, 1500);
+  });
+}
+
+/* ---- SCRATCH TICKETS ---- */
+const SCRS = [{ n: 'PENNY SCRATCH', cost: 20, c: '#b87333' }, { n: 'SILVER SCRATCH', cost: 200, c: '#8e9aa8' }, { n: 'GOLD SCRATCH', cost: 2000, c: '#e8b923' }], SC_V = [.5, 1, 2, 5, 20, 100];
+function renderScratch() {
+  stopGames(); $('#page').innerHTML = lotHead('SCRATCH TICKETS', 1) + `<div class="small" style="margin-bottom:10px">Buy a ticket, scratch all 6 spots. Find 3 matching prizes to win that many coins. Winnings are paid as soon as you buy.</div><div class="orow" style="flex-wrap:wrap">${SCRS.map((s, i) => `<button class="btn gold" data-s="${i}" style="background:${s.c}">${s.n} · ${fmt(s.cost)} LC</button>`).join('')}</div><div id="scArea" style="margin-top:14px"></div>`;
+  $('#lBack').onclick = () => renderLottery();
+  $$('[data-s]').forEach(b => b.onclick = () => {
+    const s = SCRS[+b.dataset.s]; if ((S.lc || 0) < s.cost) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
+    lcAdd(-s.cost); lotRefresh(); const out = lotRoll(LOT_TAB), val = x => Math.round(x * s.cost * LC_VAL); let cells;
+    if (out !== 0) { const w = out === 'J' ? 100 : out, others = shuf(SC_V.filter(x => x !== w)).slice(0, 3); cells = shuf([w, w, w, ...others]) }
+    else { let a; do { a = []; const cnt = {}; while (a.length < 6) { const x = SC_V[Math.floor(Math.random() * 6)]; if ((cnt[x] || 0) < 2) { cnt[x] = (cnt[x] || 0) + 1; a.push(x) } } } while (0); cells = a }
+    const prize = out === 0 ? 0 : val(out === 'J' ? 100 : out); if (prize) lotPay(prize); else save(true); let left = 6;
+    $('#scArea').innerHTML = `<div class="panel scr" style="border-color:${s.c}"><b>${s.n}</b><div class="scgrid">${cells.map((v, j) => `<div class="sccell" data-j="${j}"><span>${fmt(val(v))}</span><i>SCRATCH</i></div>`).join('')}</div><div class="orow" style="justify-content:center"><button class="btn sm alt" id="scAll">SCRATCH ALL</button></div><div id="scRes" style="font-weight:800;margin-top:8px;min-height:22px"></div></div>`;
+    const done = () => { if (--left > 0) return; if (prize) { sfx('ach'); confetti(['#ffd34d', '#ff5a5f', '#35c75a'], 140); $('#scRes').textContent = 'WINNER! +' + fmt(prize) + ' COINS' } else { sfx('err'); $('#scRes').textContent = 'No match. Better luck next time!' } };
+    const rev = c => { if (c.classList.contains('open')) return; c.classList.add('open'); sfx('ui'); done() };
+    $$('.sccell').forEach(c => c.onclick = () => rev(c)); $('#scAll').onclick = () => $$('.sccell').forEach((c, j) => setTimeout(() => rev(c), j * 120));
+  });
+}
+
+/* ---- BIG SPIN WHEEL ---- */
+const WH_RINGS = [[0, 0, 0, 0, 0, 0, 0, 0, .2, .3], [0, 0, 0, 0, 0, 0, 0, 0, .5, .5], [0, 0, 0, 0, 0, 0, 0, .5, .5, .5], [0, 0, 0, 0, 0, 0, 0, .5, .5, 1], [0, 0, 0, 0, 0, 0, .5, .5, .5, 1], [0, 0, 0, 0, 0, 0, .5, 1, 1, 1], [0, 0, 0, 0, 0, .5, 1, 1, 1, 1], [0, 0, 0, 0, 0, 1, 1, 1, 1, 2], [0, 0, 0, 0, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1, 1, 2]];
+const WH = WH_RINGS.map((r, i) => { const rr = mulberry(i * 77 + 3), a = r.slice(); for (let j = a.length - 1; j > 0; j--) { const k = Math.floor(rr() * (j + 1)); [a[j], a[k]] = [a[k], a[j]] } return a });
+const whCol = m => m === 'C' ? '#ffd34d' : m === 0 ? '#2d3b55' : m < 1 ? '#3b82c4' : m === 1 ? '#2fb36b' : '#e8b923';
+function renderWheel() {
+  stopGames(); const R0 = 250, W = 21, ar = (r, a) => [(260 + r * Math.sin(a)).toFixed(1), (260 - r * Math.cos(a)).toFixed(1)];
+  let svg = ''; for (let i = 0; i < 10; i++) for (let k = 0; k < 10; k++) { const ro = R0 - W * i, ri = ro - W, a0 = k * Math.PI / 5 + .01, a1 = (k + 1) * Math.PI / 5 - .01, p1 = ar(ro, a0), p2 = ar(ro, a1), p3 = ar(ri, a1), p4 = ar(ri, a0), m = WH[i][k]; svg += `<path id="wc${i}_${k}" d="M${p1} A${ro} ${ro} 0 0 1 ${p2} L${p3} A${ri} ${ri} 0 0 0 ${p4}Z" fill="${whCol(m)}"><title>${m ? m + 'x' : 'nothing'}</title></path>` }
+  $('#page').innerHTML = lotHead('BIG SPIN WHEEL', 1) + `<div class="panel gpanel"><div class="small">10 rings with 10 spots each, plus the golden center. Land the center for <b>50x</b> your bet! Grey = nothing, blue = under 1x, green = 1x, gold = 2x. Winnings are paid in coins (1 LC = ${LC_VAL} coins).</div><svg viewBox="0 0 520 520" class="whsvg">${svg}<circle id="wcC" cx="260" cy="260" r="38" fill="#ffd34d" stroke="#8a6a00" stroke-width="4"/><text x="260" y="268" text-anchor="middle" font-size="22" font-weight="900" fill="#5a3a00">50x</text></svg><div id="whRes" style="font-weight:800;min-height:24px;margin:8px 0"></div><div class="orow" style="justify-content:center;flex-wrap:wrap">${[1000, 10000, 100000].map(b => `<button class="btn gold" data-b="${b}">SPIN · ${fmt(b)} LC</button>`).join('')}</div></div>`;
+  $('#lBack').onclick = () => renderLottery(); let busy = false;
+  $$('[data-b]').forEach(b => b.onclick = () => {
+    if (busy) return; const bet = +b.dataset.b; if ((S.lc || 0) < bet) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
+    busy = true; lcAdd(-bet); lotRefresh(); save(true); $('#whRes').textContent = 'Spinning...'; const pick = Math.floor(Math.random() * 101), res = pick === 100 ? 'C' : [Math.floor(pick / 10), pick % 10], cells = []; for (let j = 0; j < 30; j++) cells.push(Math.random() < .01 ? 'C' : [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)]); cells.push(res);
+    const el = c => c === 'C' ? $('#wcC') : $('#wc' + c[0] + '_' + c[1]); let prev = null, t = 0;
+    cells.forEach((c, j) => { t += 40 + j * j * 0.45; T_(() => { if (prev) prev.classList.remove('hl'); prev = el(c); prev.classList.add('hl'); sfx('ui'); if (j === cells.length - 1) fin(c) }, t) });
+    const fin = c => { const mult = c === 'C' ? 50 : WH[c[0]][c[1]], prize = Math.round(mult * bet * LC_VAL); prev.classList.add('win'); if (prize) { lotPay(prize); sfx('ach'); if (mult >= 2) confetti(['#ffd34d', '#ff5a5f', '#35c75a', '#4da6ff'], mult >= 50 ? 400 : 120) } else { save(true); sfx('err') } $('#whRes').textContent = (c === 'C' ? 'JACKPOT! ' : '') + (prize ? mult + 'x → +' + fmt(prize) + ' COINS' : 'Nothing this time.'); T_(() => { prev.classList.remove('hl', 'win'); busy = false }, 1500) };
+  });
+}
+GAMES.unshift({ id: 'lottery', t: 'LOTTERY', d: 'Powerball, lottery machines, scratch tickets and the big spin wheel!', c: '#e84393', ic: 'chance/Jackpot', r: () => renderLottery(), b: () => '', nb: 1, free: 1 });
 
 /* ---- TYPE RACE ---- */
 function renderType() {
@@ -4947,7 +5134,7 @@ function renderOwner() {
   $('#bb_run').onclick = () => bulkBG(+$('#bb_tol').value, false); $('#bb_undo').onclick = () => bulkBG(0, true);
   $('#im_reset').onclick = () => { const v = pickerVal('im'); if (ITEMS[v.key]) saveSpecial({ id: 'k:' + v.key, key: v.key, img: '' }) };
   const num = id => +$('#' + id).value, tgt = () => $('#o_t').value.trim(), need = () => { if (!tgt()) { toast('Enter a player username.', 'bad'); return false } return true };
-  const rep = (r, what) => toast(r === 'queued' ? `${what}: player offline - queued, delivers when they come online` : r === 'self' ? `${what}: applied to you` : `${what}: sent`, 'good');
+  const rep = (r, what) => toast(r === 'queued' ? `${what}: player offline - saved, they get it the moment they open the game, even if you are offline` : r === 'self' ? `${what}: applied to you` : `${what}: sent`, 'good');
   $('#o_setCoins').onclick = () => { let n = Math.max(0, num('o_coins') || 0); if (!own) { const left = (+lsGet('sc_admcoin', 0) || 0) + 1800000 - Date.now(); if (left > 0) return toast('You can set coins again in ' + Math.ceil(left / 60000) + ' min', 'bad'); const cap = myTier() >= 5 ? 1e6 : 250000; if (n > cap) { n = cap; toast('Capped at ' + fmt(cap), 'good') } lsSet('sc_admcoin', Date.now()) } S.coins = n; updateStats(); save(true); toast('Coins set', 'good') };
   $('#o_setRank').onclick = () => { setRankTo(num('o_rank') || 0); save(true); toast('Rank set', 'good') };
   $('#o_give').onclick = () => { const v = pickerVal('g'); if (!own) { const left = (+lsGet('sc_admsub', 0) || 0) + 300000 - Date.now(); if (left > 0) return toast('Wait ' + Math.ceil(left / 1000) + 's before your next sub', 'bad'); v.n = 1 } rep(adminSend(ME.username, 'sub', v), 'Give sub') };
@@ -5342,7 +5529,6 @@ function checkAch() {
 }
 function tickChecks() {
   if (!S) return; S.lastSeen = Date.now(); if (S.coins > S.peak) S.peak = S.coins;
-  if (!ownsHidden('aarav') && S.peak >= 1e8) grantHidden('aarav');
   if (!ownsHidden('holden') && (S.packOpens.shadow || 0) >= 1000) grantHidden('holden');
   if (!ownsHidden('subzero') && S.wins >= 100) grantHidden('subzero');
   checkAch();
