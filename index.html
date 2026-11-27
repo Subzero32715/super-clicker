@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Super Clicker</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='32,3 40,23 61,24 45,38 50,59 32,47 14,59 19,38 3,24 24,23' fill='%232f86ff' stroke='%23ffffff' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
@@ -389,6 +390,30 @@ body.calm *{animation-duration:0s!important;animation-iteration-count:1!importan
 .lwrap{position:relative;width:260px;height:270px;margin:10px auto}.lwptr{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:28px;color:#c0392b;z-index:2}.lwheel{position:absolute;top:18px;left:0;width:260px;height:260px;border-radius:50%;border:6px solid #333;transition:transform 4.2s cubic-bezier(.12,.7,.1,1)}.lwheel span{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;font-size:24px;text-align:center;line-height:30px}
 .winflash{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);z-index:990;background:linear-gradient(120deg,#ffd34d,#ff7ab8);color:#3a1a00;border:5px solid #fff;border-radius:20px;padding:18px 34px;text-align:center;box-shadow:0 0 40px #ffd34d;animation:wfl 2.6s forwards;pointer-events:none}.winflash b{display:block;font-family:'Press Start 2P',monospace;font-size:22px}.winflash span{font-weight:900;font-size:20px}@keyframes wfl{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}15%{transform:translate(-50%,-50%) scale(1.15);opacity:1}25%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
 .pbwinpop{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:995;background:linear-gradient(135deg,#1b2340,#6c1f8a);color:#fff;border:5px solid #ffd34d;border-radius:22px;padding:20px 30px;text-align:center;box-shadow:0 0 50px #ffd34d;animation:pwin .6s,pbshake 1.2s infinite;max-width:92vw;cursor:pointer}.pw1{font-family:'Press Start 2P',monospace;font-size:14px;color:#ffd34d}.pw2{font-size:24px;font-weight:900;margin:10px 0}.pw3{font-size:15px;font-weight:700;color:#ff9ed2}@keyframes pwin{from{transform:translate(-50%,-80px) scale(.3);opacity:0}}
+/* ===== visual polish ===== */
+@media (prefers-reduced-motion:no-preference){
+.pack{transition:transform .18s ease,box-shadow .18s ease,filter .18s}.pack:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 14px 26px rgba(0,0,0,.35);filter:brightness(1.07)}.pack:active{transform:translateY(-1px) scale(.99)}
+.pack::after{content:'';position:absolute;inset:0;border-radius:20px;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.28) 50%,transparent 60%);background-size:250% 100%;background-position:150% 0;transition:background-position .7s;pointer-events:none}.pack:hover::after{background-position:-50% 0}
+.btn{transition:transform .12s ease,filter .12s ease,box-shadow .12s}.btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}.btn:active:not(:disabled){transform:translateY(1px)}
+.gcard,.panel{transition:transform .18s ease,box-shadow .18s ease}.gcard:hover{transform:translateY(-5px) rotate(-.6deg);box-shadow:0 12px 22px rgba(0,0,0,.28)}
+#page>*{animation:pgin .35s ease both}@keyframes pgin{from{opacity:0;transform:translateY(10px)}}
+#coinImg{animation:coinfloat 3.2s ease-in-out infinite;filter:drop-shadow(0 10px 8px rgba(0,0,0,.28))}@keyframes coinfloat{50%{transform:translateY(-6px)}}
+.toast,#toasts>*{animation:tin .25s ease both}@keyframes tin{from{opacity:0;transform:translateY(14px) scale(.96)}}
+}
+::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-thumb{background:linear-gradient(#6aa8ff,#3f6fd8);border-radius:10px;border:3px solid transparent;background-clip:padding-box}::-webkit-scrollbar-track{background:rgba(0,0,0,.06)}
+.panel{box-shadow:0 5px 0 rgba(30,70,160,.18),0 10px 22px rgba(30,70,160,.10)}
+.rtag{box-shadow:0 2px 0 rgba(0,0,0,.25);text-shadow:0 1px 0 rgba(0,0,0,.25)}
+::selection{background:#ffd34d;color:#3a2a00}
+/* ===== new login look ===== */
+#auth{background:radial-gradient(circle at 20% 8%,#2d3aa8 0,#0d1250 45%,#04051c 100%);position:relative;overflow:hidden}
+#auth::before,#auth::after{content:'';position:absolute;inset:-50%;background-image:radial-gradient(2px 2px at 40px 60px,#fff,transparent),radial-gradient(1.5px 1.5px at 130px 160px,#9fc4ff,transparent),radial-gradient(2px 2px at 220px 40px,#fff,transparent),radial-gradient(2.5px 2.5px at 300px 210px,#cfe0ff,transparent),radial-gradient(1.5px 1.5px at 90px 250px,#fff,transparent);background-size:340px 300px;opacity:.7;animation:authst 90s linear infinite}
+#auth::after{background-size:520px 460px;opacity:.45;animation-duration:140s;animation-direction:reverse}@keyframes authst{to{transform:translateY(300px)}}
+.authbox{position:relative;z-index:1;background:rgba(14,22,80,.55)!important;backdrop-filter:blur(12px);border:2px solid rgba(140,180,255,.45)!important;border-radius:26px!important;padding:26px 24px!important;box-shadow:0 0 0 4px rgba(47,134,255,.15),0 0 60px rgba(60,120,255,.45),0 18px 40px rgba(0,0,0,.5)!important;color:#fff}
+.authbox h1{font-size:30px!important;background:linear-gradient(180deg,#fff 30%,#8fc2ff);-webkit-background-clip:text;background-clip:text;color:transparent!important;text-shadow:none!important;filter:drop-shadow(0 3px 0 #1b3fa8) drop-shadow(0 0 14px #4d9bff)}
+.auth-star{font-size:54px;line-height:1;color:#2f86ff;text-shadow:0 0 22px #5fa8ff,0 0 4px #fff;animation:authstar 3s ease-in-out infinite}@keyframes authstar{50%{transform:translateY(-6px) rotate(14deg) scale(1.08)}}
+.auth-badge{display:inline-block;margin:8px 0 10px;padding:6px 16px;border-radius:999px;font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:1px;color:#3a2a00;background:linear-gradient(100deg,#ffd34d,#fff2b0,#ffd34d);background-size:200% 100%;animation:authsh 3s linear infinite;box-shadow:0 3px 0 #b8891a,0 0 18px rgba(255,211,77,.6)}@keyframes authsh{to{background-position:-200% 0}}
+.authbox .tag{color:#a9c9ff!important}.authbox label{color:#cfe0ff!important}.authbox .err{color:#ff9a9a!important}.authbox .small{color:#9fc4ff}
+.authbox input{background:rgba(255,255,255,.95)}.auth-credit{margin-top:14px;font-size:11px;color:#8fb0e8;opacity:.8}
 </style>
 </head>
 <body>
@@ -397,12 +422,12 @@ body.calm *{animation-duration:0s!important;animation-iteration-count:1!importan
 <!-- AUTH -->
 <div id="auth">
   <div class="panel authbox">
-    <h1>SUPER<br>CLICKER</h1>
+    <div class="auth-star">★</div><h1>SUPER<br>CLICKER</h1><div class="auth-badge">★ THE FIRST AND THE BEST ★</div>
     <div class="tag">Click. Open packs. Battle. Rule the board.</div>
     <div id="a-home" class="stack">
       <button class="btn" id="goLogin">LOG IN</button>
       <button class="btn alt" id="goSignup">MAKE ACCOUNT</button>
-    </div>
+    </div><div class="auth-credit">Original game by subzero32715</div>
     <form id="a-login" hidden autocomplete="on">
       <label>Username</label><input id="l-user" autocomplete="username" maxlength="16">
       <label>Password</label><input id="l-pass" type="password" autocomplete="current-password">
@@ -2955,8 +2980,16 @@ body.calm *{animation-duration:0s!important;animation-iteration-count:1!importan
     });
     ArtFx.chromaFx(id + nl[9]); ArtFx.omegaFx(id + nl[11], P[3]);
   });
-  const E = [['ew9/Elite Heir', 0], ['ew10/Elite Sovereign', 1], ['ew10/Elite Emperor', 2], ['ew12/Elite Monarch', 0], ['ew16/Elite Deity', 1], ['ew16/Elite Overlord', 2]], EP = ['#b14dff', '#1a0b33', '#e7d2ff', '#ffd34d'];
-  E.forEach(([k, n]) => { A(k, g => { g.circ(16, 17, 14, '#3b0f7a'); ringPx(g, 16, 17, 13, '#b14dff', 1); S.crown(g, n === 0 ? ['#b14dff', '#1a0b33', '#e7d2ff', '#ffd34d'] : n === 1 ? ['#ffd34d', '#5a3d00', '#fff2b0', '#b14dff'] : ['#ffffff', '#4a3a6a', '#ffd34d', '#ff4dd2']); if (n > 0) { spark(g, 4, 6, '#fff'); spark(g, 28, 28, '#fff') } if (n > 1) { spark(g, 28, 5, '#ffd34d'); spark(g, 4, 27, '#ffd34d') } fin(g) }); ArtFx.omegaFx(k, '#b14dff') });
+  const BG = g => { g.circ(16, 17, 14, '#3b0f7a'); ringPx(g, 16, 17, 13, '#b14dff', 1) };
+  const ELD = {
+    'ew9/Elite Heir': g => { BG(g); g.circ(16, 22, 8, '#ffd34d'); g.circ(16, 22, 5, '#3b0f7a'); g.rect(11, 15, 10, 3, '#b8891a'); g.poly([[16, 4], [22, 10], [16, 17], [10, 10]], '#d9a8ff'); g.poly([[16, 4], [22, 10], [16, 10]], '#ffffff'); g.poly([[10, 10], [16, 10], [16, 17]], '#b14dff'); spark(g, 25, 6, '#fff'); spark(g, 6, 12, '#ffd34d') },
+    'ew10/Elite Sovereign': g => { BG(g); g.poly([[12, 9], [2, 4], [4, 13], [12, 13]], '#fff2b0'); g.poly([[20, 9], [30, 4], [28, 13], [20, 13]], '#fff2b0'); g.rect(15, 13, 3, 16, '#ffd34d'); g.rect(13, 18, 7, 2, '#5a3d00'); g.rect(12, 27, 9, 2, '#5a3d00'); g.circ(16, 9, 5, '#b14dff'); g.circ(14, 7, 2, '#e7d2ff'); spark(g, 25, 24, '#fff') },
+    'ew10/Elite Emperor': g => { BG(g); g.poly([[9, 6], [16, 2], [23, 6]], '#ffd34d'); g.rect(9, 6, 14, 13, '#7a0f2e'); g.circ(16, 11, 2.5, '#ffd34d'); g.rect(6, 15, 4, 11, '#ffd34d'); g.rect(22, 15, 4, 11, '#ffd34d'); g.rect(10, 17, 12, 4, '#ff4d7a'); g.rect(8, 21, 16, 4, '#b01c4a'); g.rect(7, 25, 3, 5, '#ffd34d'); g.rect(22, 25, 3, 5, '#ffd34d') },
+    'ew12/Elite Monarch': g => { BG(g); g.poly([[15, 14], [3, 4], [2, 16], [9, 21], [15, 19]], '#ff8c1a'); g.poly([[17, 14], [29, 4], [30, 16], [23, 21], [17, 19]], '#ff8c1a'); g.poly([[15, 19], [6, 28], [14, 27]], '#ff8c1a'); g.poly([[17, 19], [26, 28], [18, 27]], '#ff8c1a'); g.poly([[3, 4], [5, 4], [15, 15], [15, 14]], '#1a0b33'); g.poly([[29, 4], [27, 4], [17, 15], [17, 14]], '#1a0b33'); [[5, 9], [4, 13], [8, 18], [27, 9], [28, 13], [24, 18]].forEach(q => g.px(q[0], q[1], '#fff')); g.ell(16, 18, 2, 8, '#1a0b33'); g.poly([[13, 9], [13, 5], [14.5, 7], [16, 4], [17.5, 7], [19, 5], [19, 9]], '#ffd34d') },
+    'ew16/Elite Deity': g => { BG(g); g.poly([[16, 1], [19, 9], [13, 9]], '#ffd34d'); g.poly([[16, 33], [19, 25], [13, 25]], '#ffd34d'); g.poly([[0, 17], [8, 14], [8, 20]], '#ffd34d'); g.poly([[32, 17], [24, 14], [24, 20]], '#ffd34d'); g.circ(16, 17, 9, '#fff2b0'); g.ell(16, 17, 7, 4, '#ffffff'); g.circ(16, 17, 3, '#b14dff'); g.circ(16, 17, 1.5, '#1a0b33'); g.px(15, 16, '#fff') },
+    'ew16/Elite Overlord': g => { BG(g); g.poly([[9, 13], [2, 3], [7, 2], [12, 9]], '#e7d2ff'); g.poly([[23, 13], [30, 3], [25, 2], [20, 9]], '#e7d2ff'); g.ell(16, 18, 9, 10, '#3a3a52'); g.rect(15, 6, 2, 8, '#ff4dd2'); g.rect(11, 17, 10, 6, '#0a0612'); g.rect(12, 19, 3, 2, '#ff2a2a'); g.rect(17, 19, 3, 2, '#ff2a2a'); g.rect(11, 16, 10, 1, '#8a8aa8'); g.poly([[12, 27], [16, 31], [20, 27]], '#3a3a52') }
+  };
+  Object.keys(ELD).forEach(k => { A(k, g => { ELD[k](g); fin(g) }); ArtFx.omegaFx(k, '#b14dff') });
 })();
 
 /*ARTDATA-END*/
@@ -4150,8 +4183,16 @@ function playAdpcm(o) {
   for (let i = 0; i < n; i++) { const by = bin.charCodeAt(i >> 1), dl = (i & 1) ? by >> 4 : by & 15, step = ADP_ST[ix]; let vp = step >> 3; if (dl & 4) vp += step; if (dl & 2) vp += step >> 1; if (dl & 1) vp += step >> 2; pred = Math.max(-32768, Math.min(32767, pred + (dl & 8 ? -vp : vp))); ix = Math.max(0, Math.min(88, ix + ADP_IX[dl & 7])); f[i] = pred / 32768 }
   const ab = c.createBuffer(1, n, o.r || 22050); ab.getChannelData(0).set(f); const sc = c.createBufferSource(), g = c.createGain(); g.gain.value = Math.min(1, (ST.vol || 70) / 100) * 1.2; sc.buffer = ab; sc.connect(g); g.connect(c.destination); sc.start(); return true;
 }
+/* ===== DAILY LOGIN STREAK ===== */
+function dailyReward() {
+  const today = pbKeyOf(Date.now()), y = new Date(); y.setDate(y.getDate() - 1), yk = pbKeyOf(y.getTime()); const st = S.streak || { last: '', n: 0 }; if (st.last === today) return;
+  st.n = st.last === yk ? Math.min(st.n + 1, 365) : 1; st.last = today; S.streak = st; const day = ((st.n - 1) % 7) + 1, big = day === 7, coins = Math.round(5000 * Math.min(st.n, 30) * (big ? 3 : 1)), lcn = 25 * Math.min(st.n, 30) * (big ? 3 : 1);
+  S.coins += coins; lcAdd(lcn); updateStats(); save(true); sfx('ach');
+  modal(`<h3>🎁 DAILY REWARD</h3><p style="margin:6px 0">Login streak: <b>${st.n} day${st.n > 1 ? 's' : ''}</b></p><div class="orow" style="justify-content:center">${[1, 2, 3, 4, 5, 6, 7].map(i => `<span class="rtag" style="background:${i < day ? '#35c75a' : i === day ? '#ffc800;color:#3a2a00' : '#555'}">${i === 7 ? '🎁' : i}</span>`).join('')}</div><p style="margin:10px 0;font-weight:800">+${fmt(coins)} coins · +${fmt(lcn)} lottery coins${big ? ' (WEEK BONUS x3!)' : ''}</p><div class="small">Come back every day to keep your streak. Miss a day and it starts over.</div><div class="mbtns"><button class="btn green" id="dlOk">NICE!</button></div>`); $('#dlOk').onclick = () => closeModal();
+}
 /* ===== what's new popup ===== */
-const VERSION = 41, CHANGELOG = [
+const VERSION = 42, CHANGELOG = [
+  { v: 42, t: 'Daily rewards and new Elite art', items: ['DAILY LOGIN STREAK: log in every day for coins and lottery coins. Day 7 pays x3!', 'All 6 Elite subs have their own totally different designs now: signet ring, scepter, throne, monarch butterfly, all-seeing eye and horned helm.', 'Lottery machines have a QUICK x10 button.'] },
   { v: 41, t: 'The Lottery update', items: ['New LOTTERY page in the menu: Powerball, machines, scratch tickets (really scratch!), Big Spin slot, Keno, Dice, Coin Streak, Lucky Wheel, Lucky Slots and Mystery Boxes.', 'Powerball draws every night at 5 PM on a live TV. Everyone sees a popup when someone wins.', 'THE VAULT now has a DIAMOND VAULT: 5 letters, much harder, one per day, and only one winner.', 'Elites are now the rarest thing in the game. Bosses pay less.', 'Better owner sounds, and Dusty Penny gets shinier as you get richer.'] },
   { v: 40, t: 'More admin tiers and rebirth rewards', items: ['Admin now has 8 tiers, and the owner can tick exactly which buttons each admin gets (LOAD THEIR SETUP to edit).', '8 new rebirth perks and a POINT SHOP for one-time goodies.', 'The Reborn Relics pack now costs rebirth points.', 'New rebirth milestones at 15 and 40 rebirths.'] },
   { v: 39, t: 'The big fun update', items: ['THE VAULT (under Minigames): finish 4 hard tasks to find the 4-letter code and win a humongous reward.', '3 new minigames: Snake, Balloon Pop and Digit Recall.', '6 more elite packs (16 total) with new custom models and 3 more Elite subs.', 'Random events now happen while you play: coin storms, lucky minutes, golden showers, mini bosses and gifts.', 'New settings: random events, event timers, auto-claim gift, owner sounds, compact layout and a calm mode.', 'The menu is organised into groups and the owner panel has a jump bar.', 'Owner: 7 new events, a sound board that plays a sound for everyone, and more.'] },
@@ -4433,7 +4474,7 @@ function lotGlobal() {
   for (const thr of [600, 300, 60]) { const f = nk + thr; if (left <= thr && left > thr - 30 && !pbFlags[f]) { pbFlags[f] = 1; const sp = thr === 60; pbPop(`<div class="pbp-t">🎟 POWERBALL IS DRAWN IN <span class="pbc" data-g="${pbTimeOf(nk)}">${clk(left)}</span></div><div class="pbp-s">${sp ? 'LAST CALL! ' : ''}Draw at 5:00 PM · Sales close 4:30 · Prize: ${esc(pbPrizeTxt(pbPrize(nk)))}</div><button class="btn sm gold" data-w>${sp ? 'WATCH LIVE' : 'OPEN POWERBALL'}</button>`, sp ? 'big' : '', sp ? 0 : 15000); sfx(sp ? 'ach' : 'ui') } }
   if (tt >= 0 && tt < 12 && !pbFlags['live' + tk]) { pbFlags['live' + tk] = 1; pbPop('<div class="pbp-t">🔴 POWERBALL IS LIVE NOW!</div><div class="pbp-s">The draw is on air.</div><button class="btn sm red" data-w>WATCH LIVE</button>', 'big', 20000); sfx('ach') }
   const c = $('#pbpop .pbc'); if (c) { const l = (+c.dataset.g - now) / 1000; if (l <= 0) $('#pbpop').remove(); else c.textContent = clk(l) }
-  if (S.pb) pbData(); const tr = coinTier(); if (tr !== lotGlobal.t) { lotGlobal.t = tr; updateCoin() }
+  if (S.pb) pbData(); if (!dailyReward.t && !uiBusy() && (!S.streak || S.streak.last !== pbKeyOf(Date.now()))) { dailyReward.t = 1; setTimeout(() => { dailyReward.t = 0; if (S && !uiBusy()) dailyReward() }, 4000) } const tr = coinTier(); if (tr !== lotGlobal.t) { lotGlobal.t = tr; updateCoin() }
 }
 setInterval(lotGlobal, 1000);
 
@@ -4445,8 +4486,9 @@ const lotList = (title, sec, items) => { $('#page').innerHTML = lotHead(title, 1
 MACHS[0].e = '🎱'; MACHS[1].e = '🔮'; MACHS[2].e = '👑'; MACHS[3].e = '🌌';
 function renderMach(i) {
   stopGames(); if (i === undefined) return lotList('LOTTERY MACHINES', 'mach', MACHS); const m = MACHS[i];
-  $('#page').innerHTML = lotHead(m.n, 1) + `<div class="panel lmach" style="border-color:${m.c};max-width:440px;margin:auto"><b style="color:${m.c}">${m.n}</b><div class="small">Winning is very rare. Prizes are paid in coins (1 lottery coin = ${LC_VAL} coins of value).</div><div class="lmbody"><div class="lm-lights"><i></i><i></i><i></i><i></i><i></i></div><div class="lm-cage" id="lmCage">${Array.from({ length: 9 }, (_, j) => `<span class="cb" style="--d:${(j * .13).toFixed(2)}s;--x:${(j % 3) * 30 + 8}px;--y:${Math.floor(j / 3) * 26 + 6}px">${LSYM[j]}</span>`).join('')}</div><div class="lm-lever" id="lmLev"><i></i></div></div><div class="lm-dome" id="ld"><span class="lm-ball">❔</span><span class="lm-ball">❔</span><span class="lm-ball">❔</span></div><div class="lm-res" id="lr" style="font-weight:800;min-height:22px">Cost ${fmt(m.cost)} LC</div><button class="btn gold" id="lGo">PULL · ${fmt(m.cost)} LC</button><div class="small">Top prize: ${m.jack ? m.jack.map(r => RAR[r].name).join(' / ') + ' sub' : fmt(m.cost * LC_VAL * 100) + ' coins'}</div></div>`;
+  $('#page').innerHTML = lotHead(m.n, 1) + `<div class="panel lmach" style="border-color:${m.c};max-width:440px;margin:auto"><b style="color:${m.c}">${m.n}</b><div class="small">Winning is very rare. Prizes are paid in coins (1 lottery coin = ${LC_VAL} coins of value).</div><div class="lmbody"><div class="lm-lights"><i></i><i></i><i></i><i></i><i></i></div><div class="lm-cage" id="lmCage">${Array.from({ length: 9 }, (_, j) => `<span class="cb" style="--d:${(j * .13).toFixed(2)}s;--x:${(j % 3) * 30 + 8}px;--y:${Math.floor(j / 3) * 26 + 6}px">${LSYM[j]}</span>`).join('')}</div><div class="lm-lever" id="lmLev"><i></i></div></div><div class="lm-dome" id="ld"><span class="lm-ball">❔</span><span class="lm-ball">❔</span><span class="lm-ball">❔</span></div><div class="lm-res" id="lr" style="font-weight:800;min-height:22px">Cost ${fmt(m.cost)} LC</div><div class="orow" style="justify-content:center"><button class="btn gold" id="lGo">PULL · ${fmt(m.cost)} LC</button><button class="btn alt" id="lGo10">QUICK x10</button></div><div class="small">Top prize: ${m.jack ? m.jack.map(r => RAR[r].name).join(' / ') + ' sub' : fmt(m.cost * LC_VAL * 100) + ' coins'}</div></div>`;
   lotBackBtn('mach'); let busy = false;
+  $('#lGo10').onclick = () => { if (busy) return; if ((S.lc || 0) < m.cost * 10) { sfx('err'); return toast('You need ' + fmt(m.cost * 10) + ' lottery coins for 10 pulls.', 'bad') } lcAdd(-m.cost * 10); let tot = 0, wins = 0, subs = []; for (let q = 0; q < 10; q++) { const out = lotRoll(LOT_TAB); if (out === 'J' && m.jack) { const k = lotSub(m.jack); addItem(k, 'n', 1); subs.push(ITEMS[k].name); wins++ } else if (out !== 0) { tot += Math.round((out === 'J' ? 100 : out) * m.cost * LC_VAL); wins++ } } if (tot) lotPay(tot); updateStats(); save(true); lotRefresh(); sfx(wins ? 'ach' : 'err'); $('#lr').textContent = wins ? '10 pulls: ' + wins + ' win' + (wins > 1 ? 's' : '') + ', +' + fmt(tot) + ' coins' + (subs.length ? ' + ' + subs.join(', ') : '') : '10 pulls: no luck. Try again!' };
   $('#lGo').onclick = () => {
     if (busy) return; if ((S.lc || 0) < m.cost) { sfx('err'); return toast('Not enough lottery coins.', 'bad') }
     busy = true; lcAdd(-m.cost); save(true); lotRefresh(); const out = lotRoll(LOT_TAB), balls = $$('#ld .lm-ball'); $('#lmCage').classList.add('spin'); $('#lmLev').classList.add('pull'); $('#ld').classList.add('spin'); $('#lr').textContent = 'Drawing...'; sfx('ui');
